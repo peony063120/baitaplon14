@@ -1,16 +1,14 @@
-module com.example.client {
+module com.auction.client {
     requires javafx.controls;
     requires javafx.fxml;
-    requires javafx.web;
+    requires com.fasterxml.jackson.databind;
+    requires com.fasterxml.jackson.datatype.jsr310;
+    requires org.slf4j;
 
-    requires org.controlsfx.controls;
-    requires com.dlsc.formsfx;
-    requires net.synedra.validatorfx;
-    requires org.kordamp.ikonli.javafx;
-    requires org.kordamp.bootstrapfx.core;
-    requires eu.hansolo.tilesfx;
-    requires com.almasb.fxgl.all;
+    opens com.auction.client to javafx.fxml;
+    opens com.auction.client.controller to javafx.fxml;
+    opens com.auction.client.model to com.fasterxml.jackson.databind;
 
-    opens com.example.client to javafx.fxml;
-    exports com.example.client;
+    exports com.auction.client;
+    exports com.auction.client.controller;
 }

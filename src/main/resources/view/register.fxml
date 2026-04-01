@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox spacing="15" alignment="CENTER" xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.RegisterController">
+
+    <padding>
+        <Insets top="30" right="40" bottom="30" left="40"/>
+    </padding>
+
+    <Text text="Create New Account" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-fill: #2c3e50;"/>
+
+    <VBox spacing="12">
+        <TextField fx:id="fullNameField" promptText="Full Name"
+                   style="-fx-pref-height: 35; -fx-padding: 6 10; -fx-border-color: #ced4da; -fx-border-radius: 5;"/>
+        <TextField fx:id="usernameField" promptText="Username"
+                   style="-fx-pref-height: 35; -fx-padding: 6 10; -fx-border-color: #ced4da; -fx-border-radius: 5;"/>
+        <TextField fx:id="emailField" promptText="Email"
+                   style="-fx-pref-height: 35; -fx-padding: 6 10; -fx-border-color: #ced4da; -fx-border-radius: 5;"/>
+        <PasswordField fx:id="passwordField" promptText="Password"
+                       style="-fx-pref-height: 35; -fx-padding: 6 10; -fx-border-color: #ced4da; -fx-border-radius: 5;"/>
+        <PasswordField fx:id="confirmPasswordField" promptText="Confirm Password"
+                       style="-fx-pref-height: 35; -fx-padding: 6 10; -fx-border-color: #ced4da; -fx-border-radius: 5;"/>
+
+        <ComboBox fx:id="roleComboBox" promptText="Select Role"
+                  style="-fx-pref-height: 35;">
+        </ComboBox>
+
+        <Label fx:id="statusLabel" style="-fx-padding: 5; -fx-font-size: 12;"/>
+
+        <Button fx:id="registerButton" text="Register" onAction="#handleRegister"
+                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-pref-height: 40; -fx-font-weight: bold; -fx-background-radius: 5;"/>
+        <Button text="Back to Login" onAction="#handleBackToLogin"
+                style="-fx-background-color: transparent; -fx-text-fill: #6c757d; -fx-border-color: #6c757d; -fx-border-radius: 5; -fx-pref-height: 36;"/>
+    </VBox>
+
+</VBox>
