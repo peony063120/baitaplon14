@@ -1,0 +1,258 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
+  <diagram name="Class Diagram" id="class-diagram-clean">
+    <mxGraphModel dx="2807" dy="2324" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Entity" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#E6E6E6;strokeColor=#666666;fontSize=12;fontColor=#000000;" value="&lt;&lt;abstract&gt;&gt;&#xa;Entity" vertex="1">
+          <mxGeometry height="140" width="200" x="60" y="-310" as="geometry" />
+        </mxCell>
+        <mxCell id="Entity-attrs" parent="Entity" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="- id: String&#xa;- createdAt: LocalDateTime&#xa;- updatedAt: LocalDateTime" vertex="1">
+          <mxGeometry height="54" width="200" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Entity-methods" parent="Entity" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="+ getId(): String&#xa;+ getCreatedAt(): LocalDateTime&#xa;+ updateTimestamp(): void" vertex="1">
+          <mxGeometry height="46" width="200" y="94" as="geometry" />
+        </mxCell>
+        <mxCell id="User" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#E6E6E6;strokeColor=#666666;fontSize=12;fontColor=#000000;" value="&lt;&lt;abstract&gt;&gt;&#xa;User" vertex="1">
+          <mxGeometry height="190" width="220" x="430" y="-130" as="geometry" />
+        </mxCell>
+        <mxCell id="User-attrs" parent="User" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="- username: String&#xa;- password: String&#xa;- email: String&#xa;- fullName: String&#xa;- active: boolean" vertex="1">
+          <mxGeometry height="80" width="220" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="User-methods" parent="User" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="+ getUsername(): String&#xa;+ setUsername(name: String): void&#xa;+ authenticate(pwd: String): boolean&#xa;+ getRole(): String (abstract)" vertex="1">
+          <mxGeometry height="70" width="220" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="Bidder" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;fontColor=#000000;" value="Bidder" vertex="1">
+          <mxGeometry height="150" width="320" x="-100" y="255" as="geometry" />
+        </mxCell>
+        <mxCell id="Bidder-attrs" parent="Bidder" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="- balance: double&#xa;- autoBidConfigs: Map&lt;String, AutoBidConfig&gt;" vertex="1">
+          <mxGeometry height="44" width="320" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Bidder-methods" parent="Bidder" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="+ getBalance(): double&#xa;+ addBalance(amount: double): void&#xa;+ deductBalance(amount: double): boolean&#xa;+ setAutoBidConfig(auctionId: String, config: AutoBidConfig): void&#xa;+ getRole(): String" vertex="1">
+          <mxGeometry height="70" width="320" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="Seller" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;fontColor=#000000;" value="Seller" vertex="1">
+          <mxGeometry height="120" width="240" x="320" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="Seller-attrs" parent="Seller" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="- auctionIds: List&lt;String&gt;" vertex="1">
+          <mxGeometry height="30" width="240" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Seller-methods" parent="Seller" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="+ addAuctionId(auctionId: String): void&#xa;+ removeAuctionId(auctionId: String): void&#xa;+ getAuctionIds(): List&lt;String&gt;&#xa;+ getRole(): String" vertex="1">
+          <mxGeometry height="54" width="240" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="Admin" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;fontColor=#000000;" value="Admin" vertex="1">
+          <mxGeometry height="120" width="260" x="590" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="Admin-attrs" parent="Admin" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="- permissionLevel: String" vertex="1">
+          <mxGeometry height="30" width="260" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Admin-methods" parent="Admin" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="+ getPermissionLevel(): String&#xa;+ setPermissionLevel(level: String): void&#xa;+ getRole(): String" vertex="1">
+          <mxGeometry height="54" width="260" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="AutoBidConfig" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=12;fontColor=#000000;" value="AutoBidConfig" vertex="1">
+          <mxGeometry height="110" width="220" x="-50" y="455" as="geometry" />
+        </mxCell>
+        <mxCell id="AutoBidConfig-attrs" parent="AutoBidConfig" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="- maxBid: double&#xa;- increment: double" vertex="1">
+          <mxGeometry height="34" width="220" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="AutoBidConfig-methods" parent="AutoBidConfig" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="+ getNextBid(currentPrice: double): double&#xa;+ canBid(currentPrice: double): boolean" vertex="1">
+          <mxGeometry height="40" width="220" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="Item" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#E6E6E6;strokeColor=#666666;fontSize=12;fontColor=#000000;" value="&lt;&lt;abstract&gt;&gt;&#xa;Item" vertex="1">
+          <mxGeometry height="180" width="260" x="960" y="-230" as="geometry" />
+        </mxCell>
+        <mxCell id="Item-attrs" parent="Item" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="- name: String&#xa;- description: String&#xa;- startingPrice: double&#xa;- sellerId: String&#xa;- category: String" vertex="1">
+          <mxGeometry height="70" width="260" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Item-methods" parent="Item" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="+ getName(): String&#xa;+ getStartingPrice(): double&#xa;+ getItemType(): String (abstract)&#xa;+ displayInfo(): void" vertex="1">
+          <mxGeometry height="70" width="260" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="Electronics" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=12;fontColor=#000000;" value="Electronics" vertex="1">
+          <mxGeometry height="140" width="240" x="775" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Electronics-attrs" parent="Electronics" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="- brand: String&#xa;- model: String&#xa;- warrantyMonths: int&#xa;- refurbished: boolean" vertex="1">
+          <mxGeometry height="60" width="240" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Electronics-methods" parent="Electronics" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="+ getItemType(): String&#xa;+ displayInfo(): void" vertex="1">
+          <mxGeometry height="44" width="240" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="Art" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=12;fontColor=#000000;" value="Art" vertex="1">
+          <mxGeometry height="140" width="240" x="1200" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="Art-attrs" parent="Art" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="- artist: String&#xa;- yearCreated: int&#xa;- medium: String&#xa;- height: double&#xa;- width: double" vertex="1">
+          <mxGeometry height="74" width="240" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Art-methods" parent="Art" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="+ getItemType(): String&#xa;+ displayInfo(): void" vertex="1">
+          <mxGeometry height="30" width="240" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="Vehicle" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=12;fontColor=#000000;" value="Vehicle" vertex="1">
+          <mxGeometry height="140" width="240" x="860" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="Vehicle-attrs" parent="Vehicle" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="- make: String&#xa;- model: String&#xa;- year: int&#xa;- licensePlate: String&#xa;- mileage: double" vertex="1">
+          <mxGeometry height="74" width="240" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Vehicle-methods" parent="Vehicle" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="+ getItemType(): String&#xa;+ displayInfo(): void" vertex="1">
+          <mxGeometry height="30" width="240" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="Auction" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=12;fontColor=#000000;" value="Auction" vertex="1">
+          <mxGeometry height="220" width="340" x="320" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="Auction-attrs" parent="Auction" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="- itemId: String&#xa;- sellerId: String&#xa;- startTime: LocalDateTime&#xa;- endTime: LocalDateTime&#xa;- currentPrice: double&#xa;- currentWinnerId: String&#xa;- status: AuctionStatus&#xa;- bidHistory: List&lt;BidTransaction&gt;&#xa;- participants: List&lt;String&gt;&#xa;- antiSnipingEnabled: boolean&#xa;- antiSnipingExtensionSeconds: double" vertex="1">
+          <mxGeometry height="130" width="340" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Auction-methods" parent="Auction" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="+ isActive(): boolean&#xa;+ canBid(userId: String): boolean&#xa;+ addBid(bid: BidTransaction): boolean&#xa;+ extendEndTime(seconds: double): void" vertex="1">
+          <mxGeometry height="54" width="340" y="166" as="geometry" />
+        </mxCell>
+        <mxCell id="BidTransaction" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=12;fontColor=light-dark(default, #0f0000);" value="BidTransaction" vertex="1">
+          <mxGeometry height="110" width="300" x="340" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="BidTransaction-attrs" parent="BidTransaction" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="- auctionId: String&#xa;- bidderId: String&#xa;- amount: double&#xa;- bidTime: LocalDateTime&#xa;- autoBid: boolean" vertex="1">
+          <mxGeometry height="74" width="300" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="AuctionStatus" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=12;fontColor=light-dark(default, #0f0000);" value="&lt;&lt;enumeration&gt;&gt;&#xa;AuctionStatus" vertex="1">
+          <mxGeometry height="130" width="140" x="760" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="AuctionStatus-values" parent="AuctionStatus" style="text;align=center;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="DRAFT&#xa;OPEN&#xa;RUNNING&#xa;FINISHED&#xa;PAID&#xa;CANCELLED" vertex="1">
+          <mxGeometry height="90" width="140" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="AuctionManager" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=50;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#F8CECC;strokeColor=#B85450;fontSize=12;fontColor=light-dark(default, #0e0101);" value="&lt;&lt;singleton&gt;&gt;&#xa;AuctionManager" vertex="1">
+          <mxGeometry height="170" width="200" x="40" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="AuctionManager-attrs" parent="AuctionManager" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="- instance: AuctionManager&#xa;- auctions: Map&lt;String, Auction&gt;&#xa;- autoBidQueues: Map&lt;String, PriorityQueue&gt;" vertex="1">
+          <mxGeometry height="60" width="200" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="AuctionManager-methods" parent="AuctionManager" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="+ getInstance(): AuctionManager&#xa;+ createAuction(): Auction&#xa;+ placeBid(): boolean&#xa;+ setupAutoBid(): void" vertex="1">
+          <mxGeometry height="60" width="200" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="ItemFactory" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#F8CECC;strokeColor=#B85450;fontSize=12;fontColor=#000000;" value="ItemFactory" vertex="1">
+          <mxGeometry height="140" width="200" x="1370" y="-30" as="geometry" />
+        </mxCell>
+        <mxCell id="ItemFactory-methods" parent="ItemFactory" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="+ createElectronics(): Electronics&#xa;+ createArt(): Art&#xa;+ createVehicle(): Vehicle&#xa;+ createItem(type: String): Item" vertex="1">
+          <mxGeometry height="104" width="200" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="AuctionObserver" parent="1" style="swimlane;fontStyle=2;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=12;fontColor=#000000;" value="&lt;&lt;interface&gt;&gt;&#xa;AuctionObserver" vertex="1">
+          <mxGeometry height="110" width="280" x="-60" y="900" as="geometry" />
+        </mxCell>
+        <mxCell id="AuctionObserver-methods" parent="AuctionObserver" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="+ onBidPlaced(auction: Auction, bid: BidTransaction): void&#xa;+ onAuctionStatusChanged(auction: Auction): void&#xa;+ onAuctionEnded(auction: Auction): void" vertex="1">
+          <mxGeometry height="70" width="280" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="AuctionSubject" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=12;" value="AuctionSubject" vertex="1">
+          <mxGeometry height="130" width="300" x="340" y="910" as="geometry" />
+        </mxCell>
+        <mxCell id="AuctionSubject-attrs" parent="AuctionSubject" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="- observers: List&lt;AuctionObserver&gt;" vertex="1">
+          <mxGeometry height="30" width="300" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="AuctionSubject-methods" parent="AuctionSubject" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="+ attach(observer: AuctionObserver): void&#xa;+ detach(observer: AuctionObserver): void&#xa;+ notifyBidPlaced(auction: Auction, bid: BidTransaction): void" vertex="1">
+          <mxGeometry height="64" width="300" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="UserDAO" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=50;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#F8CECC;strokeColor=#B85450;fontSize=12;fontColor=#000000;" value="&lt;&lt;singleton&gt;&gt;&#xa;UserDAO" vertex="1">
+          <mxGeometry height="190" width="430" x="680" y="860" as="geometry" />
+        </mxCell>
+        <mxCell id="UserDAO-attrs" parent="UserDAO" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="- instance: UserDAO&#xa;- userCache: Map&lt;String, User&gt;&#xa;- usernameIndex: Map&lt;String, User&gt;" vertex="1">
+          <mxGeometry height="50" width="430" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="UserDAO-methods" parent="UserDAO" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="+ getInstance(): UserDAO&#xa;+ saveUser(user: User): void&#xa;+ getUser(id: String): User&#xa;+ getUserByUsername(username: String): User&#xa;+ authenticate(username: String, password: String): boolean&#xa;+ register(username: String, password: String, email: String, fullName: String, role: String): User" vertex="1">
+          <mxGeometry height="90" width="430" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="AuctionDAO" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=50;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#F8CECC;strokeColor=#B85450;fontSize=12;fontColor=#000000;" value="&lt;&lt;singleton&gt;&gt;&#xa;AuctionDAO" vertex="1">
+          <mxGeometry height="140" width="260" x="1160" y="860" as="geometry" />
+        </mxCell>
+        <mxCell id="AuctionDAO-attrs" parent="AuctionDAO" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="- instance: AuctionDAO&#xa;- auctionCache: Map&lt;String, Auction&gt;" vertex="1">
+          <mxGeometry height="40" width="260" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="AuctionDAO-methods" parent="AuctionDAO" style="text;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;overflow=fill;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" value="+ getInstance(): AuctionDAO&#xa;+ saveAuction(auction: Auction): void&#xa;+ getAuction(id: String): Auction&#xa;+ getAllAuctions(): List&lt;Auction&gt;" vertex="1">
+          <mxGeometry height="50" width="260" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="rel1" edge="1" parent="1" source="User" style="endArrow=block;endFill=0;endSize=12;strokeWidth=2;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="Entity" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel2" edge="1" parent="1" source="Bidder" style="endArrow=block;endFill=0;endSize=12;strokeWidth=2;html=1;rounded=0;" target="User" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="160" y="220" />
+              <mxPoint x="410" y="220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel3" edge="1" parent="1" source="Seller" style="endArrow=block;endFill=0;endSize=12;strokeWidth=2;html=1;rounded=0;" target="User" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="440" y="220" />
+              <mxPoint x="410" y="220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel4" edge="1" parent="1" source="Admin" style="endArrow=block;endFill=0;endSize=12;strokeWidth=2;html=1;rounded=0;" target="User" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="720" y="220" />
+              <mxPoint x="410" y="220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel5" edge="1" parent="1" source="Bidder" style="endArrow=diamondThin;endFill=1;endSize=12;strokeWidth=2;html=1;rounded=0;" target="AutoBidConfig" value="contains">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel6" edge="1" parent="1" source="Item" style="endArrow=block;endFill=0;endSize=12;strokeWidth=2;html=1;rounded=0;" target="Entity" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1080" y="200" />
+              <mxPoint x="140" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel7" edge="1" parent="1" source="Electronics" style="endArrow=block;endFill=0;endSize=12;strokeWidth=2;html=1;rounded=0;" target="Item" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel8" edge="1" parent="1" source="Art" style="endArrow=block;endFill=0;endSize=12;strokeWidth=2;html=1;rounded=0;" target="Item" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel9" edge="1" parent="1" source="Vehicle" style="endArrow=block;endFill=0;endSize=12;strokeWidth=2;html=1;rounded=0;" target="Item" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel10" edge="1" parent="1" source="Auction" style="endArrow=diamondThin;endFill=0;endSize=12;strokeWidth=2;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BidTransaction" value="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="450" y="730" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel10-label" connectable="0" parent="rel10" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="*" vertex="1">
+          <mxGeometry relative="1" x="0.2" y="2" as="geometry">
+            <mxPoint x="10" y="-5" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel11" edge="1" parent="1" source="Auction" style="endArrow=open;endFill=0;dashed=1;strokeWidth=1;html=1;rounded=0;" target="AuctionStatus" value="uses">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel12" edge="1" parent="1" source="AuctionManager" style="endArrow=open;endFill=0;dashed=1;strokeWidth=1;html=1;rounded=0;" target="Auction" value="manages">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel13" edge="1" parent="1" style="endArrow=block;endFill=0;endSize=12;dashed=1;strokeWidth=2;html=1;rounded=0;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="72.26" y="800" />
+              <mxPoint x="112.26" y="800" />
+            </Array>
+            <mxPoint x="72.26" y="780" as="sourcePoint" />
+            <mxPoint x="47.7438709677415" y="900" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel14" edge="1" parent="1" source="AuctionManager-methods" style="endArrow=block;endFill=0;endSize=12;strokeWidth=2;html=1;rounded=0;exitX=0.506;exitY=0.985;exitDx=0;exitDy=0;exitPerimeter=0;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="140" y="840" />
+              <mxPoint x="490" y="840" />
+            </Array>
+            <mxPoint x="140" y="820" as="sourcePoint" />
+            <mxPoint x="490" y="950" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel15" edge="1" parent="1" source="ItemFactory" style="endArrow=open;endFill=0;dashed=1;strokeWidth=1;html=1;rounded=0;" target="Item" value="creates">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="2bwp_gAon9SqBbmemM-S-1" edge="1" parent="1" source="Vehicle" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0;exitDx=0;exitDy=0;" target="Vehicle">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
