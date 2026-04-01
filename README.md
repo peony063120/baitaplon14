@@ -14,7 +14,7 @@ A comprehensive online auction system built with Java, featuring real-time biddi
 ## Documentation
 
 ### Class Diagram
-![Class Diagram](docs/diagrams/class-diagram.png)
+![Class Diagram](docs/diagram/class-diagram.png)
 
 The class diagram above shows the complete object-oriented design of our auction system, including:
 - **Entity Hierarchy**: Base classes for users and items
