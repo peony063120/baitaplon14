@@ -4,11 +4,11 @@
 A comprehensive online auction system built with Java, featuring real-time bidding, auto-bidding, and anti-sniping protection.
 
 ## Team Members
-|         Name        |    ID    | Contribution |
+| Name                |    ID    | Contribution |
 |---------------------|----------|--------------|
 | Hoàng Phương Nhi    | 25023508 |  |
 | Nguyễn Ngọc Quỳnh   | 25023524 |  |
-| Đỗ Khánh Linh       | 25023488 | |
+| Ngô Khánh Linh      | 25023488 | |
 | Đặng Thị Phương Anh | 25023432 | |
 
 ## Documentation
