@@ -13,7 +13,8 @@
     <artifactId>client</artifactId>
 
     <properties>
-        <javafx.version>17.0.6</javafx.version>
+        <!-- Cập nhật lên phiên bản mới nhất 23.0.2 -->
+        <javafx.version>23.0.2</javafx.version>
     </properties>
 
     <dependencies>
@@ -23,7 +24,7 @@
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
-        <!-- JavaFX -->
+        <!-- JavaFX modules -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -34,8 +35,6 @@
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
         </dependency>
-
-        <!-- JavaFX Charts for visualization -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-charts</artifactId>
@@ -51,6 +50,9 @@
                 <version>0.0.8</version>
                 <configuration>
                     <mainClass>com.auction.client.ClientApp</mainClass>
+                    <options>
+                        <option>--enable-preview</option>
+                    </options>
                 </configuration>
             </plugin>
         </plugins>
