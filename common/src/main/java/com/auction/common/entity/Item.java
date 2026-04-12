@@ -1,4 +1,4 @@
-package com.auction.client.entity;
+package com.auction.common.entity;
 
 public abstract class Item extends Entity{
     protected String name;

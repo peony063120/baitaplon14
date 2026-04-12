@@ -1,4 +1,4 @@
-package com.auction.client.entity;
+package com.auction.common.entity;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
