@@ -12,6 +12,9 @@ class Admin extends User {
     public void setPermissionLevel(String level) {
         this.permissionLevel = level;
     }
+    public void setAdminStatus() {
+        System.out.println("Updating admin status for: " + getUsername());
+    }
 
     @Override
     public String getRole() {
