@@ -32,15 +32,19 @@ public class Electronics extends Item {
     }
 
     @Override
-    public void displayInfo() {
-        System.out.println("====== Electronics ======");
-        System.out.println("Tên      : " + getName());
-        System.out.println("Hãng     : " + brand);
-        System.out.println("Model    : " + model);
-        System.out.println("Bảo hành : " + warrantyMonths + " tháng");
-        System.out.println("Tân trang: " + (refurbished ? "Có" : "Không"));
-        System.out.printf ("Giá KĐ   : %.0f VNĐ%n", getStartingPrice());
-        System.out.println("Mô tả    : " + getDescription());
+    public String displayInfo() {
+        return String.format(
+                "[ELECTRONICS] %s | Hãng: %s | Model: %s | Bảo hành: %d tháng | Tân trang: %s | Giá KĐ: %.0f VNĐ",
+                getName(), brand, model, warrantyMonths, refurbished ? "Có" : "Không", getStartingPrice()
+        );
+//        System.out.println("====== Electronics ======");
+//        System.out.println("Tên      : " + getName());
+//        System.out.println("Hãng     : " + brand);
+//        System.out.println("Model    : " + model);
+//        System.out.println("Bảo hành : " + warrantyMonths + " tháng");
+//        System.out.println("Tân trang: " + (refurbished ? "Có" : "Không"));
+//        System.out.printf ("Giá KĐ   : %.0f VNĐ%n", getStartingPrice());
+//        System.out.println("Mô tả    : " + getDescription());
     }
 
     // Getters & Setters

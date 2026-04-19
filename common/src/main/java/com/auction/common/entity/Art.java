@@ -1,9 +1,8 @@
 package com.auction.common.entity;
 
-/*
-- Art - tác phẩm nghệ thuật
-- Kế thừa Item, thêm: artist, yearCreated, medium, height, width
- */
+// Art - tác phẩm nghệ thuật
+// Kế thừa Item, thêm: artist, yearCreated, medium, height, width
+
 
 public class Art extends Item {
 
@@ -32,15 +31,19 @@ public class Art extends Item {
     public String getItemType() { return "ART"; }
 
     @Override
-    public void displayInfo() {
-        System.out.println("====== Art ======");
-        System.out.println("Tên         : " + getName());
-        System.out.println("Nghệ sĩ     : " + artist);
-        System.out.println("Năm sáng tác: " + yearCreated);
-        System.out.println("Chất liệu   : " + medium);
-        System.out.printf ("Kích thước  : %.1f x %.1f cm%n", height, width);
-        System.out.printf ("Giá KĐ      : %.0f VNĐ%n", getStartingPrice());
-        System.out.println("Mô tả       : " + getDescription());
+    public String displayInfo() {
+        return String.format(
+                "[ART] %s | Nghệ sĩ: %s | Năm: %d | Chất liệu: %s | Kích thước: %.1fx%.1f cm | Giá KĐ: %.0f VNĐ",
+                getName(), artist, yearCreated, medium, height, width, getStartingPrice()
+        );
+//        System.out.println("====== Art ======");
+//        System.out.println("Tên         : " + getName());
+//        System.out.println("Nghệ sĩ     : " + artist);
+//        System.out.println("Năm sáng tác: " + yearCreated);
+//        System.out.println("Chất liệu   : " + medium);
+//        System.out.printf ("Kích thước  : %.1f x %.1f cm%n", height, width);
+//        System.out.printf ("Giá KĐ      : %.0f VNĐ%n", getStartingPrice());
+//        System.out.println("Mô tả       : " + getDescription());
     }
 
     // Getters & Setters

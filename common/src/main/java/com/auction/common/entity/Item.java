@@ -30,7 +30,7 @@ public abstract class Item extends Entity {
 
     // Abstract methods — Polymorphism
     public abstract String getItemType();  // Moi subclass tra ve loai item cua minh
-    public abstract void displayInfo();    // In thong tin chi tiet ra console
+    public abstract String displayInfo();    // In thong tin chi tiet ra console
 
     // Getters & Setters
     public String getName() { return name; }
