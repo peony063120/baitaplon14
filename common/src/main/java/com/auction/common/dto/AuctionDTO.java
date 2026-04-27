@@ -1,5 +1,7 @@
 package com.auction.common.dto;
 
+import com.auction.common.enums.AuctionStatus;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 

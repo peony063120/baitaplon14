@@ -1,5 +1,7 @@
 package com.auction.common.entity;
 
+import com.auction.common.enums.AuctionStatus;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,23 +22,25 @@ public class Auction {
     private double antiSnipingExtensionSeconds;
     private double minIncrement;
 
-    public Auction(String itemId, String sellerId, LocalDateTime startTime, LocalDateTime endTime, double startingPrice){
+    public Auction(String itemId, LocalDateTime startTime, LocalDateTime endTime, double startingPrice) {
         this.id = UUID.randomUUID().toString();
         this.itemId = itemId;
-        this.sellerId = sellerId;
+        this.sellerId = null;
         this.startTime = startTime;
-        this. endTime = endTime;
-        this. currentPrice = startingPrice;
-        this. status = AuctionStatus.DRAFT;
+        this.endTime = endTime;
+        this.currentPrice = startingPrice;
+        this.status = AuctionStatus.DRAFT;
         this.bidHistory = new ArrayList<>();
         this.participants = new ArrayList<>();
         this.antiSnipingEnabled = false;
         this.antiSnipingExtensionSeconds = 0;
         this.minIncrement = 1.0;
     }
-    public Auction(String id, String itemId, String sellerId, LocalDateTime startTime,
-                   LocalDateTime endTime, double currentPrice, String currentWinnerId,
-                   AuctionStatus status) {
+    public Auction(String itemId, String sellerId, LocalDateTime startTime, LocalDateTime endTime, double startingPrice) {
+        this(itemId, startTime, endTime, startingPrice);
+        this.sellerId = sellerId;
+    }
+    public Auction(String id, String itemId, String sellerId, LocalDateTime startTime, LocalDateTime endTime, double currentPrice, String currentWinnerId, AuctionStatus status) {
         this.id = id;
         this.itemId = itemId;
         this.sellerId = sellerId;
@@ -52,25 +56,23 @@ public class Auction {
         this.minIncrement = 1.0;
     }
 
-
     public boolean isActive(){
         LocalDateTime now = LocalDateTime.now();
         return status == AuctionStatus.RUNNING && now.isAfter(startTime) && now.isBefore(endTime);
     }
 
-    public boolean canBid(String userId, double bidAmount){
-        return isActive() && !userId.equals(sellerId) && (bidAmount >= currentPrice + minIncrement);
+    public boolean canBid(String userId){
+        return isActive() && !userId.equals(sellerId);
     }
 
     public boolean addBid(BidTransaction bid){
-        if (canBid(bid.getBidderId(), bid.getAmount()) && bid.getAmount() > currentPrice){
+        if (canBid(bid.getBidderId()) && bid.getAmount() > currentPrice){
             currentPrice = bid.getAmount();
             currentWinnerId = bid.getBidderId();
             bidHistory.add(bid);
 
             //Anti-sniping: neu gan het gio thi gia han
-            if (antiSnipingEnabled && endTime.minusSeconds((long) antiSnipingExtensionSeconds)
-                    .isBefore(bid.getBidTime())) {
+            if (antiSnipingEnabled && endTime.minusSeconds((long) antiSnipingExtensionSeconds).isBefore(bid.getBidTime())){
                 extendEndTime(antiSnipingExtensionSeconds);
             }
             return true;
@@ -100,7 +102,6 @@ public class Auction {
     public void setCurrentPrice(double currentPrice) { this.currentPrice = currentPrice; }
 
     public String getCurrentWinnerId() { return currentWinnerId; }
-
     public void setCurrentWinnerId(String currentWinnerId) { this.currentWinnerId = currentWinnerId; }
 
     public AuctionStatus getStatus() { return status; }

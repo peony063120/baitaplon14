@@ -1,6 +1,7 @@
 package com.auction.common.factory;
 
 import com.auction.common.entity.Auction;
+import com.auction.common.enums.AuctionStatus;
 
 import java.time.LocalDateTime;
 

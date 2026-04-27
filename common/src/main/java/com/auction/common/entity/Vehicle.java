@@ -13,7 +13,7 @@ public class Vehicle extends Item {
     private String licensePlate;  // Biển số xe
     private double mileage;       // Số km đã đi
 
-    public Vehicle() {
+    public Vehicle(String name, String description, double startingPrice, String sellerId, String make, String model, int year, String vin) {
         super();
     }
 
