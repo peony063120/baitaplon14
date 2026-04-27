@@ -7,6 +7,7 @@ package com.auction.common.entity;
 
 public class Electronics extends Item {
 
+
     private String brand;
     private String model;
     private int warrantyMonths;

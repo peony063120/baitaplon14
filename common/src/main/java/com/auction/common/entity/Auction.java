@@ -3,8 +3,10 @@ package com.auction.common.entity;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class Auction {
+    private String id;
     private String itemId;
     private String sellerId;
     private LocalDateTime startTime;
@@ -16,8 +18,10 @@ public class Auction {
     private List<String> participants;
     private boolean antiSnipingEnabled;
     private double antiSnipingExtensionSeconds;
+    private double minIncrement;
 
     public Auction(String itemId, String sellerId, LocalDateTime startTime, LocalDateTime endTime, double startingPrice){
+        this.id = UUID.randomUUID().toString();
         this.itemId = itemId;
         this.sellerId = sellerId;
         this.startTime = startTime;
@@ -28,25 +32,45 @@ public class Auction {
         this.participants = new ArrayList<>();
         this.antiSnipingEnabled = false;
         this.antiSnipingExtensionSeconds = 0;
+        this.minIncrement = 1.0;
+    }
+    public Auction(String id, String itemId, String sellerId, LocalDateTime startTime,
+                   LocalDateTime endTime, double currentPrice, String currentWinnerId,
+                   AuctionStatus status) {
+        this.id = id;
+        this.itemId = itemId;
+        this.sellerId = sellerId;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.currentPrice = currentPrice;
+        this.currentWinnerId = currentWinnerId;
+        this.status = status;
+        this.bidHistory = new ArrayList<>();
+        this.participants = new ArrayList<>();
+        this.antiSnipingEnabled = false;
+        this.antiSnipingExtensionSeconds = 0;
+        this.minIncrement = 1.0;
     }
 
-    public String isActive(){
+
+    public boolean isActive(){
         LocalDateTime now = LocalDateTime.now();
         return status == AuctionStatus.RUNNING && now.isAfter(startTime) && now.isBefore(endTime);
     }
 
-    public boolean canBid(String userId){
-        return isActive() && !userId.equals(sellerId);
+    public boolean canBid(String userId, double bidAmount){
+        return isActive() && !userId.equals(sellerId) && (bidAmount >= currentPrice + minIncrement);
     }
 
     public boolean addBid(BidTransaction bid){
-        if (canBid(bid.getBidderId()) && bid.getAmount() > currentPrice){
+        if (canBid(bid.getBidderId(), bid.getAmount()) && bid.getAmount() > currentPrice){
             currentPrice = bid.getAmount();
             currentWinnerId = bid.getBidderId();
             bidHistory.add(bid);
 
             //Anti-sniping: neu gan het gio thi gia han
-            if (antiSnipingEnabled && endTime.minusSeconds((long) antiSnipingExtensionSeconds).isBefore(bid.getTimestamp())){
+            if (antiSnipingEnabled && endTime.minusSeconds((long) antiSnipingExtensionSeconds)
+                    .isBefore(bid.getBidTime())) {
                 extendEndTime(antiSnipingExtensionSeconds);
             }
             return true;
@@ -57,34 +81,50 @@ public class Auction {
         this.endTime = this.endTime.plusSeconds((long) seconds);
     }
     //Getter & Setter
-    public String getItemId(){
-        return itemId;
-    }
-    public String getSellerId(){
-        return sellerId;
-    }
-    public double getCurrentPrice(){
-        return currentPrice;
-    }
-    public String getCurrentWinnerId(){
-        return currentWinnerId;
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public String getItemId() { return itemId; }
+    public void setItemId(String itemId) { this.itemId = itemId; }
+
+    public String getSellerId() { return sellerId; }
+    public void setSellerId(String sellerId) { this.sellerId = sellerId; }
+
+    public LocalDateTime getStartTime() { return startTime; }
+    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
+
+    public LocalDateTime getEndTime() { return endTime; }
+    public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
+
+    public double getCurrentPrice() { return currentPrice; }
+    public void setCurrentPrice(double currentPrice) { this.currentPrice = currentPrice; }
+
+    public String getCurrentWinnerId() { return currentWinnerId; }
+
+    public void setCurrentWinnerId(String currentWinnerId) { this.currentWinnerId = currentWinnerId; }
+
+    public AuctionStatus getStatus() { return status; }
+    public void setStatus(AuctionStatus status) { this.status = status; }
+
+    public List<BidTransaction> getBidHistory() { return bidHistory; }
+    public void setBidHistory(List<BidTransaction> bidHistory) { this.bidHistory = bidHistory; }
+
+    public List<String> getParticipants() { return participants; }
+    public void setParticipants(List<String> participants) { this.participants = participants; }
+
+    public boolean isAntiSnipingEnabled() { return antiSnipingEnabled; }
+    public void setAntiSnipingEnabled(boolean antiSnipingEnabled) { this.antiSnipingEnabled = antiSnipingEnabled; }
+
+    public double getAntiSnipingExtensionSeconds() { return antiSnipingExtensionSeconds; }
+    public void setAntiSnipingExtensionSeconds(double antiSnipingExtensionSeconds) {
+        this.antiSnipingExtensionSeconds = antiSnipingExtensionSeconds;
     }
 
-    public AuctionStatus getStatus() {
-        return status;
-    }
-    public List<BidTransaction> getBidHistory(){
-        return bidHistory;
-    }
-    public List<String> getParticipants(){
-        return participants;
-    }
+    public double getMinIncrement() { return minIncrement; }
+    public void setMinIncrement(double minIncrement) { this.minIncrement = minIncrement; }
 
-    public void setStatus(AuctionStatus status){
-        this.status = status;
-    }
-    public void enableAntiSniping(double extensionSeconds){
+    public void enableAntiSniping(double extensionSeconds) {
         this.antiSnipingEnabled = true;
-        this. antiSnipingExtensionSeconds = extensionSeconds;
+        this.antiSnipingExtensionSeconds = extensionSeconds;
     }
 }
