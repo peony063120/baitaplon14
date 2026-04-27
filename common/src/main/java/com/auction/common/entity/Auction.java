@@ -3,6 +3,7 @@ package com.auction.common.entity;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import com.auction.common.enums.AuctionStatus;
 
 public class Auction {
     private String itemId;
