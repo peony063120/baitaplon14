@@ -31,7 +31,7 @@ public class Auction {
         this.antiSnipingExtensionSeconds = 0;
     }
 
-    public String isActive(){
+    public boolean isActive(){
         LocalDateTime now = LocalDateTime.now();
         return status == AuctionStatus.RUNNING && now.isAfter(startTime) && now.isBefore(endTime);
     }
@@ -47,7 +47,7 @@ public class Auction {
             bidHistory.add(bid);
 
             //Anti-sniping: neu gan het gio thi gia han
-            if (antiSnipingEnabled && endTime.minusSeconds((long) antiSnipingExtensionSeconds).isBefore(bid.getTimestamp())){
+            if (antiSnipingEnabled && endTime.minusSeconds((long) antiSnipingExtensionSeconds).isBefore(bid.getBidTime())){
                 extendEndTime(antiSnipingExtensionSeconds);
             }
             return true;
