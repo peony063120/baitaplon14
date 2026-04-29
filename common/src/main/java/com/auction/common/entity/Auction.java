@@ -21,6 +21,7 @@ public class Auction {
     private boolean antiSnipingEnabled;
     private double antiSnipingExtensionSeconds;
     private double minIncrement;
+    private List<AutoBidConfig> autoBidConfigs = new ArrayList<>();
 
     public Auction(String itemId, LocalDateTime startTime, LocalDateTime endTime, double startingPrice) {
         this.id = UUID.randomUUID().toString();
@@ -127,5 +128,15 @@ public class Auction {
     public void enableAntiSniping(double extensionSeconds) {
         this.antiSnipingEnabled = true;
         this.antiSnipingExtensionSeconds = extensionSeconds;
+    }
+
+    // Thêm Getter để AutoBiddingStrategy có thể truy cập danh sách cấu hình
+    public List<AutoBidConfig> getAutoBidConfigs() {
+        return autoBidConfigs;
+    }
+
+    // Phương thức để thêm cấu hình mới cho phiên đấu giá này
+    public void addAutoBidConfig(AutoBidConfig config) {
+        this.autoBidConfigs.add(config);
     }
 }
