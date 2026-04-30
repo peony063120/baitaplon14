@@ -6,17 +6,15 @@ import java.util.List;
 
 /**
  * AuctionController - nhận request liên quan đến Auction từ ClientHandler,
- * ủy thác xử lí cho AuctionService.
+ * ủy thác xử lý cho AuctionService.
  *
- * Attributes (theo diagram):
- *  - auctionService: AuctionService
- *
- * Methods (theo diagram):
- *  + getAllAuctions(): List<AuctionDTO>
- *  + getAuction(id): AuctionDTO
- *  + createAuction(request): void
- *  + updateAuction(id, dto): void
- *  + deleteAuction(id): void
+ * Theo diagram server.html:
+ *   - auctionService: AuctionService
+ *   + getAllAuctions(): List<AuctionDTO>
+ *   + getAuction(id: String): AuctionDTO
+ *   + createAuction(request: AuctionDTO): void
+ *   + updateAuction(id: String, dto: AuctionDTO): void
+ *   + deleteAuction(id: String): void
  */
 public class AuctionController {
 
@@ -26,7 +24,7 @@ public class AuctionController {
         this.auctionService = auctionService;
     }
 
-    public List<AuctionDTO> getAuctions() {
+    public List<AuctionDTO> getAllAuctions() {
         return auctionService.getAllAuctions();
     }
 

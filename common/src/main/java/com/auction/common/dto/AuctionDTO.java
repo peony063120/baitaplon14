@@ -1,11 +1,13 @@
 package com.auction.common.dto;
 
 import com.auction.common.enums.AuctionStatus;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.Duration;
 
 public class AuctionDTO implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String id;
     private String itemId;
     private String itemName;
@@ -15,21 +17,39 @@ public class AuctionDTO implements Serializable {
     private AuctionStatus status;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private double startingPrice;
     private double currentPrice;
     private String currentWinnerId;
     private String currentWinnerName;
     private double minIncrement;
     private int totalBids;
+    private boolean antiSnipingEnabled;
+    private int antiSnipingExtensionSeconds;
 
+    // Constructors
     public AuctionDTO() {}
-    public AuctionDTO(String id, String itemId, String itemName, double currentPrice, AuctionStatus status, LocalDateTime endTime) {
+
+    public AuctionDTO(String id, String itemId, String itemName, String itemDescription,
+                      String sellerId, String sellerName, double startingPrice, double currentPrice,
+                      AuctionStatus status, LocalDateTime startTime, LocalDateTime endTime,
+                      double minIncrement, boolean antiSnipingEnabled, int antiSnipingExtensionSeconds) {
         this.id = id;
         this.itemId = itemId;
         this.itemName = itemName;
+        this.itemDescription = itemDescription;
+        this.sellerId = sellerId;
+        this.sellerName = sellerName;
+        this.startingPrice = startingPrice;
         this.currentPrice = currentPrice;
         this.status = status;
+        this.startTime = startTime;
         this.endTime = endTime;
+        this.minIncrement = minIncrement;
+        this.antiSnipingEnabled = antiSnipingEnabled;
+        this.antiSnipingExtensionSeconds = antiSnipingExtensionSeconds;
     }
+
+    // Getters and Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -57,6 +77,9 @@ public class AuctionDTO implements Serializable {
     public LocalDateTime getEndTime() { return endTime; }
     public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
 
+    public double getStartingPrice() { return startingPrice; }
+    public void setStartingPrice(double startingPrice) { this.startingPrice = startingPrice; }
+
     public double getCurrentPrice() { return currentPrice; }
     public void setCurrentPrice(double currentPrice) { this.currentPrice = currentPrice; }
 
@@ -72,11 +95,30 @@ public class AuctionDTO implements Serializable {
     public int getTotalBids() { return totalBids; }
     public void setTotalBids(int totalBids) { this.totalBids = totalBids; }
 
+    public boolean isAntiSnipingEnabled() { return antiSnipingEnabled; }
+    public void setAntiSnipingEnabled(boolean antiSnipingEnabled) { this.antiSnipingEnabled = antiSnipingEnabled; }
+
+    public int getAntiSnipingExtensionSeconds() { return antiSnipingExtensionSeconds; }
+    public void setAntiSnipingExtensionSeconds(int antiSnipingExtensionSeconds) { this.antiSnipingExtensionSeconds = antiSnipingExtensionSeconds; }
+
+    // Business logic methods (từ diagram)
     public boolean isActive() {
-        return (status == AuctionStatus.OPEN || status == AuctionStatus.RUNNING) && LocalDateTime.now().isBefore(endTime);
+        if (endTime == null) return false;
+        return (status == AuctionStatus.OPEN || status == AuctionStatus.RUNNING)
+                && LocalDateTime.now().isBefore(endTime);
     }
+
+    public boolean canBid(String userId) {
+        if (userId == null) return false;
+        if (!isActive()) return false;
+        // Người dùng không được là seller và không được là người thắng hiện tại (nếu có)
+        if (sellerId != null && sellerId.equals(userId)) return false;
+        if (currentWinnerId != null && currentWinnerId.equals(userId)) return false;
+        return true;
+    }
+
     public long getRemainingTimeMillis() {
         if (endTime == null) return 0;
-        return Math.max(0, java.time.Duration.between(LocalDateTime.now(), endTime).toMillis());
+        return Math.max(0, Duration.between(LocalDateTime.now(), endTime).toMillis());
     }
 }
