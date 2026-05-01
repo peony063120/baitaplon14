@@ -3,50 +3,44 @@ package com.auction.common.entity;
 import java.time.LocalDateTime;
 
 public class AutoBidConfig {
-    private String userId;
-    private double maxBid;//luu lai gioi han cao nhat ma nguoi dung san sang tra
-    private double increment;//khoang gia cong vao them moi khi co nguoi tra gia cao hon
+    private String id; // có thể thêm id
+    private String auctionId;
+    private String bidderId; // thay vì userId
+    private double maxBid;
+    private double increment;
     private LocalDateTime createdAt;
+    private boolean active;
 
-    //Constructor
-    public AutoBidConfig(String userId,double maxBid, double increment) {
-        this.userId = userId;
+    // Constructor
+    public AutoBidConfig(String auctionId, String bidderId, double maxBid, double increment) {
+        this.id = java.util.UUID.randomUUID().toString();
+        this.auctionId = auctionId;
+        this.bidderId = bidderId;
         this.maxBid = maxBid;
         this.increment = increment;
         this.createdAt = LocalDateTime.now();
+        this.active = true;
     }
 
-    //Tinh toan muc gia thau tiep theo dua tren gia hien tai
-    //Nhap vao gia hien tai va tra ve gia moi.
     public double getNextBid(double currentPrice) {
         return currentPrice + increment;
     }
 
-    //Kiem tra xem co the tiep tuc dat thau hay khong
-    //Gia tiep theo khong duoc vuot qua maxBid
-    //Tra ve true neu viec nang gia van nam trong gioi han cho phep, nguoc lai tra ve false
     public boolean canBid(double currentPrice) {
         return (currentPrice + increment <= maxBid);
     }
 
-    //Getter & Setter
-    public double getMaxBid() {
-        return maxBid;
-    }
-
-    public void setMaxBid(double maxBid) {
-        this.maxBid = maxBid;
-    }
-
-    public double getIncrement() {
-        return increment;
-    }
-
-    public void setIncrement(double increment) {
-        this.increment = increment;
-    }
-
-    public String getUserId() { return userId; }
-
+    // Getters & Setters
+    public String getId() { return id; }
+    public String getAuctionId() { return auctionId; }
+    public void setAuctionId(String auctionId) { this.auctionId = auctionId; }
+    public String getBidderId() { return bidderId; }
+    public void setBidderId(String bidderId) { this.bidderId = bidderId; }
+    public double getMaxBid() { return maxBid; }
+    public void setMaxBid(double maxBid) { this.maxBid = maxBid; }
+    public double getIncrement() { return increment; }
+    public void setIncrement(double increment) { this.increment = increment; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 }
