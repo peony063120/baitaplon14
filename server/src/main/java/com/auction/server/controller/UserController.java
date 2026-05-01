@@ -2,22 +2,22 @@ package com.auction.server.controller;
 
 import com.auction.common.dto.LoginRequest;
 import com.auction.common.dto.LoginResponse;
-import com.auction.common.dto.UserDTO
+import com.auction.common.dto.UserDTO;
 import com.auction.server.service.UserService;
 
 /**
  * UserController - nhận request liên quan đến User từ ClientHandler,
  * ủy thác xử lí cho UserService.
- *
+ * <p>
  * Attributes (theo diagram):
- *  - userService: UserService
- *
+ * - userService: UserService
+ * <p>
  * Methods (theo diagram):
- *  + register(request: UserDTO): void
- *  + login(request: LoginRequest): LoginResponse
- *  + getUserProfile(userId: String): UserDTO
- *  + updateProfile(userId: String, dto: UserDTO): void
- *  + addBalance(userId: String, amount: double): void
+ * + register(request: UserDTO): void
+ * + login(request: LoginRequest): LoginResponse
+ * + getUserProfile(userId: String): UserDTO
+ * + updateProfile(userId: String, dto: UserDTO): void
+ * + addBalance(userId: String, amount: double): void
  */
 public class UserController {
 
