@@ -1,13 +1,19 @@
 package com.auction.common.entity;
 
+import java.time.LocalDateTime;
+
 public class AutoBidConfig {
+    private String userId;
     private double maxBid;//luu lai gioi han cao nhat ma nguoi dung san sang tra
     private double increment;//khoang gia cong vao them moi khi co nguoi tra gia cao hon
+    private LocalDateTime createdAt;
 
     //Constructor
-    public AutoBidConfig(double maxBid, double increment) {
+    public AutoBidConfig(String userId,double maxBid, double increment) {
+        this.userId = userId;
         this.maxBid = maxBid;
         this.increment = increment;
+        this.createdAt = LocalDateTime.now();
     }
 
     //Tinh toan muc gia thau tiep theo dua tren gia hien tai
@@ -39,4 +45,8 @@ public class AutoBidConfig {
     public void setIncrement(double increment) {
         this.increment = increment;
     }
+
+    public String getUserId() { return userId; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
 }

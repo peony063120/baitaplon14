@@ -12,7 +12,7 @@ public class Art extends Item {
     private double height;  // cm
     private double width;   // cm
 
-    public Art() {
+    public Art(String name, String description, double startingPrice, String sellerId, String artist, int year, String medium) {
         super();
     }
 

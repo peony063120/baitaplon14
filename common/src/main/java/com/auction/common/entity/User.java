@@ -1,5 +1,5 @@
 package com.auction.common.entity;
-abstract class User extends Entity {
+public abstract class User extends Entity {
     private String username;
     private String password;
     private String email;

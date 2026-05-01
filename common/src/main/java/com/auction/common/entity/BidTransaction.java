@@ -14,7 +14,7 @@ public class BidTransaction {
         this.auctionId = auctionId;
         this.bidderId = bidderId;
         this.amount = amount;
-        this.bidTime = (bidTime != null) ? bidTime : LocalDateTime.now();
+        this.bidTime = LocalDateTime.now();
         this.autoBid = autoBid;
     }
 
