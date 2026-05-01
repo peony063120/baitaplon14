@@ -42,7 +42,6 @@ public class AuctionDAO {
       if (currentInDb == null || auction.getCurrentPrice() > currentInDb.getCurrentPrice()) {
         auctionCache.put(auction.getId(), auction);
       }
-      // Nếu giá mới thấp hơn hoặc bằng giá hiện tại, ta không làm gì để bảo vệ dữ liệu.
     }
   }
 
