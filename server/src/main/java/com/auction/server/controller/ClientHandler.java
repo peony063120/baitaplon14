@@ -160,17 +160,17 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleSubscribe() {
-        auctionSubject.attach(clientObserver);
+        auctionSubject.registerObserver(clientObserver);
         out.println("SUBSCRIBED");
     }
 
     private void handleUnsubscribe() {
-        auctionSubject.detach(clientObserver);
+        auctionSubject.removeObserver(clientObserver);
         out.println("UNSUBSCRIBED");
     }
 
     private void cleanup() {
-        auctionSubject.detach(clientObserver);
+        auctionSubject.removeObserver(clientObserver);
         try {
             if (!socket.isClosed()) socket.close();
         } catch (Exception e) {
