@@ -1,37 +1,64 @@
 package com.auction.server.service;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Quản lý truy cập đồng thời để tránh Race Conditions.
- * Sử dụng ConcurrentHashMap để lưu trữ các Lock cho từng phiên đấu giá.
- */
 public class ConcurrentBidManager {
-    // Map lưu trữ Lock cho mỗi AuctionId để đảm bảo nhiều người không update 1 auction cùng lúc
-    private ConcurrentHashMap<String, ReentrantLock> auctionLocks;
+    private ConcurrentMap<String, ReentrantLock> bidLocks;
+    private ExecutorService executor;
 
     public ConcurrentBidManager() {
-        this.auctionLocks = new ConcurrentHashMap<>();
+        this.bidLocks = new ConcurrentHashMap<>();
+        // Khởi tạo một Thread Pool (ví dụ 10 threads) để xử lý các task đặt thầu
+        this.executor = Executors.newFixedThreadPool(10);
     }
 
     /**
-     * Lấy hoặc tạo mới một Lock cho phiên đấu giá cụ thể.
-     *
-     * @param auctionId ID của phiên đấu giá
-     * @return ReentrantLock đối tượng dùng để khóa
+     * executeBid(auctionId: String, task: Runnable): void
+     * Thực thi một tác vụ đặt thầu đảm bảo an toàn luồng cho từng Auction.
      */
-    public ReentrantLock getLock(String auctionId) {
-        // Nếu chưa có lock cho auctionId này thì tạo mới, nếu có rồi thì lấy ra
-        return auctionLocks.computeIfAbsent(auctionId, k -> new ReentrantLock());
+    public void executeBid(String auctionId, Runnable task) {
+        // Lấy hoặc tạo lock cho auctionId
+        ReentrantLock lock = bidLocks.computeIfAbsent(auctionId, k -> new ReentrantLock());
+
+        // Gửi task vào executor để xử lý bất đồng bộ
+        executor.execute(() -> {
+            lock.lock();
+            try {
+                task.run(); // Chạy logic đặt thầu (ví dụ: trừ tiền, cập nhật giá)
+            } finally {
+                lock.unlock();
+            }
+        });
     }
 
-    // Getter và Setter theo yêu cầu sơ đồ
-    public ConcurrentHashMap<String, ReentrantLock> getAuctionLocks() {
-        return auctionLocks;
+    /**
+     * shutdown(): void
+     * Dừng toàn bộ các task đang chạy khi hệ thống đóng.
+     */
+    public void shutdown() {
+        if (executor != null) {
+            executor.shutdown();
+        }
     }
 
-    public void setAuctionLocks(ConcurrentHashMap<String, ReentrantLock> locks) {
-        this.auctionLocks = locks;
+    // Getter & Setter
+    public ConcurrentMap<String, ReentrantLock> getBidLocks() {
+        return bidLocks;
+    }
+
+    public void setBidLocks(ConcurrentMap<String, ReentrantLock> bidLocks) {
+        this.bidLocks = bidLocks;
+    }
+
+    public ExecutorService getExecutor() {
+        return executor;
+    }
+
+    public void setExecutor(ExecutorService executor) {
+        this.executor = executor;
     }
 }

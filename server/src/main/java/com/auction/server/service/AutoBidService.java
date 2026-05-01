@@ -1,26 +1,31 @@
 package com.auction.server.service;
 
-import com.auction.common.dto.AutoBidRequest;
-
+import com.auction.common.entity.Auction;
+import com.auction.common.entity.AutoBidConfig;
 import java.util.PriorityQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
-/**
- *Quản lý tính năng tự động đặt giá. Việc sử dụng PriorityQueue (Hàng đợi ưu tiên) gợi ý rằng các lệnh tự động đặt giá được sắp xếp
- *    theo mức giá hoặc thời gian để xử lý tối ưu.
- */
 public class AutoBidService {
-    private PriorityQueue<AutoBidRequest> autoBidQueue;
+    private PriorityQueue<AutoBidConfig> autoBidQueue;
+    private ScheduledExecutorService scheduler;
 
     public AutoBidService() {
         this.autoBidQueue = new PriorityQueue<>((a, b) -> Double.compare(b.getMaxBid(), a.getMaxBid()));
+        this.scheduler = Executors.newScheduledThreadPool(5);
     }
 
-    // Getters & Setters
-    public PriorityQueue<AutoBidRequest> getAutoBidQueue() {
-        return autoBidQueue;
+    public void registerAutoBid(AutoBidConfig config) {
+        autoBidQueue.add(config);
     }
 
-    public void setAutoBidQueue(PriorityQueue<AutoBidRequest> autoBidQueue) {
-        this.autoBidQueue = autoBidQueue;
+    public void processAutoBids(Auction auction) {
+        // Duyệt qua hàng đợi và thực hiện đặt giá tự động nếu đủ điều kiện
+    }
+
+    public void cancelAutoBid(String auctionId, String userId) {
+        autoBidQueue.removeIf(config ->
+                config.getAuctionId().equals(auctionId) && config.getAuctionId().equals(userId)
+        );
     }
 }

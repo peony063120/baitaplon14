@@ -1,21 +1,31 @@
 package com.auction.server.service;
 
-/**
- * Gửi thông báo cho người dùng (ví dụ: khi bị vượt giá,
- *      khi thắng cuộc, hoặc khi cuộc đấu giá sắp kết thúc).
- */
+import com.auction.common.entity.Auction;
+import com.auction.common.observer.AuctionSubject;
+import com.auction.common.observer.ClientObserver;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class NotificationService {
-    private String lastMessage;
+    private AuctionSubject subject;
+    private Map<String, ClientObserver> clientObservers;
 
-    public void send(String userId, String msg) {
+    public NotificationService() {
+        this.subject = new AuctionSubject();
+        this.clientObservers = new HashMap<>();
     }
 
-    // Getters & Setters
-    public String getLastMessage() {
-        return lastMessage;
+    public void sendBidUpdate(Auction auction) {
+        subject.notifyObservers(auction);
     }
 
-    public void setLastMessage(String lastMessage) {
-        this.lastMessage = lastMessage;
+    public void sendAuctionEndNotification(Auction auction) {
+        subject.notifyObservers(auction);
+    }
+
+    public void registerObserver(String clientId, ClientObserver observer) {
+        clientObservers.put(clientId, observer);
+        subject.registerObserver(observer);
     }
 }

@@ -1,41 +1,41 @@
 package com.auction.server.service;
 
 import com.auction.common.dto.BidRequest;
-import com.auction.common.dto.AutoBidRequest;
-import com.auction.common.entity.BidTransaction;
+import com.auction.common.entity.Auction;
+import com.auction.common.strategy.BiddingStrategy;
+import com.auction.server.dao.AuctionDAO;
 import com.auction.server.dao.BidTransactionDAO;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.auction.common.observer.AuctionSubject;
 
 public class BiddingService {
-    private BidTransactionDAO bidDAO;
+    private final AuctionDAO auctionDAO;
+    private final BidTransactionDAO bidDAO;
+    private BiddingStrategy strategy;
+    private AuctionSubject subject;
+    private AntiSnipingService antiSnipingService;
 
     public BiddingService() {
+        this.auctionDAO = AuctionDAO.getInstance();
         this.bidDAO = BidTransactionDAO.getInstance();
+
+        // Khởi tạo các thành phần liên quan (Giả định)
+        this.subject = new AuctionSubject();
+        this.antiSnipingService = new AntiSnipingService();
     }
 
     public synchronized void placeBid(BidRequest request) {
-        // Logic đồng bộ hóa xử lý đặt giá
+        Auction auction = auctionDAO.getAuction(request.getAuctionId());
+        if (strategy != null) {
+            strategy.execute(auction, request);
+        }
     }
 
-    public List<BidTransaction> getBidHistory(String auctionId) {
-        return new ArrayList<BidTransaction>();
+    public void setStrategy(BiddingStrategy strategy) {
+        this.strategy = strategy;
     }
 
-    public void configureAutoBid(AutoBidRequest request) {
-    }
-
-    public void cancelAutoBid(String auctionId, String userId) {
-    }
-
-    // Getters & Setters
     public BidTransactionDAO getBidDAO() {
         return bidDAO;
-    }
-
-    public void setBidDAO(BidTransactionDAO bidDAO) {
-        this.bidDAO = bidDAO;
     }
 }
 /**
