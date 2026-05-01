@@ -9,6 +9,9 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 public class AutoBiddingStrategy implements BiddingStrategy {
   private static final Logger logger = LoggerFactory.getLogger(AutoBiddingStrategy.class);
@@ -21,28 +24,33 @@ public class AutoBiddingStrategy implements BiddingStrategy {
       List<AutoBidConfig> configs = auction.getAutoBidConfigs();
       if (configs == null || configs.isEmpty()) return false;
 
-      // ưu tiên theo thời điểm đăng ký
+      // sắp xếp theo thời gian tạo (ưu tiên đăng ký sớm hơn)
       configs.sort(Comparator.comparing(AutoBidConfig::getCreatedAt));
 
       boolean hasChange;
       do {
         hasChange = false;
         for (AutoBidConfig config : configs) {
-          if (config.getUserId().equals(auction.getCurrentWinnerId())) continue;
+          // SỬA: dùng getBidderId() thay vì getUserId()
+          if (config.getBidderId().equals(auction.getCurrentWinnerId())) continue;
 
           if (config.canBid(auction.getCurrentPrice())) {
             double nextBid = config.getNextBid(auction.getCurrentPrice());
 
-            // Cập nhật trạng thái an toàn trong Lock (Chống rollback / Lost update)
+            // Cập nhật auction
             auction.setCurrentPrice(nextBid);
-            auction.setCurrentWinnerId(config.getUserId());
+            auction.setCurrentWinnerId(config.getBidderId());
             auction.getBidHistory().add(new BidTransaction(
-                auction.getId(), config.getUserId(), nextBid, LocalDateTime.now(), true
+                    auction.getId(),
+                    config.getBidderId(),
+                    nextBid,
+                    LocalDateTime.now(),
+                    true
             ));
 
-            logger.info("[AUTO-REACTION] - Nâng giá lên {} cho người dùng {}", nextBid, config.getUserId());
+            logger.info("[AUTO-REACTION] Ra giá {} cho người dùng {}", nextBid, config.getBidderId());
             hasChange = true;
-            break; // Quay lại đầu danh sách để đảm bảo tính ưu tiên
+            break; // quay lại vòng lặp để đảm bảo ưu tiên
           }
         }
       } while (hasChange);

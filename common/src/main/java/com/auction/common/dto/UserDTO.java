@@ -1,10 +1,14 @@
 package com.auction.common.dto;
 
+import com.auction.common.entity.Bidder;
+import com.auction.common.entity.User;
+
 import java.io.Serializable;
 
 public class UserDTO implements Serializable {
     private String id;
     private String username;
+    private String password;
     private String email;
     private String fullName;
     private String role;
@@ -15,9 +19,10 @@ public class UserDTO implements Serializable {
     private double totalRevenue;
 
     public UserDTO() {}
-    public UserDTO(String id, String username, String email, String fullName, String role, double balance) {
+    public UserDTO(String id, String username, String password, String email, String fullName, String role, double balance) {
         this.id = id;
         this.username = username;
+        this.password = password;
         this.email = email;
         this.fullName = fullName;
         this.role = role;
@@ -27,6 +32,9 @@ public class UserDTO implements Serializable {
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }

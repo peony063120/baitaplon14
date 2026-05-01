@@ -3,6 +3,9 @@ package com.auction.server.controller;
 import com.auction.common.dto.LoginRequest;
 import com.auction.common.dto.LoginResponse;
 import com.auction.common.dto.UserDTO;
+import com.auction.common.exception.AuctionException;
+import com.auction.common.exception.AuctionNotFoundException;
+import com.auction.common.exception.InvalidBidException;
 import com.auction.server.service.UserService;
 
 /**
@@ -40,10 +43,21 @@ public class UserController {
     }
 
     public void updateProfile(String userId, UserDTO dto) {
-        userService.updateProfile(userId, dto);
+        try {
+            userService.updateProfile(userId, dto);
+        } catch (AuctionNotFoundException e) {
+            // Xử lý lỗi: log hoặc gửi phản hồi lỗi về client
+            e.printStackTrace();
+        }
     }
 
     public void addBalance(String userId, double amount) {
-        userService.addBalance(userId, amount);
+        try {
+            userService.addBalance(userId, amount);
+        } catch (InvalidBidException e) {
+            e.printStackTrace();
+        } catch (AuctionException e) {  // bắt cả AuctionNotFoundException và AuctionException
+            e.printStackTrace();
+        }
     }
 }

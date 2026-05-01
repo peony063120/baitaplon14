@@ -5,18 +5,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DatabaseConnection {
   private static volatile DatabaseConnection instance;
-  private final Connection connection;
+  private final Map<String, Map<String, Object>> storage;
 
   private DatabaseConnection() {
-    final Map<String, Map<?, ?>> masterStorage = new ConcurrentHashMap<>();
-
-    this.connection = new Connection() {
-      @Override
-      @SuppressWarnings("unchecked")
-      public <K, V> Map<K, V> getTable(String tableName) {
-        return (Map<K, V>) masterStorage.computeIfAbsent(tableName, k -> new ConcurrentHashMap<>());
-      }
-    };
+    storage = new ConcurrentHashMap<>();
   }
 
   public static DatabaseConnection getInstance() {
@@ -30,7 +22,12 @@ public class DatabaseConnection {
     return instance;
   }
 
-  public Connection getConnection() {
-    return this.connection;
+  @SuppressWarnings("unchecked")
+  public <T> Map<String, T> getTable(String tableName) {
+    return (Map<String, T>) storage.computeIfAbsent(tableName, k -> new ConcurrentHashMap<>());
+  }
+
+  public void closeConnection() {
+    storage.clear();
   }
 }

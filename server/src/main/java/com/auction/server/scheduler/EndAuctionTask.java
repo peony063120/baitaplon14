@@ -44,7 +44,7 @@ public class EndAuctionTask implements Runnable {
             auction.setStatus(AuctionStatus.FINISHED);
             auctionDAO.saveAuction(auction);
             AuctionManager.getInstance().endAuction(auctionId);
-            System.out.println("Auction " + auctionId + " has ended. Winner: " + auction.getCurrentWinner());
+            System.out.println("Auction " + auctionId + " has ended. Winner: " + auction.getCurrentWinnerId());
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.auction.server.dao;
 
 import com.auction.common.entity.Auction;
+import java.util.Collection;
 import java.util.Map;
 
 public class AuctionDAO {
@@ -8,7 +9,7 @@ public class AuctionDAO {
   private final Map<String, Auction> auctionCache;
 
   private AuctionDAO() {
-    this.auctionCache = DatabaseConnection.getInstance().getConnection().getTable("AUCTIONS");
+    this.auctionCache = DatabaseConnection.getInstance().getTable("AUCTIONS");
   }
 
   public static AuctionDAO getInstance() {
@@ -22,36 +23,26 @@ public class AuctionDAO {
     return instance;
   }
 
-  /**
-   * Lưu hoặc cập nhật phiên đấu giá.
-   * Xử lý trường hợp hàng triệu người cùng đấu giá (Concurrent Bidding).
-   */
   public void saveAuction(Auction auction) {
-    if (auction == null || auction.getId() == null) {
-      return;
-    }
-
-    /**
-     * Khóa theo ID phiên đấu giá để đảm bảo tính tuần tự khi cập nhật giá.
-     * Ngăn chặn việc giá thấp ghi đè lên giá cao do trễ mạng.
-     */
+    if (auction == null || auction.getId() == null) return;
     synchronized (auction.getId().intern()) {
-      Auction currentInDb = auctionCache.get(auction.getId());
-
-      // Nếu là phiên đấu giá mới hoặc có giá cao hơn giá hiện tại trong DB.
-      if (currentInDb == null || auction.getCurrentPrice() > currentInDb.getCurrentPrice()) {
+      Auction current = auctionCache.get(auction.getId());
+      if (current == null || auction.getCurrentPrice() > current.getCurrentPrice()) {
         auctionCache.put(auction.getId(), auction);
       }
     }
   }
 
-  /**
-   * Lấy thông tin phiên đấu giá từ kho lưu trữ tập trung.
-   */
   public Auction getAuction(String id) {
-    if (id == null) {
-      return null;
-    }
+    if (id == null) return null;
     return auctionCache.get(id);
+  }
+
+  public Collection<Auction> getAllAuctions() {
+    return auctionCache.values();
+  }
+
+  public void deleteAuction(String id) {
+    if (id != null) auctionCache.remove(id);
   }
 }

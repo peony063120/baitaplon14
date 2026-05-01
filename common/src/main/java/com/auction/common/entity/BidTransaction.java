@@ -1,60 +1,53 @@
 package com.auction.common.entity;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class BidTransaction {
+public class BidTransaction implements Serializable {
+    private String transactionId;
     private String auctionId;
     private String bidderId;
     private double amount;
     private LocalDateTime bidTime;
     private boolean autoBid;
 
-    // Constructor
-    public BidTransaction(String auctionId, String bidderId, double amount, LocalDateTime bidTime, boolean autoBid) {
+    // Constructor đầy đủ với transactionId
+    public BidTransaction(String transactionId, String auctionId, String bidderId,
+                          double amount, LocalDateTime bidTime, boolean autoBid) {
+        this.transactionId = transactionId;
         this.auctionId = auctionId;
         this.bidderId = bidderId;
         this.amount = amount;
-        this.bidTime = LocalDateTime.now();
+        this.bidTime = bidTime;      // ← sửa: dùng tham số thay vì LocalDateTime.now()
         this.autoBid = autoBid;
     }
 
-    // Getter
-    public String getAuctionId() {
-        return auctionId;
+    // Constructor rút gọn (nếu không cần transactionId, tự sinh UUID)
+    public BidTransaction(String auctionId, String bidderId, double amount, LocalDateTime bidTime, boolean autoBid) {
+        this(java.util.UUID.randomUUID().toString(), auctionId, bidderId, amount, bidTime, autoBid);
     }
 
-    public String getBidderId() {
-        return bidderId;
-    }
+    // Getters
+    public String getTransactionId() { return transactionId; }
+    public String getAuctionId() { return auctionId; }
+    public String getBidderId() { return bidderId; }
+    public double getAmount() { return amount; }
+    public LocalDateTime getBidTime() { return bidTime; }
+    public boolean isAutoBid() { return autoBid; }
 
-    public double getAmount() {
-        return amount;
-    }
-
-    public LocalDateTime getBidTime() {
-        return bidTime;
-    }
-
-    public boolean isAutoBid() {
-        return autoBid;
-    }
-
-    // Setter
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
-
-    public void setAutoBid(boolean autoBid) {
-        this.autoBid = autoBid;
-    }
+    // Setters
+    public void setAmount(double amount) { this.amount = amount; }
+    public void setAutoBid(boolean autoBid) { this.autoBid = autoBid; }
 
     @Override
     public String toString() {
         return "BidTransaction{" +
-                "auctionId='" + auctionId + '\'' +
+                "transactionId='" + transactionId + '\'' +
+                ", auctionId='" + auctionId + '\'' +
                 ", bidderId='" + bidderId + '\'' +
                 ", amount=" + amount +
                 ", bidTime=" + bidTime +
                 ", autoBid=" + autoBid +
                 '}';
     }
+}

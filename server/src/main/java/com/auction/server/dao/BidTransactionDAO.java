@@ -14,29 +14,38 @@ public class BidTransactionDAO {
   public void saveBidTransaction(BidTransaction tx) {
     if (tx == null || tx.getAuctionId() == null || tx.getBidderId() == null) return;
 
-    Map<String, Queue<BidTransaction>> storage = DatabaseConnection.getInstance().getConnection().getTable("BID_HISTORY");
-    Map<String, Queue<BidTransaction>> index = DatabaseConnection.getInstance().getConnection().getTable("BIDDER_INDEX");
+    Map<String, Queue<BidTransaction>> storage = DatabaseConnection.getInstance().getTable("BID_HISTORY");
+    Map<String, Queue<BidTransaction>> index = DatabaseConnection.getInstance().getTable("BIDDER_INDEX");
 
-    // Defensive Copy: Bảo vệ dữ liệu gốc khỏi việc bị sửa đổi bên ngoài DAO.
+    // Clone để tránh bị sửa đổi sau khi lưu
     BidTransaction cloned = new BidTransaction(
-        tx.getAuctionId(), tx.getBidderId(), tx.getAmount(), tx.getBidTime(), tx.isAutoBid()
+            tx.getAuctionId(), tx.getBidderId(), tx.getAmount(), tx.getBidTime(), tx.isAutoBid()
     );
+    // Có thể cần set auctionId nếu có
+    cloned.setTransactionId(tx.getTransactionId());
 
-    // Lưu lịch sử theo sản phẩm và theo người dùng.
     storage.computeIfAbsent(cloned.getAuctionId(), k -> new ConcurrentLinkedQueue<>()).add(cloned);
     index.computeIfAbsent(cloned.getBidderId(), k -> new ConcurrentLinkedQueue<>()).add(cloned);
   }
 
   public List<BidTransaction> getBidHistory(String auctionId) {
-    Map<String, Queue<BidTransaction>> storage = DatabaseConnection.getInstance().getConnection().getTable("BID_HISTORY");
+    Map<String, Queue<BidTransaction>> storage = DatabaseConnection.getInstance().getTable("BID_HISTORY");
     Queue<BidTransaction> queue = storage.get(auctionId);
     if (queue == null) return Collections.emptyList();
 
-    // Trả về bản sao để bên ngoài (như UI) không can thiệp được vào dữ liệu gốc.
     List<BidTransaction> result = new ArrayList<>();
     for (BidTransaction tx : queue) {
-      result.add(new BidTransaction(tx.getAuctionId(), tx.getBidderId(), tx.getAmount(), tx.getBidTime(), tx.isAutoBid()));
+      result.add(new BidTransaction(
+              tx.getAuctionId(), tx.getBidderId(), tx.getAmount(), tx.getBidTime(), tx.isAutoBid()
+      ));
     }
     return result;
+  }
+
+  public List<BidTransaction> getBidsByUser(String userId) {
+    Map<String, Queue<BidTransaction>> index = DatabaseConnection.getInstance().getTable("BIDDER_INDEX");
+    Queue<BidTransaction> queue = index.get(userId);
+    if (queue == null) return Collections.emptyList();
+    return new ArrayList<>(queue);
   }
 }

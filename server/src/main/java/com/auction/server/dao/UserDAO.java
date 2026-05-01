@@ -5,6 +5,7 @@ import java.util.Map;
 
 public class UserDAO {
   private static volatile UserDAO instance;
+
   private UserDAO() {}
 
   public static UserDAO getInstance() {
@@ -18,20 +19,24 @@ public class UserDAO {
 
   public void saveUser(User user) {
     if (user == null || user.getUsername() == null) {
-      throw new IllegalArgumentException("Dữ liệu người dùng không hợp lệ."); // Xử lý lỗi đầu vào
+      throw new IllegalArgumentException("Invalid user data.");
     }
-
-    Map<String, User> table = DatabaseConnection.getInstance().getConnection().getTable("USERS");
-
-    // Đảm bảo không ghi đè người dùng đã tồn tại (Atomicity)
+    Map<String, User> table = DatabaseConnection.getInstance().getTable("USERS");
     if (table.putIfAbsent(user.getUsername(), user) != null) {
-      throw new IllegalArgumentException("Tên đăng nhập đã tồn tại.");
+      throw new IllegalArgumentException("Username already exists.");
     }
   }
 
   public User findUserByUsername(String username) {
     if (username == null) return null;
-    Map<String, User> table = DatabaseConnection.getInstance().getConnection().getTable("USERS");
+    Map<String, User> table = DatabaseConnection.getInstance().getTable("USERS");
     return table.get(username);
+  }
+
+  public User findUserById(String userId) {
+    // Nếu ID là username, có thể dùng findUserByUsername
+    // Hoặc nếu bạn lưu theo ID riêng, cần tạo map riêng
+    // Ở đây giả sử userId chính là username
+    return findUserByUsername(userId);
   }
 }

@@ -1,51 +1,97 @@
 package com.auction.server.service;
 
+import com.auction.common.dto.LoginResponse;
 import com.auction.common.dto.UserDTO;
+import com.auction.common.entity.Bidder;
 import com.auction.common.entity.User;
+import com.auction.common.exception.AuctionException;
+import com.auction.common.exception.AuctionNotFoundException;
+import com.auction.common.exception.InvalidBidException;
 import com.auction.server.dao.UserDAO;
 
 /**
- * UserService.java: Xử lý các nghiệp vụ liên quan đến người dùng
- * như đăng ký, đăng nhập và quản lý tài khoản.
+ * UserService - Xử lý nghiệp vụ người dùng.
  */
 public class UserService {
     private UserDAO userDAO;
-    private Object passwordEncoder;
 
     public UserService() {
         this.userDAO = UserDAO.getInstance();
-        this.passwordEncoder = new Object();
     }
 
+    // Đăng ký (giữ nguyên logic cũ)
     public void register(UserDTO request) {
-        // Dùng class cụ thể Member thay vì lớp ẩn
         User newUser = new Member(
                 request.getUsername(),
                 request.getPassword(),
                 request.getEmail(),
                 request.getFullName()
         );
-
         userDAO.saveUser(newUser);
     }
 
-    public UserDTO authenticate(String username, String password) {
+    // Xác thực (giữ nguyên)
+    public LoginResponse authenticate(String username, String password) {
         User user = userDAO.findUserByUsername(username);
         if (user != null && user.authenticate(password)) {
-            UserDTO dto = new UserDTO();
-            dto.setId(user.getUsername());
-            dto.setUsername(user.getUsername());
-            return dto;
+            String sessionToken = java.util.UUID.randomUUID().toString();
+            double balance = (user instanceof Bidder) ? ((Bidder) user).getBalance() : 0.0;
+            return new LoginResponse(true, "Đăng nhập thành công",
+                    user.getUsername(), user.getUsername(), user.getRole(),
+                    sessionToken, balance);
         }
-        return null;
+        return new LoginResponse(false, "Sai tên đăng nhập hoặc mật khẩu");
     }
-
+    // Lấy thông tin user (đã fix)
     public UserDTO getUserById(String userId) {
-        return new UserDTO();//lấy thông tin chi tiết
+        User user = userDAO.findUserByUsername(userId);
+        if (user == null) return null;
+
+        UserDTO dto = new UserDTO();
+        dto.setId(user.getUsername());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        dto.setFullName(user.getFullName());
+        dto.setRole(user.getRole());
+        if (user instanceof Bidder) {
+            dto.setBalance(((Bidder) user).getBalance());
+        }
+        dto.setActive(user.isActive());
+        return dto;
     }
 
+    // Cập nhật profile – ném exception nếu cần
+    public void updateProfile(String userId, UserDTO dto) throws AuctionNotFoundException {
+        User user = userDAO.findUserByUsername(userId);
+        if (user == null) {
+            throw new AuctionNotFoundException("User not found: " + userId);
+        }
+        // Chỉ cập nhật các field cho phép
+        user.setEmail(dto.getEmail());
+        user.setFullName(dto.getFullName());
+        // Không update password, role
+        userDAO.saveUser(user);   // dùng saveUser thay vì updateUser
+    }
 
-    // Getters & Setters
+    // Nạp tiền – ném exception nếu có lỗi
+    public void addBalance(String userId, double amount)
+            throws InvalidBidException, AuctionNotFoundException, AuctionException {
+        if (amount <= 0) {
+            throw new InvalidBidException("Amount must be positive");
+        }
+        User user = userDAO.findUserByUsername(userId);
+        if (user == null) {
+            throw new AuctionNotFoundException("User not found: " + userId);
+        }
+        if (!(user instanceof Bidder)) {
+            throw new AuctionException("Only bidders can add balance");
+        }
+        Bidder bidder = (Bidder) user;
+        bidder.addBalance(amount);
+        userDAO.saveUser(bidder);   // dùng saveUser
+    }
+
+    // Getter/Setter (nếu cần)
     public UserDAO getUserDAO() {
         return userDAO;
     }
@@ -53,15 +99,15 @@ public class UserService {
     public void setUserDAO(UserDAO userDAO) {
         this.userDAO = userDAO;
     }
-}
-/// định nghĩa class Member
-class Member extends User {
-    public Member(String username, String password, String email, String fullName) {
-        super(username, password, email, fullName);
-    }
 
-    @Override
-    public String getRole() {
-        return "MEMBER";
+    // Inner class Member (giữ nguyên)
+    private static class Member extends User {
+        public Member(String username, String password, String email, String fullName) {
+            super(username, password, email, fullName);
+        }
+        @Override
+        public String getRole() {
+            return "MEMBER";
+        }
     }
 }
