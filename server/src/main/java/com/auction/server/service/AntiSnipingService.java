@@ -1,6 +1,8 @@
 package com.auction.server.service;
 
 import com.auction.common.entity.Auction;
+import com.auction.server.config.AntiSnipingConfig;
+import com.auction.server.scheduler.AuctionScheduler;
 
 /**
  * AntiSnipingService: Tự động gia hạn thời gian đấu giá nếu có lượt đặt thầu phút chót.
@@ -10,8 +12,8 @@ public class AntiSnipingService {
     private AuctionScheduler scheduler;
 
     public AntiSnipingService() {
-        this.config = new AntiSnipingConfig();
-        this.scheduler = new AuctionScheduler();
+        this.config = AntiSnipingConfig.getInstance();
+        this.scheduler = AuctionScheduler.getInstance();
     }
 
     /**
