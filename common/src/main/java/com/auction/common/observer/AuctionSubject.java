@@ -8,14 +8,14 @@ public class AuctionSubject implements Subject {
     private final List<Observer> observers = new ArrayList<>();
 
     @Override
-    public void attach(Observer observer) {
+    public void registerObserver(Observer observer) {
         if (observer != null && !observers.contains(observer)) {
             observers.add(observer);
         }
     }
 
     @Override
-    public void detach(Observer observer) {
+    public void removeObserver(Observer observer) {
         observers.remove(observer);
     }
 

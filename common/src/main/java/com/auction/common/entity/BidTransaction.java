@@ -38,6 +38,7 @@ public class BidTransaction implements Serializable {
     // Setters
     public void setAmount(double amount) { this.amount = amount; }
     public void setAutoBid(boolean autoBid) { this.autoBid = autoBid; }
+    public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
 
     @Override
     public String toString() {

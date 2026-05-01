@@ -21,7 +21,7 @@ public class BidTransactionDAO {
     BidTransaction cloned = new BidTransaction(
             tx.getAuctionId(), tx.getBidderId(), tx.getAmount(), tx.getBidTime(), tx.isAutoBid()
     );
-    // Có thể cần set auctionId nếu có
+    // Có thể cần set TransactionId nếu có
     cloned.setTransactionId(tx.getTransactionId());
 
     storage.computeIfAbsent(cloned.getAuctionId(), k -> new ConcurrentLinkedQueue<>()).add(cloned);
