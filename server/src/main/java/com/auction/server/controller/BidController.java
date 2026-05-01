@@ -4,6 +4,7 @@ import com.auction.common.dto.AutoBidRequest;
 import com.auction.common.dto.BidRequest;
 import com.auction.common.entity.BidTransaction;
 import com.auction.server.service.BiddingService;
+
 import java.util.List;
 
 /**
