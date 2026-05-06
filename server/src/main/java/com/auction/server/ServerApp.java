@@ -43,7 +43,7 @@ public class ServerApp {
             UserService userService = new UserService();
             BiddingService biddingService = new BiddingService();
             AutoBidService autoBidService = new AutoBidService();
-            NotificationService notificationService = new NotificationService();
+            NotificationService notificationService = NotificationService.getInstance();
             AntiSnipingService antiSnipingService = new AntiSnipingService();
             ConcurrentBidManager concurrentBidManager = new ConcurrentBidManager();
 

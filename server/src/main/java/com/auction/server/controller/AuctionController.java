@@ -1,6 +1,7 @@
 package com.auction.server.controller;
 
 import com.auction.common.dto.AuctionDTO;
+import com.auction.common.exception.AuctionNotFoundException;
 import com.auction.server.service.AuctionService;
 
 import java.util.List;
@@ -29,7 +30,7 @@ public class AuctionController {
         return auctionService.getAllAuctions();
     }
 
-    public AuctionDTO getAuction(String id) {
+    public AuctionDTO getAuction(String id) throws AuctionNotFoundException {
         return auctionService.getAuction(id);
     }
 
@@ -37,11 +38,11 @@ public class AuctionController {
         auctionService.createAuction(request);
     }
 
-    public void updateAuction(String id, AuctionDTO dto) {
+    public void updateAuction(String id, AuctionDTO dto) throws AuctionNotFoundException {
         auctionService.updateAuction(id, dto);
     }
 
-    public void deleteAuction(String id) {
+    public void deleteAuction(String id) throws AuctionNotFoundException {
         auctionService.deleteAuction(id);
     }
 }

@@ -95,7 +95,7 @@ class UserServiceTest {
     }
 
     @Test
-    void updateProfile_Success() {
+    void updateProfile_Success() throws AuctionNotFoundException {
         when(userDAO.findUserByUsername("john")).thenReturn(bidder);
         doNothing().when(userDAO).saveUser(any(User.class));
 
@@ -115,7 +115,7 @@ class UserServiceTest {
     }
 
     @Test
-    void addBalance_Success() {
+    void addBalance_Success() throws AuctionException, AuctionNotFoundException, InvalidBidException {
         when(userDAO.findUserByUsername("john")).thenReturn(bidder);
         doNothing().when(userDAO).saveUser(any(User.class));
 
@@ -139,7 +139,6 @@ class UserServiceTest {
 
     @Test
     void addBalance_NotABidder() {
-        // Giả sử có user loại Member (không phải Bidder)
         User member = new User("member", "pass", "m@x.com", "Member") {
             @Override public String getRole() { return "MEMBER"; }
         };

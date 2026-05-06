@@ -8,18 +8,29 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class NotificationService {
+    private static NotificationService instance;
     private AuctionSubject subject;
     private Map<String, ClientObserver> clientObservers;
 
-    // Constructor mặc định (tự tạo AuctionSubject)
-    public NotificationService() {
+    private NotificationService() {
         this(new AuctionSubject());
     }
 
-    // Constructor có tham số (dùng để test, hoặc inject từ bên ngoài)
-    public NotificationService(AuctionSubject subject) {
+    NotificationService(AuctionSubject subject) {
         this.subject = subject;
         this.clientObservers = new HashMap<>();
+    }
+
+    public static synchronized NotificationService getInstance() {
+        if (instance == null) {
+            instance = new NotificationService();
+        }
+        return instance;
+    }
+
+    // Dùng cho test để inject mock subject
+    public static NotificationService getInstance(AuctionSubject subject) {
+        return new NotificationService(subject);
     }
 
     public void sendBidUpdate(Auction auction) {

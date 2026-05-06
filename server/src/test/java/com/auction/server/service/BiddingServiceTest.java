@@ -3,7 +3,6 @@ package com.auction.server.service;
 import com.auction.common.dto.BidRequest;
 import com.auction.common.entity.*;
 import com.auction.common.enums.AuctionStatus;
-import com.auction.common.exception.InvalidBidException;
 import com.auction.server.dao.AuctionDAO;
 import com.auction.server.dao.BidTransactionDAO;
 import com.auction.server.dao.UserDAO;
@@ -49,51 +48,73 @@ class BiddingServiceTest {
         validRequest = new BidRequest("auc1", "bidder1", 150.0, false);
     }
 
+    // ========== THÀNH CÔNG ==========
     @Test
     void placeBid_Valid() {
+        // Mock các dependency cần thiết
         when(auctionDAO.getAuction("auc1")).thenReturn(auction);
         when(userDAO.findUserById("bidder1")).thenReturn(bidder);
-        doAnswer(i -> null).when(bidDAO).saveBidTransaction(any());
-        doAnswer(i -> null).when(auctionDAO).saveAuction(any());
-        doAnswer(i -> null).when(userDAO).saveUser(any());
+        doNothing().when(bidDAO).saveBidTransaction(any(BidTransaction.class));
+        doNothing().when(auctionDAO).saveAuction(any(Auction.class));
+        doNothing().when(userDAO).saveUser(any(User.class));
         when(antiSnipingService.checkAndExtend(auction)).thenReturn(false);
+        doNothing().when(autoBidService).processAutoBids(auction);
 
+        // Thực thi
         assertDoesNotThrow(() -> biddingService.placeBid(validRequest));
+
+        // Kiểm tra kết quả
         assertEquals(150.0, auction.getCurrentPrice());
         assertEquals(350.0, bidder.getBalance());
-        verify(bidDAO, times(1)).saveBidTransaction(any());
+        verify(bidDAO, times(1)).saveBidTransaction(any(BidTransaction.class));
         verify(auctionDAO, times(1)).saveAuction(auction);
         verify(userDAO, times(1)).saveUser(bidder);
         verify(autoBidService, times(1)).processAutoBids(auction);
     }
 
+    // ========== LỖI: AUCTION KHÔNG TỒN TẠI ==========
+    @Test
+    void placeBid_AuctionNotFound() {
+        when(auctionDAO.getAuction("auc1")).thenReturn(null);
+        // Không cần mock các dependency khác vì sẽ throw ngay
+        assertThrows(IllegalArgumentException.class, () -> biddingService.placeBid(validRequest));
+    }
+
+    // ========== LỖI: AUCTION KHÔNG CHẠY ==========
     @Test
     void placeBid_AuctionNotRunning() {
         auction.setStatus(AuctionStatus.FINISHED);
-        when(auctionDAO.getAuction("auc1")).thenReturn(auction);
+        when(auctionDAO.getAuction("auc1")).thenReturn(auction); // ✅ already correct
+        // The real fix must be in BiddingService — but if you can't change it,
+        // verify what method/field the service uses to look up the auction
         assertThrows(IllegalStateException.class, () -> biddingService.placeBid(validRequest));
     }
 
+    // ========== LỖI: SELLER ĐẶT GIÁ ==========
     @Test
     void placeBid_SellerCannotBid() {
-        validRequest = new BidRequest("auc1", "seller1", 150.0, false);
         when(auctionDAO.getAuction("auc1")).thenReturn(auction);
-        assertThrows(IllegalArgumentException.class, () -> biddingService.placeBid(validRequest));
+        // Remove any extra stubs — the service throws before needing userDAO
+        BidRequest sellerRequest = new BidRequest("auc1", "seller1", 150.0, false);
+        assertThrows(IllegalArgumentException.class, () -> biddingService.placeBid(sellerRequest));
     }
 
+    // ========== LỖI: KHÔNG ĐỦ TIỀN ==========
     @Test
     void placeBid_InsufficientBalance() {
-        bidder.deductBalance(500.0);
         when(auctionDAO.getAuction("auc1")).thenReturn(auction);
         when(userDAO.findUserById("bidder1")).thenReturn(bidder);
-        assertThrows(IllegalArgumentException.class, () -> biddingService.placeBid(validRequest));
+        // Remove extra stubs — only mock what's needed before the throw
+        BidRequest highBid = new BidRequest("auc1", "bidder1", 600.0, false);
+        assertThrows(IllegalArgumentException.class, () -> biddingService.placeBid(highBid));
     }
 
+    // ========== LỖI: GIÁ KHÔNG HỢP LỆ ==========
     @Test
     void placeBid_InvalidAmount() {
-        validRequest = new BidRequest("auc1", "bidder1", 80.0, false);
         when(auctionDAO.getAuction("auc1")).thenReturn(auction);
         when(userDAO.findUserById("bidder1")).thenReturn(bidder);
-        assertThrows(IllegalArgumentException.class, () -> biddingService.placeBid(validRequest));
+        BidRequest lowBid = new BidRequest("auc1", "bidder1", 80.0, false);
+        assertThrows(IllegalArgumentException.class, () -> biddingService.placeBid(lowBid));
     }
 }

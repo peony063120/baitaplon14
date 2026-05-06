@@ -16,13 +16,18 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuctionServiceTest {
 
-    @Mock private AuctionDAO auctionDAO;
-    @InjectMocks private AuctionService auctionService;
+    @Mock
+    private AuctionDAO auctionDAO;
+
+    @InjectMocks
+    private AuctionService auctionService;
+
     private Auction sampleAuction;
 
     @BeforeEach
@@ -45,7 +50,7 @@ class AuctionServiceTest {
     }
 
     @Test
-    void getAuction_Exists() {
+    void getAuction_Exists() throws AuctionNotFoundException {
         when(auctionDAO.getAuction("auc1")).thenReturn(sampleAuction);
         AuctionDTO dto = auctionService.getAuction("auc1");
         assertNotNull(dto);
@@ -71,7 +76,7 @@ class AuctionServiceTest {
     }
 
     @Test
-    void updateAuction() {
+    void updateAuction() throws AuctionNotFoundException {
         when(auctionDAO.getAuction("auc1")).thenReturn(sampleAuction);
         doAnswer(invocation -> null).when(auctionDAO).saveAuction(any());
 
@@ -83,7 +88,7 @@ class AuctionServiceTest {
     }
 
     @Test
-    void deleteAuction() {
+    void deleteAuction() throws AuctionNotFoundException {
         when(auctionDAO.getAuction("auc1")).thenReturn(sampleAuction);
         doAnswer(invocation -> null).when(auctionDAO).deleteAuction("auc1");
         auctionService.deleteAuction("auc1");

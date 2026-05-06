@@ -6,6 +6,7 @@ import com.auction.common.observer.ClientObserver;
 import com.auction.server.controller.AuctionController;
 import com.auction.server.controller.BidController;
 import com.auction.server.controller.UserController;
+import com.auction.common.exception.AuctionNotFoundException;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -109,14 +110,18 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleGetAuction(String id) {
-        AuctionDTO a = auctionController.getAuction(id);
-        if (a != null) {
-            out.println("AUCTION:" + a.getId() + ":" + a.getItemName()
-                    + ":" + a.getCurrentPrice() + ":" + a.getStatus().name()
-                    + ":" + a.getCurrentWinnerId() + ":" + a.getTotalBids()
-                    + ":" + a.getRemainingTimeMillis());
-        } else {
-            out.println("ERROR:Auction not found");
+        try {
+            AuctionDTO a = auctionController.getAuction(id);
+            if (a != null) {
+                out.println("AUCTION:" + a.getId() + ":" + a.getItemName()
+                        + ":" + a.getCurrentPrice() + ":" + a.getStatus().name()
+                        + ":" + a.getCurrentWinnerId() + ":" + a.getTotalBids()
+                        + ":" + a.getRemainingTimeMillis());
+            } else {
+                out.println("ERROR:Auction not found");
+            }
+        } catch (AuctionNotFoundException e) {
+            out.println("ERROR:" + e.getMessage());
         }
     }
 
