@@ -14,7 +14,13 @@ public class Vehicle extends Item {
     private double mileage;       // Số km đã đi
 
     public Vehicle(String name, String description, double startingPrice, String sellerId, String make, String model, int year, String vin) {
-        super();
+        // Gán các thuộc tính chung
+        super(name, description, startingPrice, sellerId);
+        // Gán các thuộc tính riêng của Vehicle
+        this.make = make;
+        this.model = model;
+        this.year = year;
+        this.licensePlate = vin;
     }
 
     public Vehicle(String name, String description, double startingPrice,

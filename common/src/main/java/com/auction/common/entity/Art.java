@@ -13,7 +13,12 @@ public class Art extends Item {
     private double width;   // cm
 
     public Art(String name, String description, double startingPrice, String sellerId, String artist, int year, String medium) {
-        super();
+        // Gán các thuộc tính chung vào lớp cha Item
+        super(name, description, startingPrice, sellerId);
+        // Gán các thuộc tính riêng của Art
+        this.artist = artist;
+        this.yearCreated = year;
+        this.medium = medium;
     }
 
     public Art(String name, String description, double startingPrice,

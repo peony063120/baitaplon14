@@ -27,7 +27,7 @@ public class AutoBidConfig {
     }
 
     public boolean canBid(double currentPrice) {
-        return (currentPrice + increment <= maxBid);
+        return active && (currentPrice + increment <= maxBid);
     }
 
     // Getters & Setters
