@@ -1,7 +1,11 @@
 package com.auction.server.dao;
 
 import com.auction.common.entity.Auction;
+import com.auction.common.enums.AuctionStatus;
+
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 public class AuctionDAO {
@@ -44,5 +48,15 @@ public class AuctionDAO {
 
   public void deleteAuction(String id) {
     if (id != null) auctionCache.remove(id);
+  }
+
+  public List<Auction> getAuctionsByStatus(AuctionStatus status) {
+    List<Auction> result = new ArrayList<>();
+    for (Auction auction : auctionCache.values()) {
+      if (auction.getStatus() == status) {
+        result.add(auction);
+      }
+    }
+    return result;
   }
 }

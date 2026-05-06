@@ -14,7 +14,7 @@
 
     <properties>
         <!-- Cập nhật lên phiên bản mới nhất 23.0.2 -->
-        <javafx.version>23.0.2</javafx.version>
+        <javafx.version>17.0.6</javafx.version>
     </properties>
 
     <dependencies>
@@ -33,11 +33,6 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>${javafx.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-charts</artifactId>
             <version>${javafx.version}</version>
         </dependency>
     </dependencies>

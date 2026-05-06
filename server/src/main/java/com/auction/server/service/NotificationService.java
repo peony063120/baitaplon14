@@ -11,8 +11,14 @@ public class NotificationService {
     private AuctionSubject subject;
     private Map<String, ClientObserver> clientObservers;
 
+    // Constructor mặc định (tự tạo AuctionSubject)
     public NotificationService() {
-        this.subject = new AuctionSubject();
+        this(new AuctionSubject());
+    }
+
+    // Constructor có tham số (dùng để test, hoặc inject từ bên ngoài)
+    public NotificationService(AuctionSubject subject) {
+        this.subject = subject;
         this.clientObservers = new HashMap<>();
     }
 
