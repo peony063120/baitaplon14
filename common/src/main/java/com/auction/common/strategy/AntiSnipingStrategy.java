@@ -23,8 +23,13 @@ public class AntiSnipingStrategy implements BiddingStrategy {
         return false;
       }
 
-      // 3. Xử lý thuật toán Anti-sniping (3.2.3)
-      if (auction.isAntiSnipingEnabled()) {
+      // (thêm) Thực hiện đặt giá TRƯỚC
+      // cần biết việc đặt giá này có thành công (hợp lệ về giá) hay không
+      NormalBiddingStrategy normal = new NormalBiddingStrategy();
+      boolean bidSuccess = normal.execute(auction, request);
+
+      // 3. Nếu đặt giá THÀNH CÔNG, mới xử lý thuật toán Anti-sniping (3.2.3)
+      if (bidSuccess && auction.isAntiSnipingEnabled()) {
         LocalDateTime now = LocalDateTime.now();
         // Ngưỡng X giây cuối (30 giây trước khi kết thúc)
         LocalDateTime threshold = auction.getEndTime().minusSeconds(30);
@@ -32,8 +37,8 @@ public class AntiSnipingStrategy implements BiddingStrategy {
         if (now.isAfter(threshold) && now.isBefore(auction.getEndTime())) {
           // Tự động gia hạn thêm Y giây
           auction.extendEndTime(auction.getAntiSnipingExtensionSeconds());
-          logger.info("[3.2.3-ANTI-SNIPING] - Phát hiện bid phút chót. Gia hạn phiên {} thêm {} giây. Thời gian mới: {}",
-              auction.getId(), auction.getAntiSnipingExtensionSeconds(), auction.getEndTime());
+          logger.info("[3.2.3-ANTI-SNIPING] - Phát hiện bid phút chót. Gia hạn phiên {} thêm {} giây.",
+              auction.getId(), auction.getAntiSnipingExtensionSeconds());
         }
       }
 
