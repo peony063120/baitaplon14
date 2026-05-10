@@ -13,7 +13,6 @@ import com.auction.server.dao.UserDAO;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * BiddingService - Xử lý logic đặt giá, auto-bid, chống sniping.
@@ -30,7 +29,7 @@ public class BiddingService {
 
     public BiddingService() {
         this.auctionDAO = AuctionDAO.getInstance();
-        this.bidDAO = BidTransactionDAO.getInstance();
+        this.bidDAO = new BidTransactionDAO();
         this.userDAO = UserDAO.getInstance();
         this.subject = new AuctionSubject();
         this.antiSnipingService = new AntiSnipingService();
