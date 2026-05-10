@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class AuctionDAO {
 
   private static volatile AuctionDAO instance;
-  private Map<String, Auction> auctionCache;
+  private final Map<String, Auction> auctionCache;
 
   private AuctionDAO() {
     this.auctionCache = new ConcurrentHashMap<>();
