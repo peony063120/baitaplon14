@@ -4,16 +4,23 @@ import com.auction.common.entity.Auction;
 import com.auction.common.enums.AuctionStatus;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
+/**
+ * AuctionDAO (Singleton)
+ * Quản lý lưu trữ và truy xuất dữ liệu phiên đấu giá.
+ * Sử dụng in-memory cache (ConcurrentHashMap) thay thế database.
+ */
 public class AuctionDAO {
+
   private static volatile AuctionDAO instance;
-  private final Map<String, Auction> auctionCache;
+  private Map<String, Auction> auctionCache;
 
   private AuctionDAO() {
-    this.auctionCache = DatabaseConnection.getInstance().getTable("AUCTIONS");
+    this.auctionCache = new ConcurrentHashMap<>();
   }
 
   public static AuctionDAO getInstance() {
@@ -28,13 +35,10 @@ public class AuctionDAO {
   }
 
   public void saveAuction(Auction auction) {
-    if (auction == null || auction.getId() == null) return;
-    synchronized (auction.getId().intern()) {
-      Auction current = auctionCache.get(auction.getId());
-      if (current == null || auction.getCurrentPrice() > current.getCurrentPrice()) {
-        auctionCache.put(auction.getId(), auction);
-      }
+    if (auction == null || auction.getId() == null) {
+      throw new IllegalArgumentException("Auction hoặc auction ID không được null");
     }
+    auctionCache.put(auction.getId(), auction);
   }
 
   public Auction getAuction(String id) {
@@ -42,21 +46,21 @@ public class AuctionDAO {
     return auctionCache.get(id);
   }
 
-  public Collection<Auction> getAllAuctions() {
-    return auctionCache.values();
+  public List<Auction> getAllAuctions() {
+    return new ArrayList<>(auctionCache.values());
   }
 
   public void deleteAuction(String id) {
-    if (id != null) auctionCache.remove(id);
+    if (id == null) {
+      throw new IllegalArgumentException("Auction ID không được null");
+    }
+    auctionCache.remove(id);
   }
 
   public List<Auction> getAuctionsByStatus(AuctionStatus status) {
-    List<Auction> result = new ArrayList<>();
-    for (Auction auction : auctionCache.values()) {
-      if (auction.getStatus() == status) {
-        result.add(auction);
-      }
-    }
-    return result;
+    if (status == null) return new ArrayList<>();
+    return auctionCache.values().stream()
+        .filter(auction -> status.equals(auction.getStatus()))
+        .collect(Collectors.toList());
   }
 }
