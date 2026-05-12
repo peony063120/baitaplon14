@@ -18,7 +18,7 @@
             <!-- Logo -->
             <HBox alignment="CENTER_LEFT" onMouseClicked="#navigateHome" spacing="10" style="-fx-cursor: hand;">
                 <StackPane prefHeight="36" prefWidth="36" style="-fx-background-color: linear-gradient(to bottom right, #C9A84C, #F0D080); -fx-background-radius: 8;">
-                    <Label style="-fx-font-size: 18; -fx-text-fill: #0D1B2A;" text="⚡" />
+                    <Label prefHeight="15.0" prefWidth="4.0" style="-fx-font-size: 18; -fx-text-fill: #0D1B2A;" text="⚡" />
                 </StackPane>
                 <Label style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #F0D080;" text="Auction System" />
             </HBox>
@@ -141,22 +141,6 @@
                             <HBox fx:id="catNgheThuat" alignment="CENTER_LEFT" onMouseClicked="#filterNgheThuat" spacing="10" style="-fx-background-radius: 8; -fx-padding: 8 12; -fx-cursor: hand;">
                                 <Circle fill="#DB2777" radius="4" />
                                 <Label style="-fx-text-fill: rgba(255,255,255,0.55); -fx-font-size: 13;" text="🎨 Nghệ thuật" />
-                            </HBox>
-                            <HBox fx:id="catTrangSuc" alignment="CENTER_LEFT" onMouseClicked="#filterTrangSuc" spacing="10" style="-fx-background-radius: 8; -fx-padding: 8 12; -fx-cursor: hand;">
-                                <Circle fill="#D97706" radius="4" />
-                                <Label style="-fx-text-fill: rgba(255,255,255,0.55); -fx-font-size: 13;" text="💎 Trang sức" />
-                            </HBox>
-                            <HBox fx:id="catBatDongSan" alignment="CENTER_LEFT" onMouseClicked="#filterBatDongSan" spacing="10" style="-fx-background-radius: 8; -fx-padding: 8 12; -fx-cursor: hand;">
-                                <Circle fill="#059669" radius="4" />
-                                <Label style="-fx-text-fill: rgba(255,255,255,0.55); -fx-font-size: 13;" text="🏠 Bất động sản" />
-                            </HBox>
-                            <HBox fx:id="catDongHo" alignment="CENTER_LEFT" onMouseClicked="#filterDongHo" spacing="10" style="-fx-background-radius: 8; -fx-padding: 8 12; -fx-cursor: hand;">
-                                <Circle fill="#DC2626" radius="4" />
-                                <Label style="-fx-text-fill: rgba(255,255,255,0.55); -fx-font-size: 13;" text="⌚ Đồng hồ" />
-                            </HBox>
-                            <HBox fx:id="catCoVat" alignment="CENTER_LEFT" onMouseClicked="#filterCoVat" spacing="10" style="-fx-background-radius: 8; -fx-padding: 8 12; -fx-cursor: hand;">
-                                <Circle fill="#6B7280" radius="4" />
-                                <Label style="-fx-text-fill: rgba(255,255,255,0.55); -fx-font-size: 13;" text="🏺 Cổ vật" />
                             </HBox>
                         </VBox>
 
