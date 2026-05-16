@@ -1,293 +1,119 @@
-
 package com.auction.client.controller;
 
-import com.auction.client.ClientApp;
+/**
+ * Màn hình chính sau khi đăng nhập.
+ * Hiển thị danh sách tất cả phiên đấu giá đang có,
+ * cho phép tìm kiếm theo tên, click vào 1 phiên để mở chi tiết, và đăng xuất.
+ */
+
+import com.auction.client.components.AuctionCard;
+import com.auction.client.model.ClientModel;
 import com.auction.client.network.ServerConnection;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.auction.common.dto.AuctionDTO;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.TextFieldListCell;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.FlowPane;
+import javafx.stage.Stage;
 
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MainController {
-    private static final Logger logger = LoggerFactory.getLogger(MainController.class);
-    private static final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
-    @FXML private Label userInfoLabel;
-    @FXML private TabPane tabPane;  // Được sử dụng, giữ lại
-    @FXML private Tab myAuctionsTab;
+    @FXML private FlowPane auctionListPane;
     @FXML private TextField searchField;
-    @FXML private ListView<String> auctionListView;
-    @FXML private ListView<String> myAuctionsListView;
-    @FXML private ListView<String> myBidsListView;
+    @FXML private Label userLabel;
     @FXML private Label statusLabel;
 
-    // Profile fields
-    @FXML private Label profileUsername;
-    @FXML private Label profileFullName;
-    @FXML private Label profileEmail;
-    @FXML private Label profileRole;
-    @FXML private Label profileBalance;
-
-    private String userId;
-    private String userRole;
-    private String username;
-
-    // Sửa thành final
-    private final ObservableList<String> auctions = FXCollections.observableArrayList();
-    private final ObservableList<String> myAuctions = FXCollections.observableArrayList();
-    private final ObservableList<String> myBids = FXCollections.observableArrayList();
+    private final ClientModel clientModel = ClientModel.getInstance();
+    private List<AuctionDTO> allAuctions;
 
     @FXML
     public void initialize() {
-        // Get user info from LoginController (tạm thời dùng giá trị mẫu)
-        userId = "temp-user-id";
-        username = "temp-user";
-        userRole = "BIDDER";
-
-        // Setup UI based on role
-        if ("SELLER".equals(userRole)) {
-            myAuctionsTab.setDisable(false);
-        } else {
-            myAuctionsTab.setDisable(true);
+        if (clientModel.getCurrentUser() != null) {
+            userLabel.setText("Xin chào, " + clientModel.getCurrentUser().getFullName());
         }
+        loadAuctions();
+    }
 
-        // Setup list cell factories
-        auctionListView.setCellFactory(TextFieldListCell.forListView());
-        myAuctionsListView.setCellFactory(TextFieldListCell.forListView());
-        myBidsListView.setCellFactory(TextFieldListCell.forListView());
+    public void loadAuctions() {
+        statusLabel.setText("Đang tải...");
+        String response = ServerConnection.getInstance().sendRequest("GET_AUCTIONS");
+        allAuctions = parseAuctions(response);
+        renderAuctions(allAuctions);
+        statusLabel.setText("Tìm thấy " + allAuctions.size() + " phiên đấu giá");
+    }
 
-        // Handle double-click on auction
-        auctionListView.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2) {
-                String selected = auctionListView.getSelectionModel().getSelectedItem();
-                if (selected != null) {
-                    String auctionId = extractAuctionId(selected);
-                    openAuctionDetail(auctionId);
-                }
+    public void openAuctionDetail(String auctionId) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/auction_detail.fxml"));
+            Stage stage = new Stage();
+            stage.setScene(new Scene(loader.load()));
+
+            AuctionDetailController controller = loader.getController();
+            controller.loadAuctionDetails(auctionId);
+
+            stage.setTitle("Chi tiết đấu giá");
+            stage.show();
+        } catch (Exception e) {
+            statusLabel.setText("Lỗi mở chi tiết: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void logout() {
+        clientModel.logout();
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/login.fxml"));
+            Stage stage = (Stage) auctionListPane.getScene().getWindow();
+            stage.setScene(new Scene(loader.load()));
+            stage.setTitle("Đăng nhập");
+        } catch (Exception e) {
+            statusLabel.setText("Lỗi: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void refreshAuctions() {
+        loadAuctions();
+    }
+
+    @FXML
+    public void searchAuctions(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            renderAuctions(allAuctions);
+            return;
+        }
+        String lower = keyword.toLowerCase();
+        List<AuctionDTO> filtered = allAuctions.stream().filter(a -> a.getItemName() != null &&
+                a.getItemName().toLowerCase().contains(lower)).collect(Collectors.toList());
+        renderAuctions(filtered);
+        statusLabel.setText("Tìm thấy " + filtered.size() + " kết quả");
+    }
+
+    @FXML
+    public void handleSearch() {
+        searchAuctions(searchField.getText().trim());
+    }
+
+    // Helpers
+    private void renderAuctions(List<AuctionDTO> auctions) {
+        Platform.runLater(() -> {
+            auctionListPane.getChildren().clear();
+            for (AuctionDTO dto : auctions) {
+                AuctionCard card = new AuctionCard(dto);
+                card.setOnMouseClicked(e -> openAuctionDetail(dto.getId()));
+                auctionListPane.getChildren().add(card);
             }
         });
-
-        // Load data
-        loadAuctions();
-        if ("SELLER".equals(userRole)) {
-            loadMyAuctions();
-        }
-        loadMyBids();
-        loadProfile();
-
-        // Set user info
-        userInfoLabel.setText("Welcome, " + username + " (" + userRole + ")");
     }
 
-    // Thêm method để set user info từ LoginController
-    public void setUserInfo(String userId, String username, String userRole) {
-        this.userId = userId;
-        this.username = username;
-        this.userRole = userRole;
-
-        // Cập nhật UI
-        userInfoLabel.setText("Welcome, " + username + " (" + userRole + ")");
-
-        if ("SELLER".equals(userRole)) {
-            myAuctionsTab.setDisable(false);
-            loadMyAuctions();
-        } else {
-            myAuctionsTab.setDisable(true);
-        }
-
-        // Reload data
-        loadAuctions();
-        loadMyBids();
-        loadProfile();
-    }
-
-    private void loadAuctions() {
-        statusLabel.setText("Loading auctions...");
-
-        new Thread(() -> {
-            try {
-                String json = ServerConnection.getAuctions();
-                if (json != null) {
-                    List<Map<String, Object>> auctionList = mapper.readValue(json,
-                            mapper.getTypeFactory().constructCollectionType(List.class, Map.class));
-
-                    Platform.runLater(() -> {
-                        auctions.clear();
-                        for (Map<String, Object> auction : auctionList) {
-                            String display = String.format("%s - $%.2f (Ends: %s)",
-                                    auction.get("itemId"),
-                                    ((Number) auction.get("currentPrice")).doubleValue(),
-                                    auction.get("endTime"));
-                            auctions.add(display);
-                        }
-                        auctionListView.setItems(auctions);
-                        statusLabel.setText(auctions.size() + " auctions available");
-                    });
-                }
-            } catch (Exception e) {
-                logger.error("Failed to load auctions", e);
-                Platform.runLater(() -> {
-                    statusLabel.setText("Failed to load auctions: " + e.getMessage());
-                });
-            }
-        }).start();
-    }
-
-    private void loadMyAuctions() {
-        new Thread(() -> {
-            try {
-                String json = ServerConnection.getAuctions();
-                if (json != null) {
-                    List<Map<String, Object>> auctionList = mapper.readValue(json,
-                            mapper.getTypeFactory().constructCollectionType(List.class, Map.class));
-
-                    Platform.runLater(() -> {
-                        myAuctions.clear();
-                        for (Map<String, Object> auction : auctionList) {
-                            String sellerId = (String) auction.get("sellerId");
-                            if (userId.equals(sellerId)) {
-                                String display = String.format("%s - $%.2f (Status: %s)",
-                                        auction.get("itemId"),
-                                        ((Number) auction.get("currentPrice")).doubleValue(),
-                                        auction.get("status"));
-                                myAuctions.add(display);
-                            }
-                        }
-                        myAuctionsListView.setItems(myAuctions);
-                    });
-                }
-            } catch (Exception e) {
-                logger.error("Failed to load my auctions", e);
-            }
-        }).start();
-    }
-
-    private void loadMyBids() {
-        new Thread(() -> {
-            try {
-                // Placeholder - bạn có thể implement sau
-                Platform.runLater(() -> {
-                    myBids.clear();
-                    myBids.add("No bids yet");
-                    myBidsListView.setItems(myBids);
-                });
-            } catch (Exception e) {
-                logger.error("Failed to load my bids", e);
-            }
-        }).start();
-    }
-
-    private void loadProfile() {
-        new Thread(() -> {
-            try {
-                String json = ServerConnection.getUser(userId);
-                if (json != null) {
-                    Map<String, Object> user = mapper.readValue(json, Map.class);
-
-                    Platform.runLater(() -> {
-                        profileUsername.setText((String) user.get("username"));
-                        profileFullName.setText((String) user.get("fullName"));
-                        profileEmail.setText((String) user.get("email"));
-                        profileRole.setText((String) user.get("role"));
-                        if (user.containsKey("balance")) {
-                            profileBalance.setText(String.format("$%.2f",
-                                    ((Number) user.get("balance")).doubleValue()));
-                        } else {
-                            profileBalance.setText("N/A");
-                        }
-                    });
-                }
-            } catch (Exception e) {
-                logger.error("Failed to load profile", e);
-                Platform.runLater(() -> {
-                    profileBalance.setText("Error loading profile");
-                });
-            }
-        }).start();
-    }
-
-    @FXML
-    private void handleSearch() {
-        String keyword = searchField.getText().toLowerCase();
-        if (keyword.isEmpty()) {
-            auctionListView.setItems(auctions);
-        } else {
-            ObservableList<String> filtered = FXCollections.observableArrayList();
-            for (String auction : auctions) {
-                if (auction.toLowerCase().contains(keyword)) {
-                    filtered.add(auction);
-                }
-            }
-            auctionListView.setItems(filtered);
-            statusLabel.setText(filtered.size() + " auctions found");
-        }
-    }
-
-    @FXML
-    private void handleRefresh() {
-        loadAuctions();
-        if ("SELLER".equals(userRole)) {
-            loadMyAuctions();
-        }
-        loadMyBids();
-    }
-
-    @FXML
-    private void handleRefreshProfile() {
-        loadProfile();
-    }
-
-    @FXML
-    private void handleCreateAuction() {
-        try {
-            ClientApp.switchScene("/view/create_auction.fxml", "Create New Auction");
-        } catch (Exception e) {
-            logger.error("Failed to load create auction screen", e);
-            showAlert("Error", "Failed to load create auction screen", Alert.AlertType.ERROR);
-        }
-    }
-
-    @FXML
-    private void handleLogout() {
-        try {
-            ServerConnection.disconnect();
-            ClientApp.switchScene("/view/login.fxml", "Login");
-        } catch (Exception e) {
-            logger.error("Logout failed", e);
-        }
-    }
-
-    private void openAuctionDetail(String auctionId) {
-        try {
-            // You'll need to pass auctionId to the detail screen
-            showAlert("Auction Details", "Opening auction: " + auctionId, Alert.AlertType.INFORMATION);
-        } catch (Exception e) {
-            logger.error("Failed to open auction detail", e);
-        }
-    }
-
-    private String extractAuctionId(String display) {
-        // Extract ID from display string (format: "ID - $price (Ends: time)")
-        if (display.contains(" - ")) {
-            return display.split(" - ")[0];
-        }
-        return display;
-    }
-
-    private void showAlert(String title, String message, Alert.AlertType type) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    private List<AuctionDTO> parseAuctions(String response) {
+        // parsing đc xử lí bởi ResponseHandler
+        return com.auction.client.network.ResponseHandler.parseAuctionList(response);
     }
 }
