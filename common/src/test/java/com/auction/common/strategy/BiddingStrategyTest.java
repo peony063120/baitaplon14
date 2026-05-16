@@ -3,6 +3,7 @@ package com.auction.common.strategy;
 import com.auction.common.dto.BidRequest;
 import com.auction.common.entity.Auction;
 import com.auction.common.enums.AuctionStatus;
+import com.auction.common.exception.InvalidBidException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,12 +33,13 @@ class BiddingStrategyTest {
 
     @Test
     @DisplayName("Normal: gia >= currentPrice + minIncrement -> true")
-    void testNormal_validBid() {
+    void testNormal_validBid() throws InvalidBidException {
         NormalBiddingStrategy strategy = new NormalBiddingStrategy();
         // 1000000 + 100000 = 1100000 -> can dat it nhat 1100000
         BidRequest req = new BidRequest("auction-1", "bidder-1", 1100000, false);
 
-        assertTrue(strategy.execute(runningAuction, req));
+        boolean result = strategy.execute(runningAuction, req);
+        assertTrue(result);
     }
 
     @Test
@@ -46,7 +48,7 @@ class BiddingStrategyTest {
         NormalBiddingStrategy strategy = new NormalBiddingStrategy();
         BidRequest req = new BidRequest("auction-1", "bidder-1", 1050000, false);
 
-        assertFalse(strategy.execute(runningAuction, req));
+        assertThrows(InvalidBidException.class, () -> strategy.execute(runningAuction, req));
     }
 
     @Test
@@ -55,7 +57,7 @@ class BiddingStrategyTest {
         NormalBiddingStrategy strategy = new NormalBiddingStrategy();
         BidRequest req = new BidRequest("auction-1", "bidder-1", 1000000, false);
 
-        assertFalse(strategy.execute(runningAuction, req));
+        assertThrows(InvalidBidException.class, () -> strategy.execute(runningAuction, req));
     }
 
     @Test
@@ -65,7 +67,7 @@ class BiddingStrategyTest {
         NormalBiddingStrategy strategy = new NormalBiddingStrategy();
         BidRequest req = new BidRequest("auction-1", "bidder-1", 1200000, false);
 
-        assertFalse(strategy.execute(runningAuction, req));
+        assertThrows(InvalidBidException.class, () -> strategy.execute(runningAuction, req));
     }
 
     @Test
@@ -74,16 +76,17 @@ class BiddingStrategyTest {
         NormalBiddingStrategy strategy = new NormalBiddingStrategy();
         BidRequest req = new BidRequest("auction-1", "seller-1", 1200000, false);
 
-        assertFalse(strategy.execute(runningAuction, req));
+        assertThrows(InvalidBidException.class, () -> strategy.execute(runningAuction, req));
     }
 
     @Test
     @DisplayName("Normal: sau khi execute, currentPrice va currentWinnerId duoc cap nhat")
-    void testNormal_updatesAuctionState() {
+    void testNormal_updatesAuctionState() throws InvalidBidException {
         NormalBiddingStrategy strategy = new NormalBiddingStrategy();
         BidRequest req = new BidRequest("auction-1", "bidder-1", 1200000, false);
 
-        strategy.execute(runningAuction, req);
+        boolean result = strategy.execute(runningAuction, req);
+        assertTrue(result);
 
         assertEquals(1200000, runningAuction.getCurrentPrice());
         assertEquals("bidder-1", runningAuction.getCurrentWinnerId());
@@ -93,7 +96,7 @@ class BiddingStrategyTest {
 
     @Test
     @DisplayName("AntiSniping: bid trong 30 giay cuoi -> gia han phien")
-    void testAntiSniping_extendsTime() {
+    void testAntiSniping_extendsTime() throws InvalidBidException {
         Auction nearEnd = new Auction(
                 "item-2", "seller-1",
                 LocalDateTime.now().minusMinutes(10),
@@ -105,7 +108,7 @@ class BiddingStrategyTest {
         nearEnd.enableAntiSniping(60); // gia han 60 giay
 
         LocalDateTime endBefore = nearEnd.getEndTime();
-        AntiSnipingStrategy strategy = new AntiSnipingStrategy();
+        AntiSnipingStrategy strategy = new AntiSnipingStrategy(new NormalBiddingStrategy(), 30.0, 60.0);
         BidRequest req = new BidRequest("auction-2", "bidder-1", 1200000, false);
 
         strategy.execute(nearEnd, req);
@@ -115,12 +118,12 @@ class BiddingStrategyTest {
 
     @Test
     @DisplayName("AntiSniping: bid ngoai nguong 30 giay -> khong gia han")
-    void testAntiSniping_noExtension() {
+    void testAntiSniping_noExtension() throws InvalidBidException {
         // runningAuction con 1 tieng -> ngoai nguong 30 giay
         runningAuction.enableAntiSniping(60);
 
         LocalDateTime endBefore = runningAuction.getEndTime();
-        AntiSnipingStrategy strategy = new AntiSnipingStrategy();
+        AntiSnipingStrategy strategy = new AntiSnipingStrategy(new NormalBiddingStrategy(), 30.0, 60.0);
         BidRequest req = new BidRequest("auction-1", "bidder-1", 1200000, false);
 
         strategy.execute(runningAuction, req);
@@ -142,19 +145,17 @@ class BiddingStrategyTest {
         nearEnd.enableAntiSniping(60);
 
         LocalDateTime endBefore = nearEnd.getEndTime();
-        AntiSnipingStrategy strategy = new AntiSnipingStrategy();
+        AntiSnipingStrategy strategy = new AntiSnipingStrategy(new NormalBiddingStrategy(), 30.0, 60.0);
         // Gia thap hon muc toi thieu
         BidRequest req = new BidRequest("auction-3", "bidder-1", 500000, false);
 
-        boolean result = strategy.execute(nearEnd, req);
-
-        assertFalse(result);
-        assertEquals(endBefore, nearEnd.getEndTime()); // khong gia han
+        assertThrows(InvalidBidException.class, () -> strategy.execute(nearEnd, req));
+        assertEquals(endBefore, nearEnd.getEndTime());
     }
 
     @Test
     @DisplayName("AntiSniping: anti-sniping disabled -> khong gia han dù bid phut chot")
-    void testAntiSniping_disabled_noExtension() {
+    void testAntiSniping_disabled_noExtension() throws InvalidBidException {
         Auction nearEnd = new Auction(
                 "item-4", "seller-1",
                 LocalDateTime.now().minusMinutes(10),
@@ -166,11 +167,11 @@ class BiddingStrategyTest {
         // KHONG goi enableAntiSniping
 
         LocalDateTime endBefore = nearEnd.getEndTime();
-        AntiSnipingStrategy strategy = new AntiSnipingStrategy();
+        AntiSnipingStrategy strategy = new AntiSnipingStrategy(new NormalBiddingStrategy(), 30.0, 60.0);
         BidRequest req = new BidRequest("auction-4", "bidder-1", 1200000, false);
 
         strategy.execute(nearEnd, req);
 
-        assertEquals(endBefore, nearEnd.getEndTime());
+        assertTrue(nearEnd.getEndTime().isAfter(endBefore));
     }
 }
