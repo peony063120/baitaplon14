@@ -25,13 +25,15 @@ class AuctionServiceTest {
     @Mock
     private AuctionDAO auctionDAO;
 
-    @InjectMocks
-    private AuctionService auctionService;
+    private AuctionService auctionService;  // Không dùng @InjectMocks
 
     private Auction sampleAuction;
 
     @BeforeEach
     void setUp() {
+        // Dùng constructor có tham số để inject mock
+        auctionService = new AuctionService(auctionDAO);
+
         sampleAuction = new Auction("item1", "seller1",
                 LocalDateTime.now().plusHours(1),
                 LocalDateTime.now().plusDays(1),
@@ -43,7 +45,9 @@ class AuctionServiceTest {
     @Test
     void getAllAuctions_ShouldReturnList() {
         when(auctionDAO.getAllAuctions()).thenReturn(List.of(sampleAuction));
+
         List<AuctionDTO> result = auctionService.getAllAuctions();
+
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("auc1", result.get(0).getId());
@@ -52,7 +56,9 @@ class AuctionServiceTest {
     @Test
     void getAuction_Exists() throws AuctionNotFoundException {
         when(auctionDAO.getAuction("auc1")).thenReturn(sampleAuction);
+
         AuctionDTO dto = auctionService.getAuction("auc1");
+
         assertNotNull(dto);
         assertEquals("auc1", dto.getId());
     }
@@ -60,7 +66,10 @@ class AuctionServiceTest {
     @Test
     void getAuction_NotFound() {
         when(auctionDAO.getAuction("unknown")).thenReturn(null);
+
         assertThrows(AuctionNotFoundException.class, () -> auctionService.getAuction("unknown"));
+
+        // Không cần verify ở đây
     }
 
     @Test
@@ -69,29 +78,51 @@ class AuctionServiceTest {
         dto.setItemId("item2");
         dto.setSellerId("seller2");
         dto.setCurrentPrice(200.0);
-        doNothing().when(auctionDAO).saveAuction(any(Auction.class));
 
         auctionService.createAuction(dto);
+
         verify(auctionDAO, times(1)).saveAuction(any(Auction.class));
     }
 
     @Test
     void updateAuction() throws AuctionNotFoundException {
         when(auctionDAO.getAuction("auc1")).thenReturn(sampleAuction);
-        doAnswer(invocation -> null).when(auctionDAO).saveAuction(any());
 
         AuctionDTO updateDto = new AuctionDTO();
         updateDto.setCurrentPrice(250.0);
+
         auctionService.updateAuction("auc1", updateDto);
+
         assertEquals(250.0, sampleAuction.getCurrentPrice());
-        verify(auctionDAO).saveAuction(sampleAuction);
+        verify(auctionDAO, times(1)).saveAuction(sampleAuction);
+    }
+
+    @Test
+    void updateAuction_NotFound() {
+        when(auctionDAO.getAuction("unknown")).thenReturn(null);
+
+        AuctionDTO updateDto = new AuctionDTO();
+        updateDto.setCurrentPrice(250.0);
+
+        assertThrows(AuctionNotFoundException.class,
+                () -> auctionService.updateAuction("unknown", updateDto));
     }
 
     @Test
     void deleteAuction() throws AuctionNotFoundException {
         when(auctionDAO.getAuction("auc1")).thenReturn(sampleAuction);
-        doAnswer(invocation -> null).when(auctionDAO).deleteAuction("auc1");
+        doNothing().when(auctionDAO).deleteAuction("auc1");
+
         auctionService.deleteAuction("auc1");
-        verify(auctionDAO).deleteAuction("auc1");
+
+        verify(auctionDAO, times(1)).deleteAuction("auc1");
+    }
+
+    @Test
+    void deleteAuction_NotFound() {
+        when(auctionDAO.getAuction("unknown")).thenReturn(null);
+
+        assertThrows(AuctionNotFoundException.class,
+                () -> auctionService.deleteAuction("unknown"));
     }
 }

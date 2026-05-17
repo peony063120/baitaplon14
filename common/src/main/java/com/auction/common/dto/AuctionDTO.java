@@ -25,6 +25,8 @@ public class AuctionDTO implements Serializable {
     private int totalBids;
     private boolean antiSnipingEnabled;
     private int antiSnipingExtensionSeconds;
+    private String category;          // ← THÊM category
+    private String categoryName;      // ← THÊM categoryName
 
     // Constructors
     public AuctionDTO() {}
@@ -49,7 +51,7 @@ public class AuctionDTO implements Serializable {
         this.antiSnipingExtensionSeconds = antiSnipingExtensionSeconds;
     }
 
-    // Getters and Setters
+    // ========== GETTERS & SETTERS ==========
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -101,7 +103,24 @@ public class AuctionDTO implements Serializable {
     public int getAntiSnipingExtensionSeconds() { return antiSnipingExtensionSeconds; }
     public void setAntiSnipingExtensionSeconds(int antiSnipingExtensionSeconds) { this.antiSnipingExtensionSeconds = antiSnipingExtensionSeconds; }
 
-    // Business logic methods (từ diagram)
+    // ========== THÊM CÁC GETTER/SETTER MỚI ==========
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
+    public String getCategoryName() { return categoryName; }
+    public void setCategoryName(String categoryName) { this.categoryName = categoryName; }
+
+    // ========== PHƯƠNG THỨC TIỆN ÍCH ==========
+    // Alias cho startingPrice (để tương thích với AuctionCard)
+    public double getStartPrice() {
+        return startingPrice;
+    }
+
+    public void setStartPrice(double startPrice) {
+        this.startingPrice = startPrice;
+    }
+
+    // Business logic methods
     public boolean isActive() {
         if (endTime == null) return false;
         return (status == AuctionStatus.OPEN || status == AuctionStatus.RUNNING)
@@ -111,7 +130,6 @@ public class AuctionDTO implements Serializable {
     public boolean canBid(String userId) {
         if (userId == null) return false;
         if (!isActive()) return false;
-        // Người dùng không được là seller và không được là người thắng hiện tại (nếu có)
         if (sellerId != null && sellerId.equals(userId)) return false;
         if (currentWinnerId != null && currentWinnerId.equals(userId)) return false;
         return true;

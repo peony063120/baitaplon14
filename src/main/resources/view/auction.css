@@ -1,0 +1,82 @@
+/* Vestige — JavaFX stylesheet (pair with AuctionView.fxml) */
+
+.root-bg            { -fx-background-color: #1a1a22; -fx-font-family: "Inter", "Segoe UI", sans-serif; }
+.scroll-clean       { -fx-background: transparent; -fx-background-color: transparent; }
+.scroll-clean .viewport { -fx-background-color: transparent; }
+
+/* Navbar */
+.navbar             { -fx-background-color: rgba(26,26,34,0.85); -fx-border-color: transparent transparent #2a2a35 transparent; -fx-border-width: 0 0 1 0; }
+.brand              { -fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: 800; }
+.nav-link           { -fx-text-fill: #8a8a99; -fx-font-size: 13px; -fx-font-weight: 600; }
+.user-chip          { -fx-text-fill: #8a8a99; -fx-font-family: "JetBrains Mono", monospace; -fx-font-size: 11px;
+                      -fx-background-color: rgba(255,255,255,0.05); -fx-border-color: #2a2a35; -fx-padding: 4 10 4 10; }
+
+/* Buttons */
+.btn-primary        { -fx-background-color: #d97548; -fx-text-fill: white; -fx-font-weight: 800; -fx-font-size: 11px;
+                      -fx-padding: 10 18 10 18; -fx-background-radius: 0; -fx-cursor: hand; }
+.btn-primary:hover  { -fx-background-color: #e08555; }
+.btn-light          { -fx-background-color: #fafafa; -fx-text-fill: #1a1a22; -fx-font-weight: 800; -fx-font-size: 13px;
+                      -fx-padding: 16 20 16 20; -fx-background-radius: 0; -fx-cursor: hand; }
+.btn-light:hover    { -fx-background-color: #e5e5e5; }
+.btn-ghost          { -fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: 800; -fx-font-size: 13px;
+                      -fx-padding: 16 20 16 20; -fx-border-color: #2a2a35; -fx-background-radius: 0; -fx-cursor: hand; }
+.btn-ghost:hover    { -fx-background-color: rgba(255,255,255,0.05); }
+
+/* Hero */
+.hero               { -fx-border-color: transparent transparent #2a2a35 transparent; -fx-border-width: 0 0 1 0; }
+.hero-left          { -fx-border-color: transparent #2a2a35 transparent transparent; -fx-border-width: 0 1 0 0; }
+.hero-right         { -fx-background-color: rgba(20,20,28,0.6); }
+.eyebrow            { -fx-text-fill: #d97548; -fx-font-family: "JetBrains Mono", monospace; -fx-font-size: 11px; }
+.dot-live           { -fx-background-color: #d97548; -fx-background-radius: 50; -fx-min-width: 8; -fx-min-height: 8; -fx-max-width: 8; -fx-max-height: 8; }
+.hero-title         { -fx-text-fill: white;   -fx-font-size: 56px; -fx-font-weight: 800; }
+.hero-title-muted   { -fx-text-fill: #6a6a78; -fx-font-size: 56px; -fx-font-weight: 800; }
+.hero-image-wrap    { -fx-border-color: rgba(255,255,255,0.05); -fx-border-width: 1; }
+
+.caption-mono       { -fx-text-fill: #8a8a99; -fx-font-family: "JetBrains Mono", monospace; -fx-font-size: 10px; }
+.bid-amount         { -fx-text-fill: white;   -fx-font-size: 44px; -fx-font-weight: 800; }
+.reserve-met        { -fx-text-fill: #d97548; -fx-font-size: 13px; -fx-font-weight: 600; }
+.countdown          { -fx-text-fill: white;   -fx-font-family: "JetBrains Mono", monospace; -fx-font-size: 22px; -fx-font-weight: 700; }
+.hairline           { -fx-background-color: #2a2a35; -fx-pref-height: 1; -fx-padding: 0; }
+.hairline-top       { -fx-background-color: #2a2a35; -fx-pref-height: 1; }
+.time-bar > .bar    { -fx-background-color: #d97548; -fx-background-radius: 0; }
+.time-bar > .track  { -fx-background-color: rgba(255,255,255,0.05); -fx-background-radius: 0; }
+.time-bar           { -fx-pref-height: 4; }
+
+/* Sections */
+.section            { -fx-background-color: transparent; }
+.section-title      { -fx-text-fill: white; -fx-font-size: 26px; -fx-font-weight: 800; }
+.lot-grid           { -fx-background-color: #2a2a35; }
+
+/* Lot cards */
+.lot-card           { -fx-background-color: rgba(255,255,255,0.02); }
+.lot-card:hover     { -fx-background-color: rgba(255,255,255,0.04); }
+.lot-image-wrap     { -fx-border-color: rgba(255,255,255,0.05); -fx-border-width: 1; }
+.lot-title          { -fx-text-fill: white;   -fx-font-size: 14px; -fx-font-weight: 700; }
+.lot-sub            { -fx-text-fill: #8a8a99; -fx-font-size: 12px; }
+.lot-tag            { -fx-text-fill: #b0b0bd; -fx-font-family: "JetBrains Mono", monospace; -fx-font-size: 10px;
+                      -fx-background-color: rgba(255,255,255,0.05); -fx-padding: 4 8 4 8; }
+.lot-price          { -fx-text-fill: white;   -fx-font-size: 14px; -fx-font-weight: 700; }
+.lot-time           { -fx-text-fill: #d97548; -fx-font-family: "JetBrains Mono", monospace; -fx-font-size: 13px; }
+
+/* Split section */
+.split-section      { -fx-border-color: #2a2a35 transparent transparent transparent; -fx-border-width: 1 0 0 0; }
+.provenance         { -fx-background-color: transparent; }
+.provenance-body    { -fx-text-fill: #d6d6e0; -fx-font-size: 18px; -fx-line-spacing: 4; }
+.bid-history        { -fx-background-color: #14141c; -fx-border-color: transparent transparent transparent #2a2a35; -fx-border-width: 0 0 0 1; }
+.overline           { -fx-text-fill: #8a8a99; -fx-font-family: "JetBrains Mono", monospace; -fx-font-size: 12px; -fx-font-weight: 700; }
+.overline-accent    { -fx-text-fill: #d97548; -fx-font-family: "JetBrains Mono", monospace; -fx-font-size: 11px; -fx-font-weight: 700; }
+.meta-value         { -fx-text-fill: #d6d6e0; -fx-font-size: 13px; }
+
+/* Bid rows */
+.bid-row            { -fx-padding: 8 0 8 0; -fx-border-color: transparent transparent #2a2a35 transparent; -fx-border-width: 0 0 1 0; }
+.bid-row.dim-1      { -fx-opacity: 0.6; }
+.bid-row.dim-2      { -fx-opacity: 0.4; }
+.bidder             { -fx-text-fill: white; -fx-font-family: "JetBrains Mono", monospace; -fx-font-size: 11px; }
+.bid-value          { -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: 700; }
+.bid-time           { -fx-text-fill: #8a8a99; -fx-font-size: 10px; }
+
+.next-increment     { -fx-background-color: rgba(217,117,72,0.05); -fx-border-color: rgba(217,117,72,0.2); -fx-border-width: 1; }
+.next-amount        { -fx-text-fill: white; -fx-font-family: "JetBrains Mono", monospace; -fx-font-size: 26px; -fx-font-weight: 800; }
+
+/* Footer */
+.footer-text        { -fx-text-fill: #6a6a78; -fx-font-family: "JetBrains Mono", monospace; -fx-font-size: 10px; }
