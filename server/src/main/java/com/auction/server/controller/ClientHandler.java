@@ -1,6 +1,7 @@
 package com.auction.server.controller;
 
 import com.auction.common.dto.*;
+import com.auction.common.exception.InvalidBidException;
 import com.auction.common.observer.AuctionSubject;
 import com.auction.common.observer.ClientObserver;
 import com.auction.server.controller.AuctionController;
@@ -135,7 +136,7 @@ public class ClientHandler implements Runnable {
         out.println("CREATE_AUCTION_OK");
     }
 
-    private void handlePlaceBid(String payload) {
+    private void handlePlaceBid(String payload) throws InvalidBidException {
         String[] p = payload.split(":");
         boolean isAutoBid = p.length > 3 && Boolean.parseBoolean(p[3]);
         BidRequest req = new BidRequest(p[0], p[1], Double.parseDouble(p[2]), isAutoBid);

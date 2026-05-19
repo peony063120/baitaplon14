@@ -4,6 +4,7 @@ import com.auction.common.dto.AutoBidRequest;
 import com.auction.common.dto.BidRequest;
 import com.auction.common.entity.*;
 import com.auction.common.enums.AuctionStatus;
+import com.auction.common.exception.InvalidBidException;
 import com.auction.common.observer.AuctionSubject;
 import com.auction.common.strategy.BiddingStrategy;
 import com.auction.common.strategy.NormalBiddingStrategy;
@@ -40,7 +41,7 @@ public class BiddingService {
     /**
      * Đặt giá – đồng bộ trên đối tượng auction để tránh xung đột
      */
-    public void placeBid(BidRequest request) {
+    public void placeBid(BidRequest request) throws InvalidBidException {
         Auction auction = auctionDAO.getAuction(request.getAuctionId());
         if (auction == null) {
             throw new IllegalArgumentException("Auction not found");
@@ -50,7 +51,7 @@ public class BiddingService {
         synchronized (auction) {
             // Kiểm tra trạng thái
             if (auction.getStatus() != AuctionStatus.RUNNING) {
-                throw new IllegalStateException("Auction is not running");
+                throw new IllegalArgumentException("Auction is not running");
             }
 
             // Seller không được đấu giá sản phẩm của mình
