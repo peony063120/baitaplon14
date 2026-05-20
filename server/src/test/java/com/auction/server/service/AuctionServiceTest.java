@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
@@ -25,21 +26,35 @@ class AuctionServiceTest {
     @Mock
     private AuctionDAO auctionDAO;
 
-    private AuctionService auctionService;  // Không dùng @InjectMocks
+    @Spy  // Dùng Spy để mapper thật vẫn hoạt động
+    private AuctionMapper mapper = new AuctionMapper();
+
+    @InjectMocks  // Inject cả auctionDAO và mapper
+    private AuctionService auctionService;
 
     private Auction sampleAuction;
+    private AuctionDTO sampleAuctionDTO;
 
     @BeforeEach
     void setUp() {
-        // Dùng constructor có tham số để inject mock
-        auctionService = new AuctionService(auctionDAO);
-
+        // Tạo sample auction
         sampleAuction = new Auction("item1", "seller1",
                 LocalDateTime.now().plusHours(1),
                 LocalDateTime.now().plusDays(1),
                 100.0);
         sampleAuction.setId("auc1");
         sampleAuction.setStatus(AuctionStatus.DRAFT);
+
+        // Tạo sample DTO từ auction
+        sampleAuctionDTO = new AuctionDTO();
+        sampleAuctionDTO.setId("auc1");
+        sampleAuctionDTO.setItemId("item1");
+        sampleAuctionDTO.setSellerId("seller1");
+        sampleAuctionDTO.setStartingPrice(100.0);
+        sampleAuctionDTO.setCurrentPrice(100.0);
+        sampleAuctionDTO.setStatus(AuctionStatus.DRAFT);
+        sampleAuctionDTO.setStartTime(LocalDateTime.now().plusHours(1));
+        sampleAuctionDTO.setEndTime(LocalDateTime.now().plusDays(1));
     }
 
     @Test
@@ -68,18 +83,12 @@ class AuctionServiceTest {
         when(auctionDAO.getAuction("unknown")).thenReturn(null);
 
         assertThrows(AuctionNotFoundException.class, () -> auctionService.getAuction("unknown"));
-
-        // Không cần verify ở đây
     }
 
     @Test
     void createAuction() {
-        AuctionDTO dto = new AuctionDTO();
-        dto.setItemId("item2");
-        dto.setSellerId("seller2");
-        dto.setCurrentPrice(200.0);
-
-        auctionService.createAuction(dto);
+        // Không cần khi dùng @InjectMocks + @Spy
+        auctionService.createAuction(sampleAuctionDTO);
 
         verify(auctionDAO, times(1)).saveAuction(any(Auction.class));
     }

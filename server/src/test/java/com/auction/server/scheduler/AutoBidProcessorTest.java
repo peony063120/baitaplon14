@@ -14,7 +14,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,10 +25,8 @@ class AutoBidProcessorTest {
 
     @BeforeEach
     void setUp() {
-        processor = AutoBidProcessor.getInstance();
-        // Replace internal DAO and service with mocks via reflection (if necessary)
-        // Alternatively, we can test processAllActiveAuctions separately using a testable subclass.
-        // For simplicity, we'll test the core logic by invoking processAllActiveAuctions via reflection.
+        // Dùng constructor test thay vì getInstance()
+        processor = new AutoBidProcessor(auctionDAO, autoBidService);
     }
 
     @Test
@@ -45,13 +42,22 @@ class AutoBidProcessorTest {
         when(auctionDAO.getAuctionsByStatus(AuctionStatus.RUNNING)).thenReturn(List.of(runningAuction));
         doNothing().when(autoBidService).processAutoBids(runningAuction);
 
-        // Call private method via reflection (or expose for testing)
-        // For simplicity, we assume you have a method processAllActiveAuctions() that uses the injected dependencies.
-        // If not, you can restructure code to inject mocks via constructor.
-        // Here we just verify that no exception is thrown if we call it.
-        assertDoesNotThrow(() -> {
-            // processor.processAllActiveAuctions(); // requires mocking static singleton
-        });
+        // Gọi method package-private
+        processor.processAllActiveAuctions();
+
+        verify(auctionDAO, times(1)).getAuctionsByStatus(AuctionStatus.RUNNING);
+        verify(autoBidService, times(1)).processAutoBids(runningAuction);
+        verify(autoBidService, never()).processAutoBids(finishedAuction);
+    }
+
+    @Test
+    void processAllActiveAuctions_NoRunningAuctions() {
+        when(auctionDAO.getAuctionsByStatus(AuctionStatus.RUNNING)).thenReturn(List.of());
+
+        processor.processAllActiveAuctions();
+
+        verify(auctionDAO, times(1)).getAuctionsByStatus(AuctionStatus.RUNNING);
+        verify(autoBidService, never()).processAutoBids(any());
     }
 
     @AfterEach

@@ -28,13 +28,30 @@ public class BiddingService {
     private final AntiSnipingService antiSnipingService;
     private final AutoBidService autoBidService;
 
+    // Constructor mặc định (dùng trong production)
     public BiddingService() {
         this.auctionDAO = AuctionDAO.getInstance();
-        this.bidDAO = new BidTransactionDAO();
+        this.bidDAO = BidTransactionDAO.getInstance();
         this.userDAO = UserDAO.getInstance();
         this.subject = new AuctionSubject();
         this.antiSnipingService = new AntiSnipingService();
         this.autoBidService = new AutoBidService();
+        this.strategy = new NormalBiddingStrategy();
+    }
+
+    // Constructor để test inject mock
+    public BiddingService(AuctionDAO auctionDAO,
+                          BidTransactionDAO bidDAO,
+                          UserDAO userDAO,
+                          AuctionSubject subject,
+                          AntiSnipingService antiSnipingService,
+                          AutoBidService autoBidService) {
+        this.auctionDAO = auctionDAO;
+        this.bidDAO = bidDAO;
+        this.userDAO = userDAO;
+        this.subject = subject;
+        this.antiSnipingService = antiSnipingService;
+        this.autoBidService = autoBidService;
         this.strategy = new NormalBiddingStrategy();
     }
 

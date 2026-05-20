@@ -14,29 +14,33 @@ class ConcurrentBidManagerTest {
     @Test
     void testConcurrentBids_OnlyOneSucceeds() throws InterruptedException {
         ConcurrentBidManager manager = new ConcurrentBidManager();
-        ExecutorService testExecutor = Executors.newFixedThreadPool(10);
+        ExecutorService testExecutor = Executors.newFixedThreadPool(50); // Tăng lên 50 thread
         AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger acceptedCount = new AtomicInteger(0); // Thêm để kiểm tra
 
         String auctionId = "auc1";
 
-        // Gửi 100 yêu cầu đấu giá đồng thời cho cùng một auction
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 500; i++) { // Tăng số lượng lên 500
             testExecutor.submit(() -> {
-                // Mỗi yêu cầu sẽ thực hiện tăng successCount
-                manager.executeBid(auctionId, successCount::incrementAndGet);
+                boolean accepted = manager.executeBid(auctionId, () -> {
+                    // Mô phỏng xử lý lâu
+                    try { Thread.sleep(5); } catch (InterruptedException ignored) {}
+                    successCount.incrementAndGet();
+                });
+                if (accepted) acceptedCount.incrementAndGet();
             });
         }
 
-        // Đợi tất cả yêu cầu gửi đi hoàn tất
         testExecutor.shutdown();
-        testExecutor.awaitTermination(5, TimeUnit.SECONDS);
-
-        // Đợi thêm một chút để manager xử lý hết các tác vụ trong hàng đợi nội bộ
-        Thread.sleep(500);
-
-        // Chỉ có một tác vụ được thực thi thành công (do lock chỉ cho phép một luồng chạy tại một thời điểm)
-        assertEquals(1, successCount.get());
+        testExecutor.awaitTermination(10, TimeUnit.SECONDS);
 
         manager.shutdown();
+        manager.awaitTermination(10, TimeUnit.SECONDS);
+
+        System.out.println("Accepted: " + acceptedCount.get() + ", Success: " + successCount.get());
+
+        // Nếu code đúng, cả hai phải bằng 1
+        assertEquals(1, successCount.get());
+        assertEquals(1, acceptedCount.get());
     }
 }

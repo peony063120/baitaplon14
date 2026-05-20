@@ -20,6 +20,12 @@ public class AuctionService {
         this.mapper = new AuctionMapper();
     }
 
+    // Thêm constructor này để test có thể inject mock
+    public AuctionService(AuctionDAO auctionDAO) {
+        this.auctionDAO = auctionDAO;
+        this.mapper = new AuctionMapper();
+    }
+    
     public List<AuctionDTO> getAllAuctions() {
         return auctionDAO.getAllAuctions()
                 .stream()
