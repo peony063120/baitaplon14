@@ -3,6 +3,7 @@ package com.auction.server.controller;
 import com.auction.common.dto.AutoBidRequest;
 import com.auction.common.dto.BidRequest;
 import com.auction.common.entity.BidTransaction;
+import com.auction.common.exception.InvalidBidException;
 import com.auction.server.service.BiddingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,7 @@ class BidControllerTest {
     }
 
     @Test
-    void placeBid_ShouldCallService() {
+    void placeBid_ShouldCallService() throws InvalidBidException {
         doNothing().when(biddingService).placeBid(bidRequest);
         bidController.placeBid(bidRequest);
         verify(biddingService, times(1)).placeBid(bidRequest);
@@ -61,5 +62,15 @@ class BidControllerTest {
         doNothing().when(biddingService).cancelAutoBid("auc1", "bidder1");
         bidController.cancelAutoBid("auc1", "bidder1");
         verify(biddingService, times(1)).cancelAutoBid("auc1", "bidder1");
+    }
+
+    @Test
+    void placeBid_ShouldThrowException_WhenBidIsInvalid() throws InvalidBidException {
+        doThrow(new InvalidBidException("Mức giá không hợp lệ"))
+            .when(biddingService).placeBid(bidRequest);
+
+        assertThrows(InvalidBidException.class, () -> {
+            bidController.placeBid(bidRequest);
+        });
     }
 }

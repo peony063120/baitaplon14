@@ -4,6 +4,7 @@ import com.auction.common.dto.AutoBidRequest;
 import com.auction.common.dto.BidRequest;
 import com.auction.common.entity.*;
 import com.auction.common.enums.AuctionStatus;
+import com.auction.common.exception.InvalidBidException;
 import com.auction.common.observer.AuctionSubject;
 import com.auction.common.strategy.BiddingStrategy;
 import com.auction.common.strategy.NormalBiddingStrategy;
@@ -27,9 +28,10 @@ public class BiddingService {
     private final AntiSnipingService antiSnipingService;
     private final AutoBidService autoBidService;
 
+    // Constructor mặc định (dùng trong production)
     public BiddingService() {
         this.auctionDAO = AuctionDAO.getInstance();
-        this.bidDAO = new BidTransactionDAO();
+        this.bidDAO = BidTransactionDAO.getInstance();
         this.userDAO = UserDAO.getInstance();
         this.subject = new AuctionSubject();
         this.antiSnipingService = new AntiSnipingService();
@@ -37,10 +39,26 @@ public class BiddingService {
         this.strategy = new NormalBiddingStrategy();
     }
 
+    // Constructor để test inject mock
+    public BiddingService(AuctionDAO auctionDAO,
+                          BidTransactionDAO bidDAO,
+                          UserDAO userDAO,
+                          AuctionSubject subject,
+                          AntiSnipingService antiSnipingService,
+                          AutoBidService autoBidService) {
+        this.auctionDAO = auctionDAO;
+        this.bidDAO = bidDAO;
+        this.userDAO = userDAO;
+        this.subject = subject;
+        this.antiSnipingService = antiSnipingService;
+        this.autoBidService = autoBidService;
+        this.strategy = new NormalBiddingStrategy();
+    }
+
     /**
      * Đặt giá – đồng bộ trên đối tượng auction để tránh xung đột
      */
-    public void placeBid(BidRequest request) {
+    public void placeBid(BidRequest request) throws InvalidBidException {
         Auction auction = auctionDAO.getAuction(request.getAuctionId());
         if (auction == null) {
             throw new IllegalArgumentException("Auction not found");
@@ -50,7 +68,7 @@ public class BiddingService {
         synchronized (auction) {
             // Kiểm tra trạng thái
             if (auction.getStatus() != AuctionStatus.RUNNING) {
-                throw new IllegalStateException("Auction is not running");
+                throw new IllegalArgumentException("Auction is not running");
             }
 
             // Seller không được đấu giá sản phẩm của mình

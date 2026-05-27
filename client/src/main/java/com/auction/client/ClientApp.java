@@ -16,9 +16,13 @@ public class ClientApp extends Application {
     public void start(Stage stage) throws Exception {
         primaryStage = stage;
 
-        // Initialize server connection
-        serverConnection = new ServerConnection("localhost", 9999);
-        serverConnection.connect();
+        serverConnection = ServerConnection.getInstance();
+
+        try {
+            serverConnection.connect("localhost", 9999);
+        } catch (Exception e) {
+            System.err.println("Could not connect to the server:" + e.getMessage());
+        }
 
         // Load login screen
         showLoginScreen();

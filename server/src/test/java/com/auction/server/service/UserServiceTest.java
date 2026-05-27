@@ -46,7 +46,7 @@ class UserServiceTest {
 
     @Test
     void register_Success() {
-        when(userDAO.findUserByUsername("john")).thenReturn(null);
+        // register() không gọi findUserByUsername, chỉ gọi saveUser
         doNothing().when(userDAO).saveUser(any(User.class));
 
         assertDoesNotThrow(() -> userService.register(userDTO));

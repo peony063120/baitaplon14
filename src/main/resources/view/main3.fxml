@@ -7,7 +7,7 @@
 
 <!-- BidVN - San Dau Gia Truc Tuyen - Controller: com.bidvn.AuctionPlatformController -->
 
-<BorderPane prefHeight="800" prefWidth="900.0" style="-fx-background-color: #F5F0E8;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bidvn.AuctionPlatformController">
+<BorderPane prefHeight="800" prefWidth="1200.0" style="-fx-background-color: #F5F0E8;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bidvn.AuctionPlatformController">
 
     <!-- ═══════════════════════════════════════════ -->
     <!-- HEADER                                       -->
