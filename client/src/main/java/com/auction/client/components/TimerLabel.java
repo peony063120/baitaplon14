@@ -7,15 +7,25 @@ import javafx.scene.control.Label;
 import javafx.util.Duration;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class TimerLabel extends Label {
     private LocalDateTime endTime;
     private Timeline timer;
 
+    public TimerLabel() {
+        getStyleClass().add("timer-label");
+    }
+
     public TimerLabel(LocalDateTime endTime) {
+        this();
+        startCountdown(endTime);
+    }
+
+    public void startCountdown(LocalDateTime endTime) {
         this.endTime = endTime;
-        setStyle("-fx-font-family: monospace; -fx-font-size: 13px; -fx-text-fill: #D97706; -fx-font-weight: bold;");
+        if (timer != null) {
+            timer.stop();
+        }
         startTimer();
     }
 
@@ -28,28 +38,36 @@ public class TimerLabel extends Label {
 
     private void updateDisplay() {
         if (endTime == null) {
-            setText("Chưa xác định");
+            setText("Chua xac dinh");
             return;
         }
+
         long seconds = java.time.Duration.between(LocalDateTime.now(), endTime).getSeconds();
         if (seconds <= 0) {
-            setText("🔴 Đã kết thúc");
-            timer.stop();
+            setText("Da ket thuc");
+            if (!getStyleClass().contains("ended")) {
+                getStyleClass().add("ended");
+            }
+            if (timer != null) {
+                timer.stop();
+            }
             return;
         }
+
+        getStyleClass().remove("ended");
         long days = seconds / 86400;
         long hours = (seconds % 86400) / 3600;
         long minutes = (seconds % 3600) / 60;
         long secs = seconds % 60;
 
         if (days > 0) {
-            setText(String.format("⏰ %d ngày %02d giờ", days, hours));
+            setText(String.format("%d ngay %02d gio", days, hours));
         } else if (hours > 0) {
-            setText(String.format("⏰ %02d:%02d:%02d", hours, minutes, secs));
+            setText(String.format("%02d:%02d:%02d", hours, minutes, secs));
         } else if (minutes > 0) {
-            setText(String.format("⏰ %02d:%02d", minutes, secs));
+            setText(String.format("%02d:%02d", minutes, secs));
         } else {
-            setText(String.format("⏰ %02d giây", secs));
+            setText(String.format("%02d giay", secs));
         }
     }
 
@@ -59,6 +77,8 @@ public class TimerLabel extends Label {
     }
 
     public void stop() {
-        if (timer != null) timer.stop();
+        if (timer != null) {
+            timer.stop();
+        }
     }
 }

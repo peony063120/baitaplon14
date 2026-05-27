@@ -6,53 +6,82 @@ package com.auction.client.controller;
  * → nếu thành công thì chuyển sang màn hình chính main.fxml
  */
 
+import com.auction.client.ClientApp;
 import com.auction.client.model.ClientModel;
+import com.auction.client.service.DataService;
+import com.auction.common.dto.LoginResponse;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 public class LoginController {
 
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
+    @FXML private ComboBox<String> roleCombo;   // ← THÊM roleCombo
     @FXML private Label errorLabel;
 
     private final ClientModel clientModel = ClientModel.getInstance();
 
     @FXML
-    public void handleLogin() {
+    public void initialize() {
+        // Khởi tạo roleCombo
+        roleCombo.getItems().addAll("BIDDER", "SELLER", "ADMIN");
+        roleCombo.setValue("BIDDER");
+    }
+
+    @FXML
+    private void handleLogin() {
         if (!validateCredentials()) return;
 
         String username = usernameField.getText().trim();
-        String password = passwordField.getText().trim();
+        String password = passwordField.getText();
+        String role = roleCombo.getValue();
 
-        boolean success = clientModel.login(username, password);
-        if (success) {
-            navigateToMain();
+        // Sử dụng DataService để login (hỗ trợ mock/API)
+        DataService.getInstance().login(username, password, role,
+                this::onLoginSuccess,
+                this::onLoginError
+        );
+    }
+
+    private void onLoginSuccess(LoginResponse loginResp) {
+        if (loginResp.isSuccess()) {
+            // Lưu session vào ClientModel
+            clientModel.setSession(
+                    loginResp.getSessionToken(),
+                    loginResp.getUserId(),
+                    loginResp.getUsername(),
+                    loginResp.getRole(),
+                    loginResp.getBalance()
+            );
+            // Chuyển sang màn hình chính
+            try {
+                ClientApp.showMainScreen();
+            } catch (Exception e) {
+                showError("Lỗi chuyển màn hình: " + e.getMessage());
+            }
         } else {
-            showError("Sai tên đăng nhập hoặc mật khẩu");
+            showError(loginResp.getMessage());
         }
+    }
+
+    private void onLoginError(String error) {
+        showError("Lỗi kết nối: " + error);
     }
 
     @FXML
     public void goToRegister() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/register.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/register.fxml"));
             Stage stage = (Stage) usernameField.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
             stage.setTitle("Đăng ký");
         } catch (Exception e) {
             showError("Không thể mở trang đăng ký: " + e.getMessage());
         }
-    }
-
-    public void showError(String message) {
-        errorLabel.setText(message);
-        errorLabel.setVisible(true);
     }
 
     private boolean validateCredentials() {
@@ -71,14 +100,8 @@ public class LoginController {
         return true;
     }
 
-    private void navigateToMain() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/main.fxml"));
-            Stage stage = (Stage) usernameField.getScene().getWindow();
-            stage.setScene(new Scene(loader.load()));
-            stage.setTitle("Online Auction System");
-        } catch (Exception e) {
-            showError("Lỗi điều hướng: " + e.getMessage());
-        }
+    private void showError(String message) {
+        errorLabel.setText(message);
+        errorLabel.setVisible(true);
     }
 }

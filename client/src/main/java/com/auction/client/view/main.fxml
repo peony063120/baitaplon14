@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane stylesheets="@../styles/main.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.client.controller.MainController">
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="24" styleClass="dashboard-header">
+            <padding>
+                <Insets bottom="16" left="28" right="28" top="16" />
+            </padding>
+            <HBox alignment="CENTER_LEFT" onMouseClicked="#showDashboard" spacing="8">
+                <!-- TODO(asset): Replace this wordmark with the final monochrome logo asset. -->
+                <Text styleClass="logo-text" text="Acheron" />
+            </HBox>
+            <TextField fx:id="searchField" promptText="Search auctions..." styleClass="search-field" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Label fx:id="clockLabel" styleClass="clock" />
+            <Button fx:id="notifBtn" onAction="#showNotifications" styleClass="icon-btn" text="!" />
+            <Button fx:id="avatarBtn" onAction="#showProfile" styleClass="avatar-btn" text="U" />
+            <Button onAction="#onLogout" styleClass="logout-btn" text="Logout" />
+        </HBox>
+    </top>
+    <left>
+        <VBox spacing="12" styleClass="dashboard-sidebar">
+            <padding>
+                <Insets bottom="28" left="16" right="16" top="28" />
+            </padding>
+            <VBox spacing="8" styleClass="wallet-card">
+                <Text styleClass="muted-text" text="Available Balance" />
+                <Text fx:id="balanceLabel" styleClass="wallet-amount" text="VND 0" />
+                <HBox spacing="10">
+                    <Button onAction="#onDeposit" styleClass="wallet-btn deposit" text="Deposit" />
+                    <Button onAction="#onWithdraw" styleClass="wallet-btn withdraw" text="Withdraw" />
+                </HBox>
+            </VBox>
+            <VBox spacing="4">
+                <Text styleClass="nav-title" text="MENU" />
+                <ToggleButton fx:id="homeNav" onAction="#showDashboard" styleClass="nav-item" text="Dashboard" />
+                <ToggleButton fx:id="liveNav" onAction="#showLive" styleClass="nav-item" text="Live Auctions" />
+                <ToggleButton fx:id="historyNav" onAction="#showHistory" styleClass="nav-item" text="My Bids" />
+                <ToggleButton fx:id="walletNav" onAction="#showWallet" styleClass="nav-item" text="Wallet" />
+                <ToggleButton fx:id="profileNav" onAction="#showProfile" styleClass="nav-item" text="Profile" />
+            </VBox>
+            <VBox fx:id="sellerMenu" managed="false" spacing="4" visible="false">
+                <Text styleClass="nav-title" text="SELLER" />
+                <ToggleButton onAction="#showCreateAuction" styleClass="nav-item" text="Create Auction" />
+                <ToggleButton onAction="#showMyAuctions" styleClass="nav-item" text="My Auctions" />
+            </VBox>
+            <VBox spacing="4">
+                <Text styleClass="nav-title" text="CATEGORIES" />
+                <ToggleButton fx:id="catAll" onAction="#filterByCategory" styleClass="cat-item" text="All" userData="all" />
+                <ToggleButton fx:id="catXe" onAction="#filterByCategory" styleClass="cat-item" text="Vehicles" userData="xe" />
+                <ToggleButton fx:id="catDienTu" onAction="#filterByCategory" styleClass="cat-item" text="Electronics" userData="dien-tu" />
+                <ToggleButton fx:id="catNgheThuat" onAction="#filterByCategory" styleClass="cat-item" text="Art" userData="nghe-thuat" />
+                <ToggleButton fx:id="catTrangSuc" onAction="#filterByCategory" styleClass="cat-item" text="Jewelry" userData="trang-suc" />
+                <ToggleButton fx:id="catBatDongSan" onAction="#filterByCategory" styleClass="cat-item" text="Real Estate" userData="bat-dong-san" />
+                <ToggleButton fx:id="catDongHo" onAction="#filterByCategory" styleClass="cat-item" text="Watches" userData="dong-ho" />
+            </VBox>
+        </VBox>
+    </left>
+    <center>
+        <StackPane fx:id="contentPane" styleClass="dashboard-content" />
+    </center>
+</BorderPane>

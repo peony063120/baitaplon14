@@ -10,185 +10,161 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
 import javafx.util.Duration;
-import com.auction.client.components.TimerLabel;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
 
 public class AuctionCard extends VBox {
     private AuctionDTO auction;
-    private Consumer<AuctionDTO> onBidCallback;
+    private final Consumer<AuctionDTO> onBidCallback;
     private Timeline countdownTimer;
-
-    // Style constants
-    private static final String CARD_STYLE = """
-        -fx-background-color: white;
-        -fx-border-color: #E2D9C8;
-        -fx-border-radius: 16;
-        -fx-background-radius: 16;
-        -fx-padding: 12;
-        -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 4, 0, 0, 2);
-        """;
-    private static final String HOVER_STYLE = """
-        -fx-background-color: white;
-        -fx-border-color: #C9A84C;
-        -fx-border-radius: 16;
-        -fx-background-radius: 16;
-        -fx-padding: 12;
-        -fx-effect: dropshadow(gaussian, rgba(201,168,76,0.15), 8, 0, 0, 2);
-        """;
 
     public AuctionCard(AuctionDTO auction, Consumer<AuctionDTO> onBidCallback) {
         this.auction = auction;
         this.onBidCallback = onBidCallback;
+        getStyleClass().add("auction-card");
         buildUI();
-        setOnMouseEntered(e -> setStyle(HOVER_STYLE));
-        setOnMouseExited(e -> setStyle(CARD_STYLE));
-        setStyle(CARD_STYLE);
         startCountdown();
     }
 
     private void buildUI() {
-        setSpacing(8);
+        setSpacing(10);
         setMinWidth(280);
         setMaxWidth(280);
 
-        // Image/Icon area
-        Label iconLabel = new Label(getIconForCategory());
-        iconLabel.setFont(Font.font(48));
-        iconLabel.setAlignment(Pos.CENTER);
-        iconLabel.setMaxWidth(Double.MAX_VALUE);
-        iconLabel.setStyle("-fx-padding: 20 0 20 0; -fx-background-color: #F0EBE0; -fx-background-radius: 12;");
+        Label imagePlaceholder = new Label(getCategoryLabel());
+        imagePlaceholder.getStyleClass().add("asset-placeholder");
+        imagePlaceholder.setAlignment(Pos.CENTER);
+        imagePlaceholder.setMaxWidth(Double.MAX_VALUE);
+        imagePlaceholder.setMinHeight(130);
+        // TODO(asset): Replace this text placeholder with the auction item image when image URLs are available.
 
-        // Status badge
         Label statusBadge = new Label(getStatusText());
         statusBadge.getStyleClass().add("card-badge");
-        statusBadge.setStyle(getStatusStyle());
 
-        // Category label
-        Label categoryLabel = new Label(auction.getCategoryName());
-        categoryLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #8A6520; -fx-font-weight: bold; -fx-letter-spacing: 0.8px;");
+        Label categoryLabel = new Label(getCategoryLabel().toUpperCase());
+        categoryLabel.getStyleClass().add("muted-text");
+        categoryLabel.setStyle("-fx-font-size: 11px; -fx-font-weight: 800;");
 
-        // Title
         Label titleLabel = new Label(auction.getItemName());
-        titleLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: 600; -fx-wrap-text: true;");
+        titleLabel.setWrapText(true);
+        titleLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: 800; -fx-text-fill: #111111;");
 
-        // Price row
         HBox priceBox = new HBox(16);
         priceBox.setAlignment(Pos.CENTER_LEFT);
 
         VBox currentPriceBox = new VBox(2);
-        Label currentPriceLabel = new Label("Giá hiện tại");
-        currentPriceLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #6B7A8D;");
+        Label currentPriceLabel = new Label("Gia hien tai");
+        currentPriceLabel.getStyleClass().add("muted-text");
+        currentPriceLabel.setStyle("-fx-font-size: 11px;");
         Label currentPriceValue = new Label(formatPrice(auction.getCurrentPrice()));
-        currentPriceValue.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #C9A84C;");
+        currentPriceValue.getStyleClass().add("current-price");
         currentPriceBox.getChildren().addAll(currentPriceLabel, currentPriceValue);
 
         VBox startPriceBox = new VBox(2);
-        Label startPriceLabel = new Label("Khởi điểm");
-        startPriceLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #6B7A8D;");
+        Label startPriceLabel = new Label("Khoi diem");
+        startPriceLabel.getStyleClass().add("muted-text");
+        startPriceLabel.setStyle("-fx-font-size: 11px;");
         Label startPriceValue = new Label(formatPrice(auction.getStartPrice()));
-        startPriceValue.setStyle("-fx-font-size: 13px; -fx-text-fill: #6B7A8D;");
+        startPriceValue.getStyleClass().add("muted-text");
+        startPriceValue.setStyle("-fx-font-size: 13px;");
         startPriceBox.getChildren().addAll(startPriceLabel, startPriceValue);
 
         priceBox.getChildren().addAll(currentPriceBox, startPriceBox);
 
-        // Meta row
         HBox metaBox = new HBox(12);
-        Label bidCountLabel = new Label("🟢 " + auction.getTotalBids() + " lượt đặt");
-        bidCountLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #6B7A8D;");
+        metaBox.setAlignment(Pos.CENTER_LEFT);
+        Label bidCountLabel = new Label(auction.getTotalBids() + " luot dat");
+        bidCountLabel.getStyleClass().add("muted-text");
+        bidCountLabel.setStyle("-fx-font-size: 12px;");
 
         TimerLabel timerLabel = new TimerLabel(auction.getEndTime());
+        HBox.setHgrow(timerLabel, Priority.ALWAYS);
         metaBox.getChildren().addAll(bidCountLabel, timerLabel);
 
-        // Bid button
-        Button bidButton = new Button("🏷️ Đặt Giá Ngay");
+        Button bidButton = new Button("Dat gia ngay");
         bidButton.getStyleClass().add("bid-button");
-        bidButton.setStyle("""
-            -fx-background-color: #C9A84C;
-            -fx-text-fill: #0D1B2A;
-            -fx-font-weight: bold;
-            -fx-padding: 8 16;
-            -fx-background-radius: 8;
-            """);
         bidButton.setOnAction(e -> {
-            if (onBidCallback != null) onBidCallback.accept(auction);
+            if (onBidCallback != null) {
+                onBidCallback.accept(auction);
+            }
         });
         bidButton.setMaxWidth(Double.MAX_VALUE);
 
-        // Stack for relative positioning
         StackPane badgePane = new StackPane();
-        badgePane.getChildren().addAll(iconLabel, statusBadge);
+        badgePane.getChildren().addAll(imagePlaceholder, statusBadge);
         StackPane.setAlignment(statusBadge, Pos.TOP_LEFT);
-        StackPane.setMargin(statusBadge, new Insets(8, 0, 0, 8));
+        StackPane.setMargin(statusBadge, new Insets(10, 0, 0, 10));
 
         getChildren().addAll(badgePane, categoryLabel, titleLabel, priceBox, metaBox, bidButton);
     }
 
-    private String getIconForCategory() {
+    private String getCategoryLabel() {
+        String categoryName = auction.getCategoryName();
+        if (categoryName != null && !categoryName.isBlank()) {
+            return categoryName;
+        }
+
         String category = auction.getCategory();
-        if (category == null) return "📦";
+        if (category == null || category.isBlank()) {
+            return "San pham";
+        }
+
         return switch (category.toLowerCase()) {
-            case "xe", "xe co", "xe cộ", "vehicle" -> "🚗";
-            case "dien-tu", "dien tu", "electronics" -> "💻";
-            case "nghe-thuat", "nghe thuat", "art" -> "🎨";
-            case "trang-suc", "trang suc", "jewelry" -> "💎";
-            case "bat-dong-san", "bat dong san", "realestate" -> "🏠";
-            case "dong-ho", "dong ho", "watch" -> "⌚";
-            case "co-vat", "co vat", "antique" -> "🏺";
-            default -> "📦";
+            case "xe", "xe co", "vehicle" -> "Phuong tien";
+            case "dien-tu", "dien tu", "electronics" -> "Dien tu";
+            case "nghe-thuat", "nghe thuat", "art" -> "Nghe thuat";
+            case "trang-suc", "trang suc", "jewelry" -> "Trang suc";
+            case "bat-dong-san", "bat dong san", "realestate" -> "Bat dong san";
+            case "dong-ho", "dong ho", "watch" -> "Dong ho";
+            case "co-vat", "co vat", "antique" -> "Co vat";
+            default -> category;
         };
     }
 
     private String getStatusText() {
         AuctionStatus status = auction.getStatus();
-        if (status == null) return "SẮP MỞ";
+        if (status == null) {
+            return "SAP MO";
+        }
         return switch (status) {
-            case RUNNING -> "TRỰC TIẾP";
-            case FINISHED -> "KẾT THÚC";
-            case PAID -> "ĐÃ THANH TOÁN";
-            case CANCELLED -> "ĐÃ HỦY";
-            default -> "SẮP MỞ";
-        };
-    }
-
-    private String getStatusStyle() {
-        AuctionStatus status = auction.getStatus();
-        if (status == null) return "-fx-background-color: #2563EB; -fx-text-fill: white;";
-        return switch (status) {
-            case RUNNING -> "-fx-background-color: #DC2626; -fx-text-fill: white;";
-            case FINISHED, PAID -> "-fx-background-color: #6B7280; -fx-text-fill: white;";
-            case CANCELLED -> "-fx-background-color: #9BAAB8; -fx-text-fill: white;";
-            default -> "-fx-background-color: #2563EB; -fx-text-fill: white;";
+            case RUNNING -> "DANG DIEN RA";
+            case FINISHED -> "KET THUC";
+            case PAID -> "DA THANH TOAN";
+            case CANCELLED -> "DA HUY";
+            default -> "SAP MO";
         };
     }
 
     private String formatPrice(double price) {
         if (price >= 1_000_000_000) {
-            return String.format("₫ %.1f Tỷ", price / 1_000_000_000);
+            return String.format("VND %.1f Ty", price / 1_000_000_000);
         } else if (price >= 1_000_000) {
-            return String.format("₫ %.0f Tr", price / 1_000_000);
+            return String.format("VND %.0f Tr", price / 1_000_000);
         }
-        return String.format("₫ %,.0f", price);
+        return String.format("VND %,.0f", price);
     }
 
     private void startCountdown() {
-        if (auction.getEndTime() == null || auction.getStatus() != AuctionStatus.RUNNING) return;
+        if (auction.getEndTime() == null || auction.getStatus() != AuctionStatus.RUNNING) {
+            return;
+        }
         countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> updateCountdown()));
         countdownTimer.setCycleCount(Animation.INDEFINITE);
         countdownTimer.play();
     }
 
     private void updateCountdown() {
-        if (auction.getEndTime() == null) return;
+        if (auction.getEndTime() == null) {
+            return;
+        }
         long remaining = java.time.Duration.between(LocalDateTime.now(), auction.getEndTime()).getSeconds();
-        if (remaining <= 0) {
-            if (countdownTimer != null) countdownTimer.stop();
+        if (remaining <= 0 && countdownTimer != null) {
+            countdownTimer.stop();
         }
     }
 

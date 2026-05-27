@@ -13,11 +13,42 @@ import java.util.logging.Logger;
 /**
  * RealtimeListener — Đối tượng quan sát (Observer) nhận các thông báo đẩy thời gian thực
  * từ máy chủ và phân phối tới tất cả các hàm gọi ngược (callbacks) của UI hoặc logic đã đăng ký.
+ *
+ * SỬ DỤNG SINGLETON PATTERN: Chỉ có một instance duy nhất trong toàn bộ ứng dụng.
  */
 public class RealtimeListener {
 
   private static final Logger LOGGER = Logger.getLogger(RealtimeListener.class.getName());
 
+  // ==================== SINGLETON PATTERN ====================
+  private static volatile RealtimeListener instance;
+
+  /**
+   * Lấy instance duy nhất của RealtimeListener (Singleton).
+   * @return instance của RealtimeListener
+   */
+  public static RealtimeListener getInstance() {
+    if (instance == null) {
+      synchronized (RealtimeListener.class) {
+        if (instance == null) {
+          instance = new RealtimeListener();
+        }
+      }
+    }
+    return instance;
+  }
+
+  /**
+   * Reset instance (dùng cho testing hoặc reconnect).
+   */
+  public static synchronized void resetInstance() {
+    if (instance != null) {
+      instance.clearAllCallbacks();
+      instance = null;
+    }
+  }
+
+  // ==================== FIELDS ====================
   // Bản đồ chứa danh sách các hàm Callback đã đăng ký theo từng loại sự kiện cụ thể
   private final Map<String, List<Consumer<Object>>> callbacks = new ConcurrentHashMap<>();
 
@@ -35,7 +66,16 @@ public class RealtimeListener {
     IS_JAVAFX_AVAILABLE = available;
   }
 
-  public RealtimeListener() {}
+  // Private constructor cho Singleton
+  private RealtimeListener() {}
+
+  /**
+   * Xóa tất cả callbacks (dùng khi reset instance).
+   */
+  private synchronized void clearAllCallbacks() {
+    callbacks.clear();
+    LOGGER.info("RealtimeListener: Đã xóa tất cả callbacks");
+  }
 
   /**
    * Đăng ký một hàm Callback để lắng nghe một loại sự kiện cụ thể từ mạng.
@@ -87,7 +127,7 @@ public class RealtimeListener {
    */
   public void onBidUpdate(BidTransaction bid) {
     LOGGER.info("RealtimeListener: Nhận sự kiện BID_UPDATE — Mã phiên="
-        + bid.getAuctionId() + " Số tiền=" + bid.getAmount());
+            + bid.getAuctionId() + " Số tiền=" + bid.getAmount());
     dispatch(MessageProtocol.TYPE_BID_UPDATE, bid);
   }
 
@@ -98,7 +138,7 @@ public class RealtimeListener {
    */
   public void onAuctionUpdate(Auction auction) {
     LOGGER.info("RealtimeListener: Nhận sự kiện AUCTION_UPDATE — Mã phiên=" + auction.getId()
-        + " Trạng thái mới=" + auction.getStatus());
+            + " Trạng thái mới=" + auction.getStatus());
     dispatch(MessageProtocol.TYPE_AUCTION_UPDATE, auction);
   }
 
@@ -128,7 +168,7 @@ public class RealtimeListener {
           cb.accept(payload);
         } catch (Exception ex) {
           LOGGER.warning("RealtimeListener: Lỗi thực thi hàm callback của sự kiện '"
-              + eventType + "' — " + ex.getMessage());
+                  + eventType + "' — " + ex.getMessage());
         }
       };
 

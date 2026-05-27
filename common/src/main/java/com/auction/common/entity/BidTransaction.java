@@ -40,6 +40,11 @@ public class BidTransaction implements Serializable {
     public void setAutoBid(boolean autoBid) { this.autoBid = autoBid; }
     public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
 
+    // Thêm method này
+    public long getTimestamp() {
+        return bidTime != null ? bidTime.toEpochSecond(java.time.ZoneOffset.UTC) : 0;
+    }
+
     @Override
     public String toString() {
         return "BidTransaction{" +

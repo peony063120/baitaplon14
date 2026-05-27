@@ -1,119 +1,179 @@
 package com.auction.client.controller;
 
-/**
- * Màn hình chính sau khi đăng nhập.
- * Hiển thị danh sách tất cả phiên đấu giá đang có,
- * cho phép tìm kiếm theo tên, click vào 1 phiên để mở chi tiết, và đăng xuất.
- */
-
-import com.auction.client.components.AuctionCard;
+import com.auction.client.ClientApp;
 import com.auction.client.model.ClientModel;
-import com.auction.client.network.ServerConnection;
-import com.auction.common.dto.AuctionDTO;
+import com.auction.common.entity.Bidder;
+import com.auction.common.entity.User;
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
+import javafx.scene.Node;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.FlowPane;
-import javafx.stage.Stage;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.io.IOException;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 public class MainController {
 
-    @FXML private FlowPane auctionListPane;
     @FXML private TextField searchField;
-    @FXML private Label userLabel;
-    @FXML private Label statusLabel;
+    @FXML private Label clockLabel;
+    @FXML private Text balanceLabel;
+    @FXML private StackPane contentPane;
+    @FXML private VBox sellerMenu;
+    @FXML private ToggleButton homeNav;
+    @FXML private ToggleButton liveNav;
+    @FXML private ToggleButton historyNav;
+    @FXML private ToggleButton walletNav;
+    @FXML private ToggleButton profileNav;
 
     private final ClientModel clientModel = ClientModel.getInstance();
-    private List<AuctionDTO> allAuctions;
+    private DashboardController dashboardController;
 
     @FXML
     public void initialize() {
-        if (clientModel.getCurrentUser() != null) {
-            userLabel.setText("Xin chào, " + clientModel.getCurrentUser().getFullName());
-        }
-        loadAuctions();
+        updateHeader();
+        showDashboard();
     }
 
-    public void loadAuctions() {
-        statusLabel.setText("Đang tải...");
-        String response = ServerConnection.getInstance().sendRequest("GET_AUCTIONS");
-        allAuctions = parseAuctions(response);
-        renderAuctions(allAuctions);
-        statusLabel.setText("Tìm thấy " + allAuctions.size() + " phiên đấu giá");
-    }
+    private void updateHeader() {
+        clockLabel.setText(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
 
-    public void openAuctionDetail(String auctionId) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/auction_detail.fxml"));
-            Stage stage = new Stage();
-            stage.setScene(new Scene(loader.load()));
-
-            AuctionDetailController controller = loader.getController();
-            controller.loadAuctionDetails(auctionId);
-
-            stage.setTitle("Chi tiết đấu giá");
-            stage.show();
-        } catch (Exception e) {
-            statusLabel.setText("Lỗi mở chi tiết: " + e.getMessage());
+        User currentUser = clientModel.getCurrentUser();
+        if (currentUser instanceof Bidder bidder) {
+            balanceLabel.setText(String.format("VND %,.0f", bidder.getBalance()));
+        } else {
+            balanceLabel.setText("VND 0");
         }
+
+        boolean seller = currentUser != null && "SELLER".equalsIgnoreCase(currentUser.getRole());
+        sellerMenu.setVisible(seller);
+        sellerMenu.setManaged(seller);
     }
 
     @FXML
-    public void logout() {
+    public void showDashboard() {
+        dashboardController = loadContent("/view/dashboard.fxml");
+        selectNav(homeNav);
+    }
+
+    @FXML
+    public void showLive() {
+        dashboardController = loadContent("/view/dashboard.fxml");
+        if (dashboardController != null) {
+            dashboardController.setFilter("ending");
+        }
+        selectNav(liveNav);
+    }
+
+    @FXML
+    public void showHistory() {
+        loadContent("/view/bid_history.fxml");
+        selectNav(historyNav);
+    }
+
+    @FXML
+    public void showProfile() {
+        loadContent("/view/profile.fxml");
+        selectNav(profileNav);
+    }
+
+    @FXML
+    public void showWallet() {
+        selectNav(walletNav);
+        showInfo("Wallet", "Wallet actions are available from your profile for now.");
+    }
+
+    @FXML
+    public void showCreateAuction() {
+        loadContent("/view/create_auction.fxml");
+    }
+
+    @FXML
+    public void showMyAuctions() {
+        loadContent("/view/my_auctions.fxml");
+    }
+
+    @FXML
+    public void showNotifications() {
+        showInfo("Notifications", "No new notifications.");
+    }
+
+    @FXML
+    public void onDeposit() {
+        showProfile();
+    }
+
+    @FXML
+    public void onWithdraw() {
+        showInfo("Withdraw", "Withdrawals are not implemented yet.");
+    }
+
+    @FXML
+    public void onLogout() {
         clientModel.logout();
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/login.fxml"));
-            Stage stage = (Stage) auctionListPane.getScene().getWindow();
-            stage.setScene(new Scene(loader.load()));
-            stage.setTitle("Đăng nhập");
+            ClientApp.showLoginScreen();
         } catch (Exception e) {
-            statusLabel.setText("Lỗi: " + e.getMessage());
+            showInfo("Logout error", e.getMessage());
         }
     }
 
     @FXML
-    public void refreshAuctions() {
-        loadAuctions();
-    }
-
-    @FXML
-    public void searchAuctions(String keyword) {
-        if (keyword == null || keyword.isBlank()) {
-            renderAuctions(allAuctions);
+    public void filterByCategory(ActionEvent event) {
+        if (dashboardController == null) {
+            showDashboard();
+        }
+        if (dashboardController == null || !(event.getSource() instanceof ToggleButton button)) {
             return;
         }
-        String lower = keyword.toLowerCase();
-        List<AuctionDTO> filtered = allAuctions.stream().filter(a -> a.getItemName() != null &&
-                a.getItemName().toLowerCase().contains(lower)).collect(Collectors.toList());
-        renderAuctions(filtered);
-        statusLabel.setText("Tìm thấy " + filtered.size() + " kết quả");
+        Object userData = button.getUserData();
+        dashboardController.filterByCategory(userData != null ? userData.toString() : "all");
     }
 
     @FXML
     public void handleSearch() {
-        searchAuctions(searchField.getText().trim());
+        if (dashboardController == null) {
+            showDashboard();
+        }
+        if (dashboardController != null) {
+            dashboardController.searchAuctions(searchField.getText());
+        }
     }
 
-    // Helpers
-    private void renderAuctions(List<AuctionDTO> auctions) {
-        Platform.runLater(() -> {
-            auctionListPane.getChildren().clear();
-            for (AuctionDTO dto : auctions) {
-                AuctionCard card = new AuctionCard(dto);
-                card.setOnMouseClicked(e -> openAuctionDetail(dto.getId()));
-                auctionListPane.getChildren().add(card);
+    private <T> T loadContent(String resourcePath) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(resourcePath));
+            Node view = loader.load();
+            contentPane.getChildren().setAll(view);
+            return loader.getController();
+        } catch (IOException | RuntimeException e) {
+            showInfo("Screen error", "Cannot open " + resourcePath + ": " + e.getMessage());
+            return null;
+        }
+    }
+
+    private void selectNav(ToggleButton selected) {
+        for (ToggleButton button : new ToggleButton[]{homeNav, liveNav, historyNav, walletNav, profileNav}) {
+            if (button != null) {
+                button.setSelected(button == selected);
             }
-        });
+        }
     }
 
-    private List<AuctionDTO> parseAuctions(String response) {
-        // parsing đc xử lí bởi ResponseHandler
-        return com.auction.client.network.ResponseHandler.parseAuctionList(response);
+    private void showInfo(String title, String message) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION, message);
+            alert.setTitle(title);
+            alert.setHeaderText(null);
+            alert.showAndWait();
+        });
     }
 }

@@ -13,6 +13,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ClientHandler implements Runnable {
     private final Socket socket;
@@ -83,6 +85,9 @@ public class ClientHandler implements Runnable {
         String[] p = payload.split(":");
         LoginRequest req = new LoginRequest(p[0], p[1], p.length > 2 ? p[2] : "BIDDER");
         LoginResponse resp = userController.login(req);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("type", resp.isSuccess() ? "LOGIN_OK" : "LOGIN_FAIL");
         if (resp != null && resp.isSuccess()) {
             out.println("LOGIN_OK:" + resp.getSessionToken() + ":" + resp.getUserId()
                     + ":" + resp.getRole() + ":" + resp.getBalance());

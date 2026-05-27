@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.auction.client.controller.LoginController"
+            stylesheets="@../styles/main.css">
+    <center>
+        <HBox alignment="CENTER" spacing="28" styleClass="login-container">
+            <padding>
+                <Insets top="60" right="80" bottom="60" left="80"/>
+            </padding>
+
+            <VBox alignment="CENTER_LEFT" spacing="24" styleClass="login-left" prefWidth="430">
+                <!-- TODO(asset): Replace text logo with final Acheron logo image/brand mark. -->
+                <Text text="Acheron" styleClass="login-logo"/>
+                <Text text="Minimal auction workspace" styleClass="login-title"/>
+                <Text text="Track auctions, place bids, and manage your wallet in one focused interface."
+                      styleClass="login-subtitle" wrappingWidth="300"/>
+                <!-- TODO(asset): Add login hero/product mockup image here if the final design needs one. -->
+                <Region prefHeight="90"/>
+            </VBox>
+
+            <VBox alignment="CENTER" spacing="18" styleClass="login-form">
+                <Text text="Sign In" styleClass="form-title"/>
+                <TextField fx:id="usernameField" promptText="Username" styleClass="login-field"/>
+                <PasswordField fx:id="passwordField" promptText="Password" styleClass="login-field"/>
+                <ComboBox fx:id="roleCombo" promptText="Select Role" styleClass="login-field">
+                    <items>
+                        <FXCollections fx:factory="observableArrayList">
+                            <String fx:value="BIDDER"/>
+                            <String fx:value="SELLER"/>
+                            <String fx:value="ADMIN"/>
+                        </FXCollections>
+                    </items>
+                    <value>BIDDER</value>
+                </ComboBox>
+                <Button text="Sign In" styleClass="login-btn" onAction="#handleLogin"/>
+                <HBox alignment="CENTER" spacing="8">
+                    <Text text="Don't have an account?" styleClass="muted-text"/>
+                    <Hyperlink text="Sign Up" onAction="#goToRegister" styleClass="signup-link"/>
+                </HBox>
+                <Label fx:id="errorLabel" styleClass="error-label"/>
+            </VBox>
+        </HBox>
+    </center>
+</BorderPane>

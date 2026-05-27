@@ -7,24 +7,21 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class PriceChart extends LineChart<Number, Number> {
     private final NumberAxis xAxis;
     private final NumberAxis yAxis;
-    private final XYChart.Series<Number, Number> series;
     private final ObservableList<XYChart.Data<Number, Number>> dataList;
-    private long startTime = System.currentTimeMillis();
+    private int pointCount = 0;
 
     public PriceChart() {
         super(new NumberAxis(), new NumberAxis());
         xAxis = (NumberAxis) getXAxis();
         yAxis = (NumberAxis) getYAxis();
 
-        xAxis.setLabel("Thời gian (phút trước)");
-        yAxis.setLabel("Giá (Triệu đồng)");
+        xAxis.setLabel("Lan dat gia");
+        yAxis.setLabel("Gia (trieu VND)");
         yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis) {
             @Override
             public String toString(Number object) {
@@ -32,37 +29,54 @@ public class PriceChart extends LineChart<Number, Number> {
             }
         });
 
-        setTitle("📈 Biểu đồ giá đấu theo thời gian");
+        setTitle("Bieu do gia dau");
         setLegendVisible(false);
         setCreateSymbols(true);
         setAnimated(false);
-        setStyle("-fx-background-color: white; -fx-background-radius: 8;");
+        getStyleClass().add("chart-panel");
 
-        series = new XYChart.Series<>();
+        XYChart.Series<Number, Number> series = new XYChart.Series<>();
         dataList = FXCollections.observableArrayList();
         series.setData(dataList);
         getData().add(series);
     }
 
+    public void addPricePoint(long timestamp, double price) {
+        double priceInMillions = price / 1_000_000.0;
+        pointCount++;
+        dataList.add(new XYChart.Data<>((double) pointCount, priceInMillions));
+
+        double currentMax = yAxis.getUpperBound();
+        if (priceInMillions > currentMax) {
+            yAxis.setUpperBound(priceInMillions * 1.1);
+        }
+
+        if (pointCount > 20) {
+            xAxis.setLowerBound(pointCount - 20);
+            xAxis.setUpperBound(pointCount);
+        }
+    }
+
     public void updateWithBidHistory(List<BidTransaction> history) {
         dataList.clear();
+        pointCount = 0;
+
         if (history == null || history.isEmpty()) {
             addEmptyData();
             return;
         }
 
-        LocalDateTime firstTime = history.get(0).getBidTime();
-        for (int i = 0; i < history.size(); i++) {
-            BidTransaction bid = history.get(i);
-            long minutesAgo = java.time.Duration.between(bid.getBidTime(), firstTime).toMinutes();
+        for (BidTransaction bid : history) {
             double priceInMillions = bid.getAmount() / 1_000_000.0;
-            dataList.add(new XYChart.Data<>((double) minutesAgo, priceInMillions));
+            pointCount++;
+            dataList.add(new XYChart.Data<>((double) pointCount, priceInMillions));
         }
 
-        // Set axis ranges
         double maxPrice = history.stream().mapToDouble(BidTransaction::getAmount).max().orElse(100_000_000);
         yAxis.setUpperBound(Math.ceil(maxPrice / 1_000_000) * 1.1);
         yAxis.setLowerBound(0);
+        xAxis.setLowerBound(0);
+        xAxis.setUpperBound(pointCount + 2);
     }
 
     private void addEmptyData() {
@@ -70,15 +84,10 @@ public class PriceChart extends LineChart<Number, Number> {
     }
 
     public void addNewBid(BidTransaction bid, int index) {
-        LocalDateTime firstTime = dataList.isEmpty() ? bid.getBidTime() : null;
-        if (!dataList.isEmpty() && dataList.get(0).getXValue() != null) {
-            // Recalculate from scratch for simplicity
-            // Or just add new point
-        }
         double priceInMillions = bid.getAmount() / 1_000_000.0;
-        dataList.add(new XYChart.Data<>((double) dataList.size(), priceInMillions));
+        pointCount++;
+        dataList.add(new XYChart.Data<>((double) pointCount, priceInMillions));
 
-        // Update max value
         double currentMax = yAxis.getUpperBound();
         if (priceInMillions > currentMax) {
             yAxis.setUpperBound(priceInMillions * 1.1);
@@ -87,6 +96,7 @@ public class PriceChart extends LineChart<Number, Number> {
 
     public void clear() {
         dataList.clear();
+        pointCount = 0;
         addEmptyData();
     }
 }

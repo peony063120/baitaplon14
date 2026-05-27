@@ -1,32 +1,25 @@
 package com.auction.client.controller;
-/**
- * Màn hình chi tiết 1 phiên đấu giá.
- * Hiển thị giá hiện tại, đếm ngược thời gian, biểu đồ giá realtime.
- * Người dùng có thể đặt giá thủ công hoặc cấu hình auto-bid.
- * Implements Observer — khi server push bid mới thì onBidReceived() tự động cập nhật UI mà không cần refresh.
- */
+
 import com.auction.client.components.PriceChart;
 import com.auction.client.components.TimerLabel;
 import com.auction.client.model.ClientModel;
 import com.auction.client.network.RealtimeListener;
-import com.auction.client.network.ResponseHandler;
 import com.auction.client.network.ServerConnection;
+import com.auction.client.service.DataService;
 import com.auction.common.dto.AuctionDTO;
-import com.auction.common.dto.AutoBidRequest;
-import com.auction.common.dto.BidRequest;
 import com.auction.common.entity.BidTransaction;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 
 public class AuctionDetailController {
 
     @FXML private Label itemNameLabel;
     @FXML private Label currentPriceLabel;
+    @FXML private Label startingPriceLabel;
+    @FXML private Label minIncrementLabel;
     @FXML private Label currentWinnerLabel;
     @FXML private Label statusLabel;
     @FXML private TextField bidAmountField;
@@ -40,133 +33,179 @@ public class AuctionDetailController {
     private final RealtimeListener realtimeListener = RealtimeListener.getInstance();
 
     public void loadAuctionDetails(String auctionId) {
-        String response = ServerConnection.getInstance().sendRequest("GET_AUCTION:" + auctionId);
-        currentAuction = ResponseHandler.parseAuction(response);
-
-        if (currentAuction == null) {
-            showError("Không tìm thấy phiên đấu giá");
-            return;
-        }
-
-        Platform.runLater(() -> {
-            itemNameLabel.setText(currentAuction.getItemName());
-            currentPriceLabel.setText(String.format("%.0f VNĐ", currentAuction.getCurrentPrice()));
-            currentWinnerLabel.setText(currentAuction.getCurrentWinnerName() != null ? currentAuction.getCurrentWinnerName() : "Chưa có");
-            statusLabel.setText(currentAuction.getStatus().getDisplayName());
-
-            if (currentAuction.getEndTime() != null) {
-                timerLabel.startCountdown(currentAuction.getEndTime());
-            }
-        });
-
-        // Đăng kí nhận realtime update (Observer Pattern)
-        realtimeListener.registerCallback("BID_UPDATE", this::onBidReceived);
-        realtimeListener.registerCallback("AUCTION_UPDATE", this::onAuctionUpdate);
-
-        ServerConnection.getInstance().sendRequest("SUBSCRIBE");
-        getBidHistory();
+        DataService.getInstance().loadAuctionDetail(
+                auctionId,
+                auction -> {
+                    currentAuction = auction;
+                    updateUI();
+                    getBidHistory();
+                    subscribeRealtime();
+                },
+                error -> showError("Cannot load auction details: " + error)
+        );
     }
 
-    @FXML
-    public void placeBid(double amount) {
-        if (currentAuction == null) return;
-        if (amount <= currentAuction.getCurrentPrice()) {
-            showError(String.format("Giá phải cao hơn %.0f VNĐ", currentAuction.getCurrentPrice()));
+    private void updateUI() {
+        if (currentAuction == null) {
             return;
         }
 
-        String userId = clientModel.getCurrentUser().getId();
-        BidRequest req = new BidRequest(currentAuction.getId(), userId, amount, false);
-        String response = ServerConnection.getInstance().sendRequest("PLACE_BID:" + req.getAuctionId()
-                + ":" + req.getBidderId()
-                + ":" + req.getAmount()
-                + ":" + req.isAutoBid());
+        itemNameLabel.setText(textOrDefault(currentAuction.getItemName(), "Auction item"));
+        currentPriceLabel.setText(formatCurrency(currentAuction.getCurrentPrice()));
+        startingPriceLabel.setText(formatCurrency(currentAuction.getStartingPrice()));
+        minIncrementLabel.setText(formatCurrency(currentAuction.getMinIncrement()));
+        currentWinnerLabel.setText(textOrDefault(currentAuction.getCurrentWinnerName(), "No bids yet"));
+        statusLabel.setText(currentAuction.getStatus() != null ? currentAuction.getStatus().getDisplayName() : "Pending");
 
-        if (response != null && response.startsWith("BID_OK")) {
-            errorLabel.setVisible(false);
-            bidAmountField.clear();
-        } else {
-            showError("Đặt giá thất bại: " + response);
+        if (currentAuction.getEndTime() != null && timerLabel != null) {
+            timerLabel.startCountdown(currentAuction.getEndTime());
+        }
+    }
+
+    private void subscribeRealtime() {
+        realtimeListener.registerCallback("BID_UPDATE", this::onBidReceived);
+        realtimeListener.registerCallback("AUCTION_UPDATE", this::onAuctionUpdate);
+        try {
+            ServerConnection.getInstance().sendRequest("SUBSCRIBE");
+        } catch (Exception e) {
+            System.err.println("Subscribe error: " + e.getMessage());
         }
     }
 
     @FXML
     public void handlePlaceBid() {
         try {
-            double amount = Double.parseDouble(bidAmountField.getText().trim());
-            placeBid(amount);
+            placeBid(Double.parseDouble(bidAmountField.getText().trim()));
         } catch (NumberFormatException e) {
-            showError("Vui lòng nhập số tiền hợp lệ");
+            showError("Enter a valid bid amount.");
+        }
+    }
+
+    public void placeBid(double amount) {
+        if (currentAuction == null) {
+            return;
+        }
+        if (amount <= currentAuction.getCurrentPrice()) {
+            showError("Bid must be higher than " + formatCurrency(currentAuction.getCurrentPrice()));
+            return;
+        }
+
+        String userId = clientModel.getCurrentUser() != null ? clientModel.getCurrentUser().getId() : "unknown";
+        try {
+            String response = ServerConnection.getInstance().sendRequest(
+                    "PLACE_BID:" + currentAuction.getId() + ":" + userId + ":" + amount + ":false"
+            );
+            if (response != null && response.startsWith("BID_OK")) {
+                bidAmountField.clear();
+                showSuccess("Bid placed successfully.");
+            } else {
+                showError("Bid failed: " + response);
+            }
+        } catch (Exception e) {
+            showError("Connection error: " + e.getMessage());
         }
     }
 
     @FXML
     public void configureAutoBid() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/auto_bid_config.fxml"));
-            Stage stage = new Stage();
-            stage.setScene(new Scene(loader.load()));
-            stage.setTitle("Cấu hình Auto Bid");
-            stage.show();
-        } catch (Exception e) {
-            showError("Lỗi mở cấu hình auto bid: " + e.getMessage());
-        }
-    }
-
-    // Observer callback - đc gọi khi server push bid mới
-    public void onBidReceived(Object data) {
-        if (!(data instanceof BidTransaction bid)) return;
-        if (!bid.getAuctionId().equals(currentAuction.getId())) return;
-
-        Platform.runLater(() -> {
-            currentAuction.setCurrentPrice(bid.getAmount());
-            currentPriceLabel.setText(String.format("%.0f VNĐ", bid.getAmount()));
-            currentWinnerLabel.setText(bid.getBidderId());
-
-            // cập nhật biểu đồ giá realtime
-            priceChart.addPricePoint(bid.getBidTime().toEpochSecond(java.time.ZoneOffset.UTC), bid.getAmount());
-        });
-    }
-
-    // Observer callback - cập nhật trạng thái auction
-    public void onAuctionUpdate(Object data) {
-        if (!(data instanceof AuctionDTO dto)) return;
-        if (!dto.getId().equals(currentAuction.getId())) return;
-
-        Platform.runLater(() -> {
-            currentAuction = dto;
-            statusLabel.setText(dto.getStatus().getDisplayName());
-            currentPriceLabel.setText(String.format("%.0f VNĐ", dto.getCurrentPrice()));
-
-            // gia hạn timer nếu anti-sniping kéo dài phiên
-            if (dto.getEndTime() != null) {
-                timerLabel.startCountdown(dto.getEndTime());
-            }
-        });
-    }
-
-    public void getBidHistory() {
-        if (currentAuction == null) return;
-        String response = ServerConnection.getInstance().sendRequest("GET_BID_HISTORY:" + currentAuction.getId());
-        // parse và hiển thị lịch sử bid
-        ResponseHandler.parseBidHistory(response).forEach(bid -> {
-            Platform.runLater(() -> {
-                priceChart.addPricePoint(bid.getTimestamp().toEpochSecond(java.time.ZoneOffset.UTC), bid.getAmount());
-            });
-        });
+        showError("Auto-bid configuration screen is not available yet.");
     }
 
     @FXML
     public void cancelAutoBid() {
-        if (currentAuction == null) return;
-        String userId = clientModel.getCurrentUser().getId();
-        ServerConnection.getInstance().sendRequest("CANCEL_AUTO_BID:" + currentAuction.getId() + ":" + userId);
+        if (currentAuction == null) {
+            return;
+        }
+
+        String userId = clientModel.getCurrentUser() != null ? clientModel.getCurrentUser().getId() : "unknown";
+        try {
+            ServerConnection.getInstance().sendRequest("CANCEL_AUTO_BID:" + currentAuction.getId() + ":" + userId);
+            showSuccess("Auto-bid cancelled.");
+        } catch (Exception e) {
+            showError("Connection error: " + e.getMessage());
+        }
+    }
+
+    public void onBidReceived(Object data) {
+        if (!(data instanceof BidTransaction bid) || currentAuction == null) {
+            return;
+        }
+        if (!bid.getAuctionId().equals(currentAuction.getId())) {
+            return;
+        }
+
+        Platform.runLater(() -> {
+            currentAuction.setCurrentPrice(bid.getAmount());
+            currentAuction.setCurrentWinnerId(bid.getBidderId());
+            currentPriceLabel.setText(formatCurrency(bid.getAmount()));
+            currentWinnerLabel.setText(bid.getBidderId());
+            if (priceChart != null) {
+                priceChart.addPricePoint(bid.getTimestamp(), bid.getAmount());
+            }
+            addBidHistoryRow(bid);
+        });
+    }
+
+    public void onAuctionUpdate(Object data) {
+        if (!(data instanceof AuctionDTO dto) || currentAuction == null || !dto.getId().equals(currentAuction.getId())) {
+            return;
+        }
+
+        Platform.runLater(() -> {
+            currentAuction = dto;
+            updateUI();
+        });
+    }
+
+    public void getBidHistory() {
+        if (currentAuction == null) {
+            return;
+        }
+
+        DataService.getInstance().loadBidHistory(
+                currentAuction.getId(),
+                history -> {
+                    bidHistoryBox.getChildren().clear();
+                    for (BidTransaction bid : history) {
+                        addBidHistoryRow(bid);
+                    }
+                    if (priceChart != null) {
+                        priceChart.updateWithBidHistory(history);
+                    }
+                },
+                error -> showError("Cannot load bid history: " + error)
+        );
+    }
+
+    private void addBidHistoryRow(BidTransaction bid) {
+        String time = bid.getBidTime() != null ? bid.getBidTime().toString() : "";
+        String suffix = bid.isAutoBid() ? " (auto)" : "";
+        bidHistoryBox.getChildren().add(new Label(
+                bid.getBidderId() + " - " + formatCurrency(bid.getAmount()) + " - " + time + suffix
+        ));
     }
 
     private void showError(String message) {
+        showMessage(message, "#DC2626");
+    }
+
+    private void showSuccess(String message) {
+        showMessage(message, "#16A34A");
+    }
+
+    private void showMessage(String message, String color) {
         Platform.runLater(() -> {
             errorLabel.setText(message);
+            errorLabel.setStyle("-fx-text-fill: " + color + ";");
             errorLabel.setVisible(true);
         });
+    }
+
+    private String textOrDefault(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private String formatCurrency(double amount) {
+        return String.format("VND %,.0f", amount);
     }
 }

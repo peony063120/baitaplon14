@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.auction.client.controller.MyAuctionsController"
+            stylesheets="@../styles/main.css">
+    <center>
+        <VBox spacing="16" styleClass="content-page">
+            <padding>
+                <Insets top="24" right="24" bottom="24" left="24"/>
+            </padding>
+            <Text text="My Auctions" styleClass="page-title"/>
+            <Label fx:id="statusLabel" styleClass="muted-text"/>
+            <!-- TODO(asset): Rows should show product thumbnails when seller auction images are persisted. -->
+            <ScrollPane fitToWidth="true" styleClass="dashboard-scroll">
+                <VBox fx:id="auctionListBox" spacing="12"/>
+            </ScrollPane>
+        </VBox>
+    </center>
+</BorderPane>

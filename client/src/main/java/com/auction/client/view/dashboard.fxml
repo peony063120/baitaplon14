@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.TilePane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<ScrollPane fitToWidth="true" styleClass="dashboard-scroll" xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.auction.client.controller.DashboardController">
+    <VBox spacing="28" styleClass="content-page">
+        <padding>
+            <Insets top="28" right="28" bottom="28" left="28"/>
+        </padding>
+
+        <HBox spacing="24" styleClass="stats-row">
+            <VBox styleClass="stat-card" spacing="8">
+                <Text text="Total Revenue" styleClass="stat-label"/>
+                <Label fx:id="totalRevenue" styleClass="stat-value"/>
+                <Text text="Completed auction value" styleClass="muted-text"/>
+            </VBox>
+            <VBox styleClass="stat-card" spacing="8">
+                <Text text="Active Auctions" styleClass="stat-label"/>
+                <Label fx:id="activeAuctionsCount" styleClass="stat-value"/>
+                <Text text="Currently running" styleClass="muted-text"/>
+            </VBox>
+        </HBox>
+
+        <VBox spacing="16">
+            <Text text="Revenue Overview" styleClass="section-title"/>
+            <LineChart fx:id="revenueChart" styleClass="revenue-chart">
+                <xAxis>
+                    <NumberAxis label="Day"/>
+                </xAxis>
+                <yAxis>
+                    <NumberAxis label="Amount"/>
+                </yAxis>
+            </LineChart>
+        </VBox>
+
+        <HBox spacing="8" styleClass="filter-tabs">
+            <ToggleButton text="All" styleClass="filter-tab" selected="true"/>
+            <ToggleButton text="Ending Soon" styleClass="filter-tab"/>
+            <ToggleButton text="Newest" styleClass="filter-tab"/>
+            <ToggleButton text="Highest Bid" styleClass="filter-tab"/>
+        </HBox>
+
+        <!-- TODO(asset): Auction cards currently show text placeholders; wire product images from real/mock data later. -->
+        <TilePane fx:id="auctionGrid" prefColumns="3" hgap="24" vgap="24"/>
+    </VBox>
+</ScrollPane>

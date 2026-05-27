@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.auction.client.controller.CreateAuctionController"
+            stylesheets="@../styles/main.css">
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="dashboard-scroll">
+            <VBox spacing="20" styleClass="content-page">
+                <padding>
+                    <Insets top="28" right="28" bottom="28" left="28"/>
+                </padding>
+                <Text text="Create New Auction" styleClass="page-title"/>
+
+                <GridPane hgap="16" vgap="16" styleClass="surface">
+                    <Text text="Item Name" styleClass="muted-text" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                    <TextField fx:id="itemNameField" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="320"/>
+                    <Text text="Description" styleClass="muted-text" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <TextArea fx:id="itemDescriptionArea" GridPane.columnIndex="1" GridPane.rowIndex="1" prefHeight="90"/>
+                    <Text text="Starting Price" styleClass="muted-text" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                    <TextField fx:id="startingPriceField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    <Text text="Min Increment" styleClass="muted-text" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                    <TextField fx:id="minIncrementField" text="50000" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                    <Text text="Start Date" styleClass="muted-text" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                    <DatePicker fx:id="startDatePicker" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+                    <Text text="Start Hour" styleClass="muted-text" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+                    <TextField fx:id="startHourField" text="9" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+                    <Text text="Duration (hours)" styleClass="muted-text" GridPane.columnIndex="0" GridPane.rowIndex="6"/>
+                    <Spinner fx:id="durationSpinner" GridPane.columnIndex="1" GridPane.rowIndex="6" editable="true"/>
+                    <Text text="Category" styleClass="muted-text" GridPane.columnIndex="0" GridPane.rowIndex="7"/>
+                    <ComboBox fx:id="itemTypeComboBox" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+                    <!-- TODO(asset): Upload flow should persist real product images and expose URLs to AuctionCard/detail gallery. -->
+                    <Button text="Upload Images" styleClass="secondary-btn" onAction="#handleUploadImages" GridPane.columnIndex="1" GridPane.rowIndex="8"/>
+                    <Label fx:id="imagePathLabel" styleClass="muted-text" GridPane.columnIndex="1" GridPane.rowIndex="9"/>
+                </GridPane>
+
+                <HBox spacing="16" alignment="CENTER_LEFT">
+                    <Button text="Create Auction" styleClass="primary-btn" onAction="#handleCreate"/>
+                    <Label fx:id="errorLabel" styleClass="error-label"/>
+                </HBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>

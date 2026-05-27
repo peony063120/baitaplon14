@@ -9,11 +9,14 @@ package com.auction.client.controller;
 import com.auction.client.model.ClientModel;
 import com.auction.client.network.ServerConnection;
 import com.auction.common.dto.UserDTO;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+
+import java.io.IOException;
 
 public class RegisterController {
 
@@ -37,26 +40,80 @@ public class RegisterController {
     public void handleRegister() {
         if (!validateInput()) return;
 
-        // thứ tự constructor: id, username, password, email, fullName, role, balance
-        UserDTO dto = new UserDTO(
-                null,
-                usernameField.getText().trim(),
-                encryptPassword(passwordField.getText().trim()),
-                emailField.getText().trim(),
-                fullNameField.getText().trim(),
-                roleComboBox.getValue(),
-                0.0
-        );
-        // set password riêng vì constructor ko có
-        // password đc xử lí bên ServerConnection
-        boolean success = clientModel.register(dto);
-        if (success) {
-            goToLogin();
-        } else {
-            showError("Đăng ký thất bại. Username có thể đã tồn tại.");
-        }
+        // Hiển thị trạng thái đang xử lý
+        errorLabel.setStyle("-fx-text-fill: #2563EB;");
+        showError("🔄 Đang xử lý đăng ký...");
+
+        String username = usernameField.getText().trim();
+        String password = passwordField.getText().trim();
+        String email = emailField.getText().trim();
+        String fullName = fullNameField.getText().trim();
+        String role = roleComboBox.getValue();
+
+        // Chạy trong background thread
+        new Thread(() -> {
+            try {
+                // Kiểm tra username đã tồn tại chưa
+                boolean exists = checkUsernameExists(username);
+                if (exists) {
+                    Platform.runLater(() -> {
+                        showError("❌ Tên đăng nhập đã tồn tại");
+                        errorLabel.setStyle("-fx-text-fill: #DC2626;");
+                    });
+                    return;
+                }
+
+                // Tạo DTO và đăng ký
+                UserDTO dto = new UserDTO(
+                        null,
+                        username,
+                        encryptPassword(password),
+                        email,
+                        fullName,
+                        role,
+                        0.0
+                );
+
+                boolean success = clientModel.register(dto);
+
+                Platform.runLater(() -> {
+                    if (success) {
+                        showError("✅ Đăng ký thành công! Chuyển đến trang đăng nhập...");
+                        errorLabel.setStyle("-fx-text-fill: #16A34A;");
+                        // Chuyển về màn hình login sau 1.5 giây
+                        new Thread(() -> {
+                            try { Thread.sleep(1500); } catch (InterruptedException ignored) {}
+                            Platform.runLater(this::goToLogin);
+                        }).start();
+                    } else {
+                        showError("❌ Đăng ký thất bại. Vui lòng thử lại.");
+                        errorLabel.setStyle("-fx-text-fill: #DC2626;");
+                    }
+                });
+            } catch (IOException e) {
+                Platform.runLater(() -> {
+                    showError("❌ Lỗi kết nối server: " + e.getMessage());
+                    errorLabel.setStyle("-fx-text-fill: #DC2626;");
+                });
+            }
+        }).start();
     }
 
+    /**
+     * Kiểm tra username đã tồn tại trên server.
+     * @param username Tên đăng nhập cần kiểm tra
+     * @return true nếu đã tồn tại, false nếu chưa
+     * @throws IOException Nếu lỗi kết nối
+     */
+    public boolean checkUsernameExists(String username) throws IOException {
+        String response = ServerConnection.getInstance().sendRequest("CHECK_USERNAME:" + username);
+        return "EXISTS".equals(response);
+    }
+
+    /**
+     * Validate dữ liệu đầu vào.
+     * @return true nếu hợp lệ, false nếu không
+     */
     public boolean validateInput() {
         String username = usernameField.getText().trim();
         String password = passwordField.getText().trim();
@@ -64,50 +121,69 @@ public class RegisterController {
         String email = emailField.getText().trim();
         String fullName = fullNameField.getText().trim();
 
-        if (username.isEmpty() || password.isEmpty() || email.isEmpty() || fullName.isEmpty()) {
-            showError("Vui lòng điền đầy đủ thông tin");
+        if (username.isEmpty()) {
+            showError("⚠️ Vui lòng nhập tên đăng nhập");
             return false;
         }
-        if (!password.equals(confirm)) {
-            showError("Mật khẩu xác nhận không khớp");
+        if (username.length() < 3) {
+            showError("⚠️ Tên đăng nhập phải có ít nhất 3 ký tự");
+            return false;
+        }
+        if (password.isEmpty()) {
+            showError("⚠️ Vui lòng nhập mật khẩu");
             return false;
         }
         if (password.length() < 6) {
-            showError("Mật khẩu phải có ít nhất 6 ký tự");
+            showError("⚠️ Mật khẩu phải có ít nhất 6 ký tự");
             return false;
         }
-        if (!email.contains("@")) {
-            showError("Email không hợp lệ");
+        if (!password.equals(confirm)) {
+            showError("⚠️ Mật khẩu xác nhận không khớp");
             return false;
         }
+        if (email.isEmpty()) {
+            showError("⚠️ Vui lòng nhập email");
+            return false;
+        }
+        if (!email.contains("@") || !email.contains(".")) {
+            showError("⚠️ Email không hợp lệ");
+            return false;
+        }
+        if (fullName.isEmpty()) {
+            showError("⚠️ Vui lòng nhập họ và tên");
+            return false;
+        }
+
         errorLabel.setVisible(false);
         return true;
-    }
-
-    public boolean checkUsernameExists(String username) {
-        String response = ServerConnection.getInstance().sendRequest("CHECK_USERNAME:" + username);
-        return "EXISTS".equals(response);
     }
 
     @FXML
     public void goToLogin() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/login.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/login.fxml"));
             Stage stage = (Stage) usernameField.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
             stage.setTitle("Đăng nhập");
         } catch (Exception e) {
-            showError("Lỗi điều hướng: " + e.getMessage());
+            showError("❌ Lỗi điều hướng: " + e.getMessage());
         }
     }
 
+    /**
+     * Mã hóa mật khẩu đơn giản.
+     * @param password Mật khẩu plain text
+     * @return Mật khẩu đã mã hóa
+     */
     private String encryptPassword(String password) {
+        // TODO: Sử dụng mã hóa mạnh hơn (BCrypt) trong production
         return Integer.toHexString(password.hashCode());
     }
 
     private void showError(String message) {
-        errorLabel.setText(message);
-        errorLabel.setVisible(true);
+        Platform.runLater(() -> {
+            errorLabel.setText(message);
+            errorLabel.setVisible(true);
+        });
     }
-
 }

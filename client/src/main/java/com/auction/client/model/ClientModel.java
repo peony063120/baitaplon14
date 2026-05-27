@@ -5,10 +5,20 @@ import com.auction.common.entity.User;
 
 public class ClientModel {
 
+    private static ClientModel instance;
     private User currentUser;
     private Session session;
 
-    public ClientModel() {
+    // Private constructor cho Singleton
+    private ClientModel() {
+    }
+
+    // Phương thức getInstance (Singleton)
+    public static synchronized ClientModel getInstance() {
+        if (instance == null) {
+            instance = new ClientModel();
+        }
+        return instance;
     }
 
     /**
@@ -65,6 +75,36 @@ public class ClientModel {
 
     public void setSession(Session session) {
         this.session = session;
+    }
+
+    /**
+     * Lấy số dư của user hiện tại
+     */
+    public double getBalance() {
+        if (currentUser instanceof com.auction.common.entity.Bidder) {
+            return ((com.auction.common.entity.Bidder) currentUser).getBalance();
+        }
+        return 0.0;
+    }
+
+    /**
+     * Lưu thông tin session sau khi đăng nhập thành công.
+     * @param sessionToken Token phiên đăng nhập
+     * @param userId ID người dùng
+     * @param username Tên đăng nhập
+     * @param role Vai trò (BIDDER, SELLER, ADMIN)
+     * @param balance Số dư tài khoản
+     */
+    public void setSession(String sessionToken, String userId, String username, String role, double balance) {
+        this.session = new Session(sessionToken, userId);
+
+        // Tạo đối tượng User tạm thời (Bidder) để lưu thông tin
+        com.auction.common.entity.Bidder user = new com.auction.common.entity.Bidder(
+                username, "", "", username
+        );
+        user.setId(userId);
+        user.addBalance(balance);
+        this.currentUser = user;
     }
 
     @Override

@@ -27,6 +27,7 @@ public class AuctionDTO implements Serializable {
     private int antiSnipingExtensionSeconds;
     private String category;          // ← THÊM category
     private String categoryName;      // ← THÊM categoryName
+    private long remainingTimeMillis;
 
     // Constructors
     public AuctionDTO() {}
@@ -138,5 +139,9 @@ public class AuctionDTO implements Serializable {
     public long getRemainingTimeMillis() {
         if (endTime == null) return 0;
         return Math.max(0, Duration.between(LocalDateTime.now(), endTime).toMillis());
+    }
+
+    public void setRemainingTimeMillis(long remainingTimeMillis) {
+        this.remainingTimeMillis = remainingTimeMillis;
     }
 }

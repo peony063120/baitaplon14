@@ -65,7 +65,7 @@ public class ServerConnection {
 
   private ServerConnection() {
     this.protocol         = new MessageProtocol();
-    this.realtimeListener = new RealtimeListener();
+    this.realtimeListener = RealtimeListener.getInstance();
   }
 
   /**
@@ -161,6 +161,37 @@ public class ServerConnection {
     } catch (InterruptedException | ExecutionException e) {
       pendingRequests.remove(requestId);
       throw new IOException("ServerConnection: Yêu cầu bị gián đoạn hoặc quá trình xử lý thất bại: " + e.getMessage());
+    }
+  }
+
+  /**
+   * Gửi yêu cầu đơn giản dạng text (không dùng Map)
+   * Phương thức này BLOCK luồng gọi.
+   */
+  public String sendRequest(String command) throws IOException {
+    if (!connected || out == null) {
+      throw new IOException("ServerConnection: Không thể gửi yêu cầu — Mạng bị ngắt kết nối.");
+    }
+
+    String requestId = java.util.UUID.randomUUID().toString();
+    CompletableFuture<String> responseFuture = new CompletableFuture<>();
+    pendingRequests.put(requestId, responseFuture);
+
+    String rawJson = "{\"requestId\":\"" + requestId + "\",\"command\":\"" + command + "\"}";
+
+    synchronized (out) {
+      out.println(rawJson);
+      LOGGER.fine("ServerConnection -> SERVER: " + rawJson);
+    }
+
+    try {
+      return responseFuture.get(10, TimeUnit.SECONDS);
+    } catch (TimeoutException e) {
+      pendingRequests.remove(requestId);
+      throw new IOException("ServerConnection: Hết thời gian chờ phản hồi từ Server");
+    } catch (InterruptedException | ExecutionException e) {
+      pendingRequests.remove(requestId);
+      throw new IOException("ServerConnection: Yêu cầu bị gián đoạn: " + e.getMessage());
     }
   }
 

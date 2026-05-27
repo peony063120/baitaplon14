@@ -16,6 +16,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -43,15 +44,25 @@ public class CreateAuctionController {
         durationSpinner.setValueFactory(factory);
     }
 
+    /**
+     * Gửi yêu cầu tạo auction lên server.
+     * @param auctionDTO Dữ liệu phiên đấu giá cần tạo
+     */
     public void createAuction(AuctionDTO auctionDTO) {
         String sellerId = clientModel.getCurrentUser().getId();
-        String response = ServerConnection.getInstance().sendRequest("CREATE_AUCTION:" +
-                auctionDTO.getItemId() + ":" + sellerId + ":" + auctionDTO.getCurrentPrice());
 
-        if (response != null && response.startsWith("CREATE_AUCTION_OK")) {
-            showSuccess();
-        } else {
-            showError("Tạo phiên đấu giá thất bại");
+        try {
+            String response = ServerConnection.getInstance().sendRequest("CREATE_AUCTION:" +
+                    auctionDTO.getItemId() + ":" + sellerId + ":" + auctionDTO.getCurrentPrice());
+
+            if (response != null && response.startsWith("CREATE_AUCTION_OK")) {
+                showSuccess();
+            } else {
+                String errorMsg = response != null ? response : "Không có phản hồi từ server";
+                showError("Tạo phiên đấu giá thất bại: " + errorMsg);
+            }
+        } catch (IOException e) {
+            showError("Lỗi kết nối server: " + e.getMessage());
         }
     }
 
@@ -69,9 +80,11 @@ public class CreateAuctionController {
         dto.setStatus(AuctionStatus.DRAFT);
         dto.setMinIncrement(Double.parseDouble(minIncrementField.getText().isBlank() ? "1.0" : minIncrementField.getText().trim()));
 
-        createAuction(dto);
+        // Gửi request trong background thread (không block UI)
+        new Thread(() -> createAuction(dto)).start();
     }
 
+    @FXML
     public void selectItemType(ItemType type) {
         itemTypeComboBox.setValue(type.name());
     }
@@ -91,7 +104,6 @@ public class CreateAuctionController {
     }
 
     public void setStartTime(LocalDateTime start) {
-        // áp dụng khi cần set từ code
         if (start != null) {
             startDatePicker.setValue(start.toLocalDate());
             startHourField.setText(String.valueOf(start.getHour()));
@@ -107,6 +119,10 @@ public class CreateAuctionController {
             showError("Vui lòng nhập tên sản phẩm");
             return false;
         }
+        if (itemDescriptionArea.getText().isBlank()) {
+            showError("Vui lòng nhập mô tả sản phẩm");
+            return false;
+        }
         try {
             double price = Double.parseDouble(startingPriceField.getText().trim());
             if (price <= 0) {
@@ -119,6 +135,16 @@ public class CreateAuctionController {
         }
         if (startDatePicker.getValue() == null) {
             showError("Vui lòng chọn ngày bắt đầu");
+            return false;
+        }
+        try {
+            int hour = Integer.parseInt(startHourField.getText().trim());
+            if (hour < 0 || hour > 23) {
+                showError("Giờ bắt đầu phải từ 0-23");
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            showError("Giờ bắt đầu không hợp lệ");
             return false;
         }
         errorLabel.setVisible(false);
@@ -136,14 +162,23 @@ public class CreateAuctionController {
     }
 
     private void showError(String message) {
+        errorLabel.setStyle("-fx-text-fill: #DC2626;");
         errorLabel.setText(message);
         errorLabel.setVisible(true);
     }
 
     private void showSuccess() {
-        errorLabel.setStyle("-fx-text-fill: green;");
-        errorLabel.setText("Tạo phiên đấu giá thành công!");
+        errorLabel.setStyle("-fx-text-fill: #16A34A;");
+        errorLabel.setText("✅ Tạo phiên đấu giá thành công!");
         errorLabel.setVisible(true);
-        ((Stage) itemNameField.getScene().getWindow()).close();
+
+        // Đóng cửa sổ sau 1.5 giây
+        new Thread(() -> {
+            try { Thread.sleep(1500); } catch (InterruptedException ignored) {}
+            javafx.application.Platform.runLater(() -> {
+                Stage stage = (Stage) itemNameField.getScene().getWindow();
+                stage.close();
+            });
+        }).start();
     }
 }
