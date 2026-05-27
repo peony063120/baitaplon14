@@ -10,7 +10,7 @@ public enum AuctionStatus {
 
     private final String displayName;
     AuctionStatus(String displayName){
-        this.displayName = displayName;
+        this.displayName = displayName ;
     }
     public String getDisplayName(){
         return displayName;
