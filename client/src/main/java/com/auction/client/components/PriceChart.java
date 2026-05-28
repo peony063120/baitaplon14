@@ -1,13 +1,14 @@
 package com.auction.client.components;
 
+import java.util.List;
+
 import com.auction.common.entity.BidTransaction;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-
-import java.util.List;
 
 public class PriceChart extends LineChart<Number, Number> {
     private final NumberAxis xAxis;
@@ -29,7 +30,7 @@ public class PriceChart extends LineChart<Number, Number> {
             }
         });
 
-        setTitle("Bieu do gia dau");
+        setTitle("Bieu do dau gia");
         setLegendVisible(false);
         setCreateSymbols(true);
         setAnimated(false);

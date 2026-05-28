@@ -15,7 +15,7 @@
                 <!-- TODO(asset): Replace this wordmark with the final monochrome logo asset. -->
                 <Text styleClass="logo-text" text="Acheron" />
             </HBox>
-            <TextField fx:id="searchField" promptText="Search auctions..." styleClass="search-field" />
+            <TextField fx:id="searchField" onAction="#handleSearch" promptText="Search auctions..." styleClass="search-field" />
             <Region HBox.hgrow="ALWAYS" />
             <Label fx:id="clockLabel" styleClass="clock" />
             <Button fx:id="notifBtn" onAction="#showNotifications" styleClass="icon-btn" text="!" />

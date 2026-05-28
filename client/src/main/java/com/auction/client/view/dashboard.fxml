@@ -45,10 +45,10 @@
         </VBox>
 
         <HBox spacing="8" styleClass="filter-tabs">
-            <ToggleButton text="All" styleClass="filter-tab" selected="true"/>
-            <ToggleButton text="Ending Soon" styleClass="filter-tab"/>
-            <ToggleButton text="Newest" styleClass="filter-tab"/>
-            <ToggleButton text="Highest Bid" styleClass="filter-tab"/>
+            <ToggleButton fx:id="filterAll" text="All" styleClass="filter-tab" selected="true" onAction="#filterByCategory" userData="all"/>
+            <ToggleButton fx:id="filterEnding" text="Ending Soon" styleClass="filter-tab" onAction="#filterByCategory" userData="ending"/>
+            <ToggleButton fx:id="filterNewest" text="Newest" styleClass="filter-tab" onAction="#filterByCategory" userData="newest"/>
+            <ToggleButton fx:id="filterHighest" text="Highest Bid" styleClass="filter-tab" onAction="#filterByCategory" userData="highest"/>
         </HBox>
 
         <!-- TODO(asset): Auction cards currently show text placeholders; wire product images from real/mock data later. -->

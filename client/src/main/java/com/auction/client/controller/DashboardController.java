@@ -1,12 +1,18 @@
 package com.auction.client.controller;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
+
 import com.auction.client.components.AuctionCard;
-import com.auction.client.model.ClientModel;
 import com.auction.client.network.ResponseHandler;
 import com.auction.client.network.ServerConnection;
 import com.auction.common.dto.AuctionDTO;
 import com.auction.common.entity.Auction;
 import com.auction.common.enums.AuctionStatus;
+
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -14,15 +20,8 @@ import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
-import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.TilePane;
 import javafx.stage.Stage;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
 public class DashboardController {
 
@@ -74,7 +73,7 @@ public class DashboardController {
         new Thread(() -> {
             try {
                 // Gọi API lấy dữ liệu biểu đồ
-                String response = ServerConnection.getInstance().sendRequest("GET_REVENUE_CHART");
+                ServerConnection.getInstance().sendRequest("GET_REVENUE_CHART");
 
                 // TODO: Parse response thành dữ liệu biểu đồ
                 // Giả sử server trả về format: "DATE:amount" hoặc JSON
@@ -239,13 +238,23 @@ public class DashboardController {
 
     // ==================== PHƯƠNG THỨC GỌI TỪ MAIN CONTROLLER ====================
 
+    @FXML
+    public void filterByCategory(javafx.event.ActionEvent event) {
+        if (event.getSource() instanceof javafx.scene.control.ToggleButton button) {
+            Object userData = button.getUserData();
+            String category = userData != null ? userData.toString() : "all";
+            this.currentFilter = category;
+            applyFilter();
+        }
+    }
+
     public void filterByCategory(String category) {
-        System.out.println("Filter by category: " + category);
-        // TODO: Lọc theo danh mục từ server
+        this.currentFilter = category != null ? category : "all";
+        applyFilter();
     }
 
     public void setFilter(String filterType) {
-        this.currentFilter = filterType;
+        this.currentFilter = filterType != null ? filterType : "all";
         applyFilter();
     }
 
