@@ -62,6 +62,7 @@ public class ServerConnection {
 
   /** Theo dõi các yêu cầu đồng bộ đang chờ dòng phản hồi tương ứng từ phía máy chủ (Server). */
   private final Map<String, CompletableFuture<String>> pendingRequests = new ConcurrentHashMap<>();
+  private final ConcurrentLinkedQueue<String> pendingTextRequests = new ConcurrentLinkedQueue<>();
 
   private ServerConnection() {
     this.protocol         = new MessageProtocol();
@@ -115,6 +116,7 @@ public class ServerConnection {
     // Hủy bỏ toàn bộ các yêu cầu đồng bộ đang chờ phản hồi để tránh rò rỉ bộ nhớ
     pendingRequests.forEach((id, future) -> future.cancel(true));
     pendingRequests.clear();
+    pendingTextRequests.clear();
     LOGGER.info("ServerConnection: Đã ngắt kết nối và giải phóng các yêu cầu đang chờ.");
   }
 
@@ -176,21 +178,22 @@ public class ServerConnection {
     String requestId = java.util.UUID.randomUUID().toString();
     CompletableFuture<String> responseFuture = new CompletableFuture<>();
     pendingRequests.put(requestId, responseFuture);
-
-    String rawJson = "{\"requestId\":\"" + requestId + "\",\"command\":\"" + command + "\"}";
+    pendingTextRequests.add(requestId);
 
     synchronized (out) {
-      out.println(rawJson);
-      LOGGER.fine("ServerConnection -> SERVER: " + rawJson);
+      out.println(command);
+      LOGGER.fine("ServerConnection -> SERVER: " + command);
     }
 
     try {
       return responseFuture.get(10, TimeUnit.SECONDS);
     } catch (TimeoutException e) {
       pendingRequests.remove(requestId);
+      pendingTextRequests.remove(requestId);
       throw new IOException("ServerConnection: Hết thời gian chờ phản hồi từ Server");
     } catch (InterruptedException | ExecutionException e) {
       pendingRequests.remove(requestId);
+      pendingTextRequests.remove(requestId);
       throw new IOException("ServerConnection: Yêu cầu bị gián đoạn: " + e.getMessage());
     }
   }
@@ -261,9 +264,20 @@ public class ServerConnection {
           break;
       }
     } catch (Exception e) {
-      LOGGER.warning("ServerConnection: Xử lý thông điệp đến thất bại — " + e.getMessage());
-      // Cơ chế dự phòng: phát tín hiệu lỗi để thông báo cho UI dữ liệu bị lỗi giải mã
-      realtimeListener.dispatch("INBOUND_PARSE_ERROR", e.getMessage());
+      completePendingTextRequest(rawJson);
+    }
+  }
+
+  private void completePendingTextRequest(String response) {
+    String requestId = pendingTextRequests.poll();
+    if (requestId == null) {
+      realtimeListener.dispatch("TEXT_MESSAGE", response);
+      return;
+    }
+
+    CompletableFuture<String> future = pendingRequests.remove(requestId);
+    if (future != null) {
+      future.complete(response);
     }
   }
 

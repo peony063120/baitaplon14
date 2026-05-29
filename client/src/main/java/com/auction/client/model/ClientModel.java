@@ -98,12 +98,22 @@ public class ClientModel {
     public void setSession(String sessionToken, String userId, String username, String role, double balance) {
         this.session = new Session(sessionToken, userId);
 
-        // Tạo đối tượng User tạm thời (Bidder) để lưu thông tin
-        com.auction.common.entity.Bidder user = new com.auction.common.entity.Bidder(
-                username, "", "", username
-        );
+        if ("BIDDER".equalsIgnoreCase(role)) {
+            com.auction.common.entity.Bidder user = new com.auction.common.entity.Bidder(
+                    username, "", "", username, balance
+            );
+            user.setId(userId);
+            this.currentUser = user;
+            return;
+        }
+
+        User user = new User(username, "", "", username) {
+            @Override
+            public String getRole() {
+                return role;
+            }
+        };
         user.setId(userId);
-        user.addBalance(balance);
         this.currentUser = user;
     }
 

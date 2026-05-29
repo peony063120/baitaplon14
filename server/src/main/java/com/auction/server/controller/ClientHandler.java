@@ -65,6 +65,7 @@ public class ClientHandler implements Runnable {
             switch (command) {
                 case "LOGIN" -> handleLogin(payload);
                 case "REGISTER" -> handleRegister(payload);
+                case "CHECK_USERNAME" -> handleCheckUsername(payload);
                 case "GET_AUCTIONS" -> handleGetAllAuctions();
                 case "GET_AUCTION" -> handleGetAuction(payload);
                 case "CREATE_AUCTION" -> handleCreateAuction(payload);
@@ -103,6 +104,10 @@ public class ClientHandler implements Runnable {
         dto.setActive(true);
         userController.register(dto);
         out.println("REGISTER_OK");
+    }
+
+    private void handleCheckUsername(String username) {
+        out.println(userController.usernameExists(username) ? "EXISTS" : "AVAILABLE");
     }
 
     private void handleGetAllAuctions() {

@@ -60,13 +60,13 @@ public class MainController {
 
     @FXML
     public void showDashboard() {
-        dashboardController = loadContent("/view/dashboard.fxml");
+        dashboardController = loadContent("/com/auction/client/view/dashboard.fxml");
         selectNav(homeNav);
     }
 
     @FXML
     public void showLive() {
-        dashboardController = loadContent("/view/dashboard.fxml");
+        dashboardController = loadContent("/com/auction/client/view/dashboard.fxml");
         if (dashboardController != null) {
             dashboardController.setFilter("ending");
         }
@@ -75,13 +75,13 @@ public class MainController {
 
     @FXML
     public void showHistory() {
-        loadContent("/view/bid_history.fxml");
+        loadContent("/com/auction/client/view/bid_history.fxml");
         selectNav(historyNav);
     }
 
     @FXML
     public void showProfile() {
-        loadContent("/view/profile.fxml");
+        loadContent("/com/auction/client/view/profile.fxml");
         selectNav(profileNav);
     }
 
@@ -93,12 +93,12 @@ public class MainController {
 
     @FXML
     public void showCreateAuction() {
-        loadContent("/view/create_auction.fxml");
+        loadContent("/com/auction/client/view/create_auction.fxml");
     }
 
     @FXML
     public void showMyAuctions() {
-        loadContent("/view/my_auctions.fxml");
+        loadContent("/com/auction/client/view/my_auctions.fxml");
     }
 
     @FXML

@@ -6,6 +6,7 @@ package com.auction.client.controller;
  * → nếu thành công thì chuyển về trang đăng nhập.
  */
 
+import com.auction.client.config.AppConfig;
 import com.auction.client.model.ClientModel;
 import com.auction.client.network.ServerConnection;
 import com.auction.common.dto.UserDTO;
@@ -32,7 +33,7 @@ public class RegisterController {
 
     @FXML
     public void initialize() {
-        roleComboBox.getItems().addAll("BIDDER", "SELLER");
+        roleComboBox.getItems().setAll("BIDDER", "SELLER", "ADMIN");
         roleComboBox.setValue("BIDDER");
     }
 
@@ -67,14 +68,14 @@ public class RegisterController {
                 UserDTO dto = new UserDTO(
                         null,
                         username,
-                        encryptPassword(password),
+                        password,
                         email,
                         fullName,
                         role,
                         0.0
                 );
 
-                boolean success = clientModel.register(dto);
+                boolean success = registerAccount(dto);
 
                 Platform.runLater(() -> {
                     if (success) {
@@ -106,8 +107,26 @@ public class RegisterController {
      * @throws IOException Nếu lỗi kết nối
      */
     public boolean checkUsernameExists(String username) throws IOException {
+        if (AppConfig.USE_MOCK) {
+            return false;
+        }
+
         String response = ServerConnection.getInstance().sendRequest("CHECK_USERNAME:" + username);
         return "EXISTS".equals(response);
+    }
+
+    private boolean registerAccount(UserDTO userDTO) throws IOException {
+        if (AppConfig.USE_MOCK) {
+            return true;
+        }
+
+        String response = ServerConnection.getInstance().sendRequest("REGISTER:"
+                + userDTO.getUsername() + ":"
+                + userDTO.getPassword() + ":"
+                + userDTO.getEmail() + ":"
+                + userDTO.getFullName() + ":"
+                + userDTO.getRole());
+        return "REGISTER_OK".equals(response);
     }
 
     /**
@@ -161,7 +180,7 @@ public class RegisterController {
     @FXML
     public void goToLogin() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/login.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/login.fxml"));
             Stage stage = (Stage) usernameField.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
             stage.setTitle("Đăng nhập");

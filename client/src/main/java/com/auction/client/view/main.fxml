@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.effect.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
@@ -62,6 +63,9 @@
         </VBox>
     </left>
     <center>
-        <StackPane fx:id="contentPane" styleClass="dashboard-content" />
+        <StackPane fx:id="contentPane" styleClass="dashboard-content">
+         <effect>
+            <Blend />
+         </effect></StackPane>
     </center>
 </BorderPane>

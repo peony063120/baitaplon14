@@ -136,7 +136,7 @@ public class MyAuctionsController {
      */
     public void editAuction(String auctionId) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/create_auction.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/create_auction.fxml"));
             Stage stage = new Stage();
             stage.setScene(new Scene(loader.load()));
             stage.setTitle("Chỉnh sửa phiên đấu giá");
@@ -152,7 +152,7 @@ public class MyAuctionsController {
      */
     public void viewBids(String auctionId) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/bid_history.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/bid_history.fxml"));
             Stage stage = new Stage();
             stage.setScene(new Scene(loader.load()));
 

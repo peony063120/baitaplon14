@@ -34,6 +34,10 @@ public class UserController {
         userService.register(request);
     }
 
+    public boolean usernameExists(String username) {
+        return userService.usernameExists(username);
+    }
+
     public LoginResponse login(LoginRequest request) {
         return userService.authenticate(request.getUsername(), request.getPassword());
     }

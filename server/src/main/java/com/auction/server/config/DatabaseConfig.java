@@ -5,7 +5,7 @@ import java.util.Properties;
 
 /**
  * DatabaseConfig
- * Cấu hình kết nối database.
+ * Cau hinh ket noi database.
  */
 public class DatabaseConfig {
     private static DatabaseConfig instance;
@@ -17,14 +17,13 @@ public class DatabaseConfig {
             if (input != null) {
                 props.load(input);
             } else {
-                // Giá trị mặc định (ví dụ H2 in-memory)
-                props.setProperty("db.url", "jdbc:h2:mem:auctiondb;DB_CLOSE_DELAY=-1");
-                props.setProperty("db.user", "sa");
+                props.setProperty("db.url", "jdbc:mysql://localhost:3306/auction");
+                props.setProperty("db.username", "root");
                 props.setProperty("db.password", "");
-                props.setProperty("db.driver", "org.h2.Driver");
+                props.setProperty("db.driver", "com.mysql.cj.jdbc.Driver");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException("Khong the doc cau hinh database", e);
         }
     }
 
@@ -39,12 +38,12 @@ public class DatabaseConfig {
         return props.getProperty("db.url");
     }
 
-    public String getUser() {
-        return props.getProperty("db.user");
+    public String getUsername() {
+        return props.getProperty("db.username", props.getProperty("db.user", ""));
     }
 
     public String getPassword() {
-        return props.getProperty("db.password");
+        return props.getProperty("db.password", "");
     }
 
     public String getDriver() {

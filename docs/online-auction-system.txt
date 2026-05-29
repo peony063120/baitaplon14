@@ -1,0 +1,200 @@
+online-auction-system/
+|
+|-- common/                         # Shared module used by client and server
+|   |-- pom.xml
+|   `-- src/main/java/com/auction/common/
+|       |-- dto/                    # Request/response/data transfer objects
+|       |   |-- AuctionDTO.java
+|       |   |-- AutoBidRequest.java
+|       |   |-- BidHistoryDTO.java
+|       |   |-- BidRequest.java
+|       |   |-- LoginRequest.java
+|       |   |-- LoginResponse.java
+|       |   `-- UserDTO.java
+|       |-- entity/                 # Core domain entities
+|       |   |-- Admin.java
+|       |   |-- Art.java
+|       |   |-- Auction.java
+|       |   |-- AutoBidConfig.java
+|       |   |-- Bidder.java
+|       |   |-- BidTransaction.java
+|       |   |-- Electronics.java
+|       |   |-- Entity.java
+|       |   |-- Item.java
+|       |   |-- Seller.java
+|       |   |-- User.java
+|       |   `-- Vehicle.java
+|       |-- enums/
+|       |   |-- AuctionStatus.java
+|       |   |-- ItemType.java
+|       |   `-- UserRole.java
+|       |-- exception/
+|       |   |-- AuctionException.java
+|       |   |-- AuctionNotFoundException.java
+|       |   |-- AuthenticationException.java
+|       |   |-- ConcurrentBidException.java
+|       |   |-- InsufficientBalanceException.java
+|       |   `-- InvalidBidException.java
+|       |-- factory/
+|       |   |-- AuctionFactory.java
+|       |   `-- ItemFactory.java
+|       |-- observer/               # Observer pattern for auction updates
+|       |   |-- AuctionSubject.java
+|       |   |-- ClientObserver.java
+|       |   |-- Observer.java
+|       |   `-- Subject.java
+|       |-- strategy/               # Bidding strategies
+|       |   |-- AntiSnipingStrategy.java
+|       |   |-- AutoBiddingStrategy.java
+|       |   |-- BiddingStrategy.java
+|       |   `-- NormalBiddingStrategy.java
+|       `-- utils/
+|           |-- DateUtils.java
+|           |-- JsonUtils.java
+|           |-- PriceUtils.java
+|           `-- ValidationUtils.java
+|
+|-- server/
+|   |-- pom.xml
+|   |-- src/main/resources/
+|   |   `-- database.properties     # JDBC config for real database mode
+|   `-- src/main/java/com/auction/server/
+|       |-- ServerApp.java          # Main server entry point
+|       |-- config/
+|       |   |-- AntiSnipingConfig.java
+|       |   |-- AppConfig.java
+|       |   |-- DatabaseConfig.java
+|       |   `-- ServerConfig.java
+|       |-- controller/
+|       |   |-- AuctionController.java
+|       |   |-- BidController.java
+|       |   |-- ClientHandler.java  # TCP client request handler
+|       |   `-- UserController.java
+|       |-- dao/
+|       |   |-- AuctionDAO.java
+|       |   |-- BidTransactionDAO.java
+|       |   |-- DatabaseConnection.java
+|       |   `-- UserDAO.java
+|       |-- listener/
+|       |   |-- AuctionEventListener.java
+|       |   |-- AuctionEventListenerImpl.java
+|       |   |-- BidEventListener.java
+|       |   `-- BidEventListenerImpl.java
+|       |-- model/
+|       |   |-- AuctionManager.java
+|       |   |-- BidQueueManager.java
+|       |   |-- PriceCalculator.java
+|       |   `-- SessionManager.java
+|       |-- scheduler/
+|       |   |-- AuctionScheduler.java
+|       |   |-- AutoBidProcessor.java
+|       |   |-- EndAuctionTask.java
+|       |   `-- StartAuctionTask.java
+|       `-- service/
+|           |-- AntiSnipingService.java
+|           |-- AuctionMapper.java
+|           |-- AuctionService.java
+|           |-- AutoBidService.java
+|           |-- BiddingService.java
+|           |-- ConcurrentBidManager.java
+|           |-- NotificationService.java
+|           `-- UserService.java
+|
+|-- client/
+|   |-- pom.xml
+|   `-- src/main/java/com/auction/client/
+|       |-- ClientApp.java                  # Plain launcher for IntelliJ/classpath runs
+|       |-- AuctionClientApplication.java   # JavaFX Application lifecycle
+|       |-- components/
+|       |   |-- AuctionCard.java
+|       |   |-- BidCard.java
+|       |   |-- PriceChart.java
+|       |   `-- TimerLabel.java
+|       |-- config/
+|       |   `-- AppConfig.java              # Mock/API flags
+|       |-- controller/
+|       |   |-- AuctionDetailController.java
+|       |   |-- BidHistoryController.java
+|       |   |-- CreateAuctionController.java
+|       |   |-- DashboardController.java
+|       |   |-- LoginController.java
+|       |   |-- MainController.java
+|       |   |-- MyAuctionsController.java
+|       |   |-- ProfileController.java
+|       |   `-- RegisterController.java
+|       |-- model/
+|       |   |-- BidHistoryModel.java
+|       |   |-- ClientModel.java
+|       |   |-- PriceChartModel.java
+|       |   `-- Session.java
+|       |-- network/
+|       |   |-- MessageProtocol.java
+|       |   |-- RealtimeListener.java
+|       |   |-- RequestBuilder.java
+|       |   |-- ResponseHandler.java
+|       |   `-- ServerConnection.java
+|       |-- service/
+|       |   |-- DataService.java
+|       |   `-- MockDataProvider.java
+|       |-- styles/
+|       |   `-- main.css
+|       `-- view/
+|           |-- auction_detail.fxml
+|           |-- bid_history.fxml
+|           |-- create_auction.fxml
+|           |-- dashboard.fxml
+|           |-- login.fxml
+|           |-- main.fxml
+|           |-- my_auctions.fxml
+|           |-- profile.fxml
+|           `-- register.fxml
+|
+|-- database/
+|   |-- schema.sql                  # Full schema
+|   |-- init_data.sql               # Seed/demo data
+|   `-- migration/
+|       |-- V1_create_users_table.sql
+|       |-- V2_create_auctions_table.sql
+|       |-- V3__create_bid_transactions_table.sql
+|       `-- V4__create_auto_bid_configs_table.sql
+|
+|-- docs/
+|   `-- online-auction-system.txt   # This file
+|
+|-- pom.xml                         # Maven parent POM
+|-- mvnw
+|-- mvnw.cmd
+|-- README.md
+|-- LICENSE
+`-- .gitignore
+
+Runtime modes
+=============
+
+1. Mock mode - no server and no database required
+   - Run main class: com.auction.client.ClientApp
+   - Add VM option:
+     -Dapp.mock=true
+   - Client uses MockDataProvider for login/dashboard/demo data.
+   - Registration is treated as a demo success and is not persisted.
+
+2. Real server + database mode
+   - Do not use -Dapp.mock=true.
+   - Start MySQL and import SQL from database/schema.sql and database/init_data.sql.
+   - Confirm server/src/main/resources/database.properties:
+     db.url=jdbc:mysql://localhost:3306/auction
+     db.username=root
+     db.password=
+     db.driver=com.mysql.cj.jdbc.Driver
+   - Start server main class:
+     com.auction.server.ServerApp
+   - Start client main class:
+     com.auction.client.ClientApp
+
+Important notes
+===============
+
+- ClientApp is the class to run from IntelliJ. AuctionClientApplication is the JavaFX Application class used internally.
+- The JavaFX resources are currently stored under client/src/main/java/com/auction/client/view and styles under client/src/main/java/com/auction/client/styles.
+- The project currently mixes text TCP commands and JSON message helpers. ServerConnection supports the text command flow used by ClientHandler.
+- Some DAO classes are still in-memory oriented. DatabaseConnection and database.properties exist for JDBC configuration, but persistence coverage depends on each DAO implementation.

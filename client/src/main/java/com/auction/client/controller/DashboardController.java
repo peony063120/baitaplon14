@@ -1,9 +1,11 @@
 package com.auction.client.controller;
 
 import com.auction.client.components.AuctionCard;
+import com.auction.client.config.AppConfig;
 import com.auction.client.model.ClientModel;
 import com.auction.client.network.ResponseHandler;
 import com.auction.client.network.ServerConnection;
+import com.auction.client.service.MockDataProvider;
 import com.auction.common.dto.AuctionDTO;
 import com.auction.common.entity.Auction;
 import com.auction.common.enums.AuctionStatus;
@@ -47,6 +49,13 @@ public class DashboardController {
      * Load danh sách phiên đấu giá từ server và hiển thị lên grid.
      */
     public void loadAuctions() {
+        if (AppConfig.USE_MOCK) {
+            allAuctions = MockDataProvider.getAuctions();
+            renderAuctions(allAuctions);
+            updateStats();
+            return;
+        }
+
         new Thread(() -> {
             try {
                 String response = ServerConnection.getInstance().sendRequest("GET_AUCTIONS");
@@ -71,6 +80,11 @@ public class DashboardController {
      * Load dữ liệu biểu đồ doanh thu từ server (THAY THẾ MOCK DATA)
      */
     private void loadRevenueChartData() {
+        if (AppConfig.USE_MOCK) {
+            updateChartFromAuctions();
+            return;
+        }
+
         new Thread(() -> {
             try {
                 // Gọi API lấy dữ liệu biểu đồ
@@ -225,7 +239,7 @@ public class DashboardController {
      */
     private void openAuctionDetail(AuctionDTO auction) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/auction_detail.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/auction_detail.fxml"));
             Stage stage = new Stage();
             stage.setScene(new Scene(loader.load()));
             AuctionDetailController controller = loader.getController();

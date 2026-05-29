@@ -21,13 +21,21 @@ public class UserService {
 
     // Đăng ký (giữ nguyên logic cũ)
     public void register(UserDTO request) {
+        if (usernameExists(request.getUsername())) {
+            throw new IllegalArgumentException("Username already exists");
+        }
         User newUser = new Member(
                 request.getUsername(),
                 request.getPassword(),
                 request.getEmail(),
-                request.getFullName()
+                request.getFullName(),
+                request.getRole()
         );
         userDAO.saveUser(newUser);
+    }
+
+    public boolean usernameExists(String username) {
+        return userDAO.findUserByUsername(username) != null;
     }
 
     // Xác thực (giữ nguyên)
@@ -102,12 +110,15 @@ public class UserService {
 
     // Inner class Member (giữ nguyên)
     private static class Member extends User {
-        public Member(String username, String password, String email, String fullName) {
+        private final String role;
+
+        public Member(String username, String password, String email, String fullName, String role) {
             super(username, password, email, fullName);
+            this.role = role == null || role.isBlank() ? "BIDDER" : role;
         }
         @Override
         public String getRole() {
-            return "MEMBER";
+            return role;
         }
     }
 }
