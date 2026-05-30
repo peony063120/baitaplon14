@@ -1,4 +1,4 @@
-package com.auction.server.service; // Đổi lại package nếu cần
+package com.auction.server.mapper; // Đổi lại package nếu cần
 
 import com.auction.common.dto.AuctionDTO;
 import com.auction.common.entity.Auction;
