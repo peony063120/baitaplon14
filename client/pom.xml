@@ -13,8 +13,7 @@
     <artifactId>client</artifactId>
 
     <properties>
-        <!-- Cập nhật lên phiên bản mới nhất 23.0.2 -->
-        <javafx.version>17.0.6</javafx.version>
+        <!-- JavaFX version is inherited from the parent pom for consistency -->
     </properties>
 
     <dependencies>
@@ -29,11 +28,13 @@
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
+            <classifier>${javafx.platform}</classifier>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
+            <classifier>${javafx.platform}</classifier>
         </dependency>
 
         <!-- Ikonli: Icon library for JavaFX -->
