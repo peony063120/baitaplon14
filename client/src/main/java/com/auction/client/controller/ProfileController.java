@@ -92,6 +92,20 @@ public class ProfileController {
     public void updateProfile(UserDTO userDTO) {
         String username = clientModel.getCurrentUser().getUsername();
 
+        if (AppConfig.isUseMock()) {
+            User currentUser = clientModel.getCurrentUser();
+            if (currentUser != null) {
+                currentUser.setFullName(userDTO.getFullName());
+                currentUser.setEmail(userDTO.getEmail());
+            }
+            Platform.runLater(() -> {
+                statusLabel.setText("✅ Profile updated successfully!");
+                statusLabel.setStyle("-fx-text-fill: #16A34A;");
+                clearStatusAfterDelay();
+            });
+            return;
+        }
+
         new Thread(() -> {
             try {
                 String response = ServerConnection.getInstance().sendRequest("UPDATE_PROFILE:" + username +

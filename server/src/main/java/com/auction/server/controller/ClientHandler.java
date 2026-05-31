@@ -75,6 +75,7 @@ public class ClientHandler implements Runnable {
                 case "GET_BID_HISTORY" -> handleGetBidHistory(payload);
                 case "CONFIGURE_AUTO_BID" -> handleConfigureAutoBid(payload);
                 case "CANCEL_AUTO_BID" -> handleCancelAutoBid(payload);
+                case "UPDATE_PROFILE" -> handleUpdateProfile(payload);
                 case "ADD_BALANCE" -> handleAddBalance(payload);
                 case "CHANGE_PASSWORD" -> handleChangePassword(payload);
                 case "GET_PENDING_AUCTIONS" -> handleGetPendingAuctions();
@@ -119,6 +120,16 @@ public class ClientHandler implements Runnable {
         double amount = Double.parseDouble(p[1]);
         userController.addBalance(userId, amount);
         out.println("BALANCE_OK");
+    }
+
+    private void handleUpdateProfile(String payload) {
+        String[] p = payload.split(":");
+        // p[0]=userId, p[1]=fullName, p[2]=email
+        UserDTO dto = new UserDTO();
+        dto.setFullName(p[1]);
+        dto.setEmail(p[2]);
+        userController.updateProfile(p[0], dto);
+        out.println("UPDATE_OK");
     }
 
     private void handleChangePassword(String payload) {
