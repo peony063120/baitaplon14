@@ -25,7 +25,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ServerApp {
-    private static final int PORT = 5000;
+    private static final int PORT = 5050;
     private static ServerSocket serverSocket;
     private static ExecutorService clientThreadPool;
     private static volatile boolean running = true;

@@ -19,7 +19,7 @@ public class ClientApp extends Application {
         serverConnection = ServerConnection.getInstance();
 
         try {
-            serverConnection.connect("localhost", 5000);
+            serverConnection.connect("localhost", 5050);
         } catch (Exception e) {
             System.err.println("Could not connect to the server:" + e.getMessage());
         }
