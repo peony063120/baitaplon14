@@ -13,7 +13,8 @@
     <artifactId>client</artifactId>
 
     <properties>
-        <!-- JavaFX version is inherited from the parent pom for consistency -->
+        <!-- Cập nhật lên phiên bản mới nhất 23.0.2 -->
+        <javafx.version>17.0.6</javafx.version>
     </properties>
 
     <dependencies>
@@ -28,13 +29,11 @@
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
-            <classifier>${javafx.platform}</classifier>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
-            <classifier>${javafx.platform}</classifier>
         </dependency>
 
         <!-- Ikonli: Icon library for JavaFX -->
@@ -92,6 +91,10 @@
             <version>${javafx.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+        </dependency>
 
     </dependencies>
 
@@ -100,8 +103,8 @@
             <resource>
                 <directory>src/main/java</directory>
                 <includes>
-                    <include>**/*.fxml</include>
-                    <include>**/*.css</include>
+                    <include>com/auction/client/view/**</include>
+                    <include>com/auction/client/styles/**</include>
                 </includes>
             </resource>
         </resources>

@@ -75,7 +75,7 @@ public class LoginController {
     @FXML
     public void goToRegister() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/register.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/register.fxml"));
             Stage stage = (Stage) usernameField.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
             stage.setTitle("Đăng ký");

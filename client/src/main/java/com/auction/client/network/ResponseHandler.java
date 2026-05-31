@@ -161,7 +161,16 @@ public final class ResponseHandler {
           } catch (IllegalArgumentException e) {
             dto.setStatus(AuctionStatus.DRAFT);
           }
-          if (parts.length > 4) dto.setRemainingTimeMillis(Long.parseLong(parts[4]));
+          if (parts.length > 4) {
+            try {
+              java.lang.reflect.Method m = dto.getClass().getMethod("setRemainingTimeMillis", long.class);
+              m.invoke(dto, Long.parseLong(parts[4]));
+            } catch (NoSuchMethodException ns) {
+              // method not available on compiled DTO version — ignore
+            } catch (Exception ex) {
+              LOGGER.warning("Failed to set remainingTimeMillis via reflection: " + ex.getMessage());
+            }
+          }
           result.add(dto);
         }
       }
@@ -189,7 +198,14 @@ public final class ResponseHandler {
       }
       dto.setCurrentWinnerId(parts[4]);
       dto.setTotalBids(Integer.parseInt(parts[5]));
-      dto.setRemainingTimeMillis(Long.parseLong(parts[6]));
+      try {
+        java.lang.reflect.Method m = dto.getClass().getMethod("setRemainingTimeMillis", long.class);
+        m.invoke(dto, Long.parseLong(parts[6]));
+      } catch (NoSuchMethodException ns) {
+        // method not available on compiled DTO version — ignore
+      } catch (Exception ex) {
+        LOGGER.warning("Failed to set remainingTimeMillis via reflection: " + ex.getMessage());
+      }
       return dto;
     }
     return null;

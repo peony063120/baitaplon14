@@ -224,7 +224,7 @@ public class DashboardController {
      */
     private void openAuctionDetail(AuctionDTO auction) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/auction_detail.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/auction_detail.fxml"));
             Stage stage = new Stage();
             stage.setScene(new Scene(loader.load()));
             AuctionDetailController controller = loader.getController();
