@@ -4,6 +4,7 @@ import com.auction.common.dto.*;
 import com.auction.common.exception.InvalidBidException;
 import com.auction.common.observer.AuctionSubject;
 import com.auction.common.observer.ClientObserver;
+import com.auction.server.config.ServerConfig;
 import com.auction.server.controller.AuctionController;
 import com.auction.server.controller.BidController;
 import com.auction.server.controller.UserController;
@@ -17,6 +18,7 @@ import java.net.Socket;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ClientHandler implements Runnable {
     private final Socket socket;
@@ -27,6 +29,11 @@ public class ClientHandler implements Runnable {
     private BufferedReader in;
     private PrintWriter out;
     private ClientObserver clientObserver;
+    
+    // Track last bid time to prevent spam bidding (userId + auctionId -> timestamp)
+    private static final Map<String, Long> lastBidTimes = new ConcurrentHashMap<>();
+    private final long defaultAuctionDurationHours;
+    private final long minBidIntervalSeconds;
 
     public ClientHandler(Socket socket,
                          AuctionController auctionController,
@@ -38,6 +45,11 @@ public class ClientHandler implements Runnable {
         this.userController = userController;
         this.bidController = bidController;
         this.auctionSubject = auctionSubject;
+        
+        // Load auction time configurations
+        ServerConfig config = ServerConfig.getInstance();
+        this.defaultAuctionDurationHours = config.getDefaultAuctionDurationHours();
+        this.minBidIntervalSeconds = config.getMinBidIntervalSeconds();
     }
 
     @Override
@@ -72,6 +84,7 @@ public class ClientHandler implements Runnable {
                 case "GET_MY_AUCTIONS" -> handleGetMyAuctions(payload);
                 case "CREATE_AUCTION" -> handleCreateAuction(payload);
                 case "PLACE_BID" -> handlePlaceBid(payload);
+                case "CANCEL_BID" -> handleCancelBid(payload);
                 case "GET_BID_HISTORY" -> handleGetBidHistory(payload);
                 case "CONFIGURE_AUTO_BID" -> handleConfigureAutoBid(payload);
                 case "CANCEL_AUTO_BID" -> handleCancelAutoBid(payload);
@@ -235,7 +248,7 @@ public class ClientHandler implements Runnable {
             double startingPrice = p.length > 2 ? Double.parseDouble(p[2]) : 0;
             String sellerUsername = p.length > 3 ? p[3] : "";
             LocalDateTime startTime = p.length > 4 && !p[4].isEmpty() ? LocalDateTime.parse(p[4]) : LocalDateTime.now();
-            LocalDateTime endTime = p.length > 5 && !p[5].isEmpty() ? LocalDateTime.parse(p[5]) : startTime.plusDays(7);
+            LocalDateTime endTime = p.length > 5 && !p[5].isEmpty() ? LocalDateTime.parse(p[5]) : startTime.plusHours(defaultAuctionDurationHours);
             double minIncrement = p.length > 6 ? Double.parseDouble(p[6]) : 1.0;
             String category = p.length > 7 ? p[7] : "";
             String imagePath = p.length > 8 ? p[8] : "";
@@ -261,10 +274,43 @@ public class ClientHandler implements Runnable {
 
     private void handlePlaceBid(String payload) throws InvalidBidException {
         String[] p = payload.split(":");
+        String auctionId = p[0];
+        String bidderId = p[1];
+        double amount = Double.parseDouble(p[2]);
         boolean isAutoBid = p.length > 3 && Boolean.parseBoolean(p[3]);
-        BidRequest req = new BidRequest(p[0], p[1], Double.parseDouble(p[2]), isAutoBid);
+        
+        // Check minimum time interval between bids from same user in same auction
+        String bidKey = bidderId + ":" + auctionId;
+        long now = System.currentTimeMillis();
+        Long lastBidTime = lastBidTimes.get(bidKey);
+        
+        if (lastBidTime != null) {
+            long elapsed = now - lastBidTime;
+            if (elapsed < minBidIntervalSeconds * 1000) {
+                out.println("ERROR:Bidding too fast. Please wait " + 
+                           (minBidIntervalSeconds - elapsed/1000) + " more seconds.");
+                return;
+            }
+        }
+        
+        // Update last bid time
+        lastBidTimes.put(bidKey, now);
+        
+        BidRequest req = new BidRequest(auctionId, bidderId, amount, isAutoBid);
         bidController.placeBid(req);
         out.println("BID_OK");
+    }
+
+    private void handleCancelBid(String payload) {
+        String[] p = payload.split(":");
+        String auctionId = p[0];
+        String bidderId = p[1];
+        try {
+            bidController.cancelBid(auctionId, bidderId);
+            out.println("CANCEL_BID_OK");
+        } catch (Exception e) {
+            out.println("ERROR:" + e.getMessage());
+        }
     }
 
     private void handleGetBidHistory(String auctionId) {

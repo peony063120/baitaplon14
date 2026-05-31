@@ -56,8 +56,17 @@ public class ServerApp {
             // Services
             AuctionService auctionService = new AuctionService();
             UserService userService = new UserService();
-            BiddingService biddingService = new BiddingService();
+            
+            // Create AutoBidService first to avoid circular dependency
             AutoBidService autoBidService = new AutoBidService();
+            
+            // Create BiddingService with AutoBidService
+            BiddingService biddingService = new BiddingService();
+            biddingService.setAutoBidService(autoBidService);
+            
+            // Set BiddingService back to AutoBidService
+            autoBidService.setBiddingService(biddingService);
+            
             NotificationService notificationService = NotificationService.getInstance();
             AntiSnipingService antiSnipingService = new AntiSnipingService();
             ConcurrentBidManager concurrentBidManager = new ConcurrentBidManager();
@@ -75,8 +84,10 @@ public class ServerApp {
             BidEventListener bidListener = new BidEventListenerImpl();
 
             // Scheduler
-            AuctionScheduler scheduler = AuctionScheduler.getInstance();
+            AuctionScheduler auctionScheduler = AuctionScheduler.getInstance();
             AutoBidProcessor autoBidProcessor = AutoBidProcessor.getInstance();
+            // Inject BiddingService into AutoBidService via AutoBidProcessor
+            autoBidProcessor.setBiddingService(biddingService);
             autoBidProcessor.start();
 
             clientThreadPool = Executors.newCachedThreadPool();

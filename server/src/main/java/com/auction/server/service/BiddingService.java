@@ -57,8 +57,17 @@ public class BiddingService {
 
     /**
      * Đặt giá – đồng bộ trên đối tượng auction để tránh xung đột
+     * Method chính gọi từ client, sẽ trigger auto-bid cho người khác
      */
     public void placeBid(BidRequest request) throws InvalidBidException {
+        placeBid(request, true);
+    }
+
+    /**
+     * Internal method with flag to control auto-bid triggering.
+     * When triggerAutoBids is false, prevents infinite recursion for auto-bids.
+     */
+    public void placeBid(BidRequest request, boolean triggerAutoBids) throws InvalidBidException {
         Auction auction = auctionDAO.getAuction(request.getAuctionId());
         if (auction == null) {
             throw new IllegalArgumentException("Auction not found");
@@ -82,7 +91,7 @@ public class BiddingService {
                 throw new IllegalArgumentException("Bidder not found");
             }
 
-            // Kiểm tra số dư
+            // Kiểm tra số dư - phải có đủ tiền cho toàn bộ giá thầu
             if (bidder.getBalance() < request.getAmount()) {
                 throw new IllegalArgumentException("Insufficient balance");
             }
@@ -91,6 +100,10 @@ public class BiddingService {
             if (!strategy.execute(auction, request)) {
                 throw new IllegalArgumentException("Invalid bid amount");
             }
+
+            // LƯU GIÁ HIỆN TẠI VÀ NGƯỜI THẮNG TRƯỚC ĐÓ
+            double previousPrice = auction.getCurrentPrice();
+            String previousWinnerId = auction.getCurrentWinnerId();
 
             // Tạo giao dịch – dùng constructor rút gọn (tự sinh transactionId)
             BidTransaction bid = new BidTransaction(
@@ -108,9 +121,22 @@ public class BiddingService {
             auction.addBid(bid);
             auctionDAO.saveAuction(auction);
 
-            // Trừ tiền bidder
-            bidder.deductBalance(request.getAmount());
-            userDAO.saveUser(bidder);
+            // HOÀN TIỀN CHO NGƯỜI THẮNG TRƯỚC (nếu có)
+            if (previousWinnerId != null && !previousWinnerId.equals(request.getBidderId())) {
+                User previousWinner = userDAO.findUserById(previousWinnerId);
+                if (previousWinner instanceof Bidder) {
+                    Bidder previousBidder = (Bidder) previousWinner;
+                    previousBidder.addBalance(previousPrice);
+                    userDAO.saveUser(previousBidder);
+                }
+            }
+
+            // CHỈ TRỪ SỐ TIỀN CHÊNH LỆCH (giá mới - giá cũ)
+            double amountToDeduct = request.getAmount() - previousPrice;
+            if (amountToDeduct > 0) {
+                bidder.deductBalance(amountToDeduct);
+                userDAO.saveUser(bidder);
+            }
 
             // Thông báo realtime cho client
             subject.notifyObservers(auction);
@@ -123,9 +149,19 @@ public class BiddingService {
                 }
             }
 
-            // Xử lý auto-bid cho các bidder khác
-            autoBidService.processAutoBids(auction);
+            // Xử lý auto-bid cho các bidder khác (chỉ nếu triggerAutoBids = true)
+            if (triggerAutoBids) {
+                autoBidService.processAutoBids(auction);
+            }
         }
+    }
+
+    /**
+     * Internal method to place a bid without triggering auto-bids for others.
+     * Used by AutoBidService to prevent infinite recursion.
+     */
+    public void placeBidInternal(BidRequest request) throws InvalidBidException {
+        placeBid(request, false);
     }
 
     public List<BidTransaction> getBidHistory(String auctionId) {
@@ -170,8 +206,81 @@ public class BiddingService {
         autoBidService.cancelAutoBid(auctionId, userId);
     }
 
+    /**
+     * Hủy đấu giá - hoàn tiền cho người đấu và cập nhật auction
+     */
+    public void cancelBid(String auctionId, String bidderId) {
+        Auction auction = auctionDAO.getAuction(auctionId);
+        if (auction == null) {
+            throw new IllegalArgumentException("Auction not found");
+        }
+
+        synchronized (auction) {
+            // Kiểm tra nếu auction đang chạy
+            if (auction.getStatus() != AuctionStatus.RUNNING) {
+                throw new IllegalArgumentException("Auction is not running");
+            }
+
+            // Kiểm tra nếu bidder là người thắng hiện tại
+            String currentWinnerId = auction.getCurrentWinnerId();
+            if (!bidderId.equals(currentWinnerId)) {
+                throw new IllegalArgumentException("Only the current highest bidder can cancel their bid");
+            }
+
+            // Lấy bidder
+            Bidder bidder = (Bidder) userDAO.findUserById(bidderId);
+            if (bidder == null) {
+                throw new IllegalArgumentException("Bidder not found");
+            }
+
+            // Lấy giá hiện tại (sẽ được hoàn lại)
+            double currentPrice = auction.getCurrentPrice();
+            
+            // Cập nhật auction: đặt trở lại người thắng trước đó
+            // Tìm bid trước đó trong lịch sử
+            List<BidTransaction> history = bidDAO.getBidHistory(auctionId);
+            BidTransaction previousBid = null;
+            
+            // Tìm bid cuối cùng không phải của bidder này
+            for (int i = history.size() - 1; i >= 0; i--) {
+                BidTransaction bid = history.get(i);
+                if (!bid.getBidderId().equals(bidderId)) {
+                    previousBid = bid;
+                    break;
+                }
+            }
+
+            if (previousBid != null) {
+                // Cập nhật auction với giá trước
+                auction.setCurrentPrice(previousBid.getAmount());
+                auction.setCurrentWinnerId(previousBid.getBidderId());
+                auctionDAO.saveAuction(auction);
+
+                // Hoàn tiền cho bidder đang hủy
+                bidder.addBalance(currentPrice);
+                userDAO.saveUser(bidder);
+            } else {
+                // Không có bid trước, đặt về giá khởi điểm
+                auction.setCurrentPrice(auction.getStartingPrice());
+                auction.setCurrentWinnerId(null);
+                auctionDAO.saveAuction(auction);
+
+                // Hoàn tiền cho bidder
+                bidder.addBalance(currentPrice);
+                userDAO.saveUser(bidder);
+            }
+
+            // Thông báo realtime
+            subject.notifyObservers(auction);
+        }
+    }
+
     public void setStrategy(BiddingStrategy strategy) {
         this.strategy = strategy;
+    }
+
+    public void setAutoBidService(AutoBidService autoBidService) {
+        this.autoBidService = autoBidService;
     }
 
     public BidTransactionDAO getBidDAO() {
