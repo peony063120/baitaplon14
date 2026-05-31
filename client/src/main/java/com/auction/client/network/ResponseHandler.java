@@ -147,7 +147,8 @@ public final class ResponseHandler {
     List<AuctionDTO> result = new ArrayList<>();
     if (response == null || response.isEmpty()) return result;
 
-    String[] lines = response.split("\n");
+    // Tách chuỗi bằng ký hiệu || thay vì \n
+    String[] lines = response.split("\\|\\|");
     for (String line : lines) {
       if (line.startsWith("AUCTION:")) {
         String[] parts = line.substring(8).split(":");
@@ -165,10 +166,8 @@ public final class ResponseHandler {
             try {
               java.lang.reflect.Method m = dto.getClass().getMethod("setRemainingTimeMillis", long.class);
               m.invoke(dto, Long.parseLong(parts[4]));
-            } catch (NoSuchMethodException ns) {
-              // method not available on compiled DTO version — ignore
             } catch (Exception ex) {
-              LOGGER.warning("Failed to set remainingTimeMillis via reflection: " + ex.getMessage());
+              // Bỏ qua lỗi reflection
             }
           }
           result.add(dto);
@@ -219,7 +218,8 @@ public final class ResponseHandler {
     List<BidTransaction> result = new ArrayList<>();
     if (response == null || response.isEmpty()) return result;
 
-    String[] lines = response.split("\n");
+    // Tách chuỗi bằng ký hiệu || thay vì \n
+    String[] lines = response.split("\\|\\|");
     for (String line : lines) {
       if (line.startsWith("BID:")) {
         String[] parts = line.substring(4).split(":");
@@ -237,21 +237,52 @@ public final class ResponseHandler {
   }
 
   /**
-   * Parse response đăng nhập từ dạng text
-   * Format: LOGIN_OK:sessionToken:userId:role:balance
+   * Parse response đăng nhập từ dạng text (Đã cập nhật nhận Username thật)
+   * Format chuẩn: LOGIN_OK:sessionToken:userId:username:role:balance
    */
   public static LoginResponse parseLoginResponse(String response) {
     if (response == null) {
       return new LoginResponse(false, "Không có phản hồi từ server");
     }
+
+    // Thử parse JSON (MessageProtocol) trước — server có thể trả JSON envelope
+    try {
+      if (response.trim().startsWith("{")) {
+        Map<String, Object> envelope = protocol().decodeToMap(response);
+        Object payload = envelope.get("payload");
+        if (payload instanceof Map) {
+          @SuppressWarnings("unchecked")
+          Map<String, Object> p = (Map<String, Object>) payload;
+          String sessionToken = p.get("sessionToken") != null ? p.get("sessionToken").toString() : (p.get("token") != null ? p.get("token").toString() : null);
+          String userId = p.get("userId") != null ? p.get("userId").toString() : null;
+          String username = p.get("username") != null ? p.get("username").toString() : null;
+          String role = p.get("role") != null ? p.get("role").toString() : null;
+          double balance = 0.0;
+          if (p.get("balance") != null) {
+            try { balance = Double.parseDouble(p.get("balance").toString()); } catch (Exception ex) { /* ignore */ }
+          }
+          if (sessionToken != null && userId != null) {
+            return new LoginResponse(true, "Đăng nhập thành công", userId, username, role, sessionToken, balance);
+          } else {
+            return new LoginResponse(false, "Định dạng phản hồi JSON không hợp lệ");
+          }
+        }
+      }
+    } catch (Exception e) {
+      LOGGER.fine("parseLoginResponse: JSON parse failed: " + e.getMessage());
+      // fallback to text parsing below
+    }
+
+    // Parse text protocol
     if (response.startsWith("LOGIN_OK:")) {
       String[] parts = response.split(":");
-      if (parts.length >= 5) {
+      if (parts.length >= 6) { // Nâng cấp từ 5 lên 6 phần tử
         String sessionToken = parts[1];
         String userId = parts[2];
-        String role = parts[3];
-        double balance = Double.parseDouble(parts[4]);
-        return new LoginResponse(true, "Đăng nhập thành công", userId, userId, role, sessionToken, balance);
+        String username = parts[3]; // Lấy chính xác username từ server trả về
+        String role = parts[4];
+        double balance = Double.parseDouble(parts[5]);
+        return new LoginResponse(true, "Đăng nhập thành công", userId, username, role, sessionToken, balance);
       }
       return new LoginResponse(false, "Định dạng phản hồi không hợp lệ");
     } else if (response.startsWith("LOGIN_FAIL:")) {

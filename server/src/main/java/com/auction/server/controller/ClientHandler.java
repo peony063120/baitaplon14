@@ -86,11 +86,9 @@ public class ClientHandler implements Runnable {
         LoginRequest req = new LoginRequest(p[0], p[1], p.length > 2 ? p[2] : "BIDDER");
         LoginResponse resp = userController.login(req);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("type", resp.isSuccess() ? "LOGIN_OK" : "LOGIN_FAIL");
         if (resp != null && resp.isSuccess()) {
-            out.println("LOGIN_OK:" + resp.getSessionToken() + ":" + resp.getUserId()
-                    + ":" + resp.getRole() + ":" + resp.getBalance());
+            // SỬA DÒNG NÀY: Chèn thêm p[0] (tên username người dùng nhập) vào chuỗi gửi về Client
+            out.println("LOGIN_OK:" + resp.getSessionToken() + ":" + resp.getUserId() + ":" + p[0] + ":" + resp.getRole() + ":" + resp.getBalance());
         } else {
             out.println("LOGIN_FAIL:" + (resp != null ? resp.getMessage() : "Invalid credentials"));
         }
@@ -106,13 +104,17 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleGetAllAuctions() {
-        var auctions = auctionController.getAllAuctions();
-        out.println("AUCTIONS_COUNT:" + auctions.size());
-        for (AuctionDTO a : auctions) {
-            out.println("AUCTION:" + a.getId() + ":" + a.getItemName()
-                    + ":" + a.getCurrentPrice() + ":" + a.getStatus().name()
-                    + ":" + a.getRemainingTimeMillis());
+        // Đã đổi var thành List<AuctionDTO> chuẩn Java 8
+        java.util.List<com.auction.common.dto.AuctionDTO> auctions = auctionController.getAllAuctions();
+        StringBuilder sb = new StringBuilder();
+        sb.append("AUCTIONS_COUNT:").append(auctions.size());
+
+        for (com.auction.common.dto.AuctionDTO a : auctions) {
+            sb.append("||AUCTION:").append(a.getId()).append(":").append(a.getItemName())
+                    .append(":").append(a.getCurrentPrice()).append(":").append(a.getStatus().name())
+                    .append(":").append(a.getRemainingTimeMillis());
         }
+        out.println(sb.toString());
     }
 
     private void handleGetAuction(String id) {
@@ -150,10 +152,17 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleGetBidHistory(String auctionId) {
-        var history = bidController.getBidHistory(auctionId);
-        out.println("BID_HISTORY_COUNT:" + history.size());
-        history.forEach(b -> out.println("BID:" + b.getBidderId() + ":" + b.getAmount()
-                + ":" + b.getBidTime() + ":" + b.isAutoBid()));
+        // Đã đổi var thành List<BidTransaction> chuẩn Java 8
+        java.util.List<com.auction.common.entity.BidTransaction> history = bidController.getBidHistory(auctionId);
+        StringBuilder sb = new StringBuilder();
+        sb.append("BID_HISTORY_COUNT:").append(history.size());
+
+        for (com.auction.common.entity.BidTransaction b : history) {
+            // Mẹo: Nếu b.getTime() báo đỏ, bạn hãy đổi chữ ".getTime()" thành ".getBidTime()" theo entity của bạn nhé
+            sb.append("||BID:").append(b.getBidderId()).append(":").append(b.getAmount())
+                    .append(":").append(b.getBidTime()).append(":").append(b.isAutoBid());
+        }
+        out.println(sb.toString());
     }
 
     private void handleConfigureAutoBid(String payload) {

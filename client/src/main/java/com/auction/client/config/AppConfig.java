@@ -8,5 +8,5 @@ public class AppConfig {
     public static final boolean USE_MOCK = Boolean.parseBoolean(System.getProperty("app.useMock", System.getenv().getOrDefault("APP_USE_MOCK", "false")));
 
     // Nếu API thật lỗi, có tự động fallback sang mock không?
-    public static final boolean AUTO_FALLBACK = Boolean.parseBoolean(System.getProperty("app.autoFallback", System.getenv().getOrDefault("APP_AUTO_FALLBACK", "true")));
+    public static final boolean AUTO_FALLBACK = Boolean.parseBoolean(System.getProperty("app.autoFallback", System.getenv().getOrDefault("APP_AUTO_FALLBACK", "false")));
 }

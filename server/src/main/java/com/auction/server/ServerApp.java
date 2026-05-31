@@ -16,6 +16,8 @@ import com.auction.server.listener.BidEventListenerImpl;
 import com.auction.server.scheduler.AuctionScheduler;
 import com.auction.server.scheduler.AutoBidProcessor;
 import com.auction.server.service.*;
+import com.auction.common.entity.Bidder;
+import com.auction.server.dao.UserDAO;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -34,11 +36,18 @@ public class ServerApp {
         System.out.println("Starting Online Auction Server...");
         try {
             DatabaseConnection.getInstance(); // Khởi tạo storage
-            org.h2.tools.Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8082").start();
+            org.h2.tools.Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8089").start();
             System.out.println("Database connection established.");
 
-            UserDAO.getInstance();
+            UserDAO userDAO = UserDAO.getInstance();
             AuctionDAO.getInstance();
+
+            // Seed default users for demo/testing if store is empty
+            if (userDAO.findUserByUsername("demo") == null) {
+                System.out.println("Seeding demo users: demo/demo, alice/alice");
+                userDAO.saveUser(new Bidder("demo", "demo", "demo@example.com", "Demo User", 1000.0));
+                userDAO.saveUser(new Bidder("alice", "alice", "alice@example.com", "Alice", 500.0));
+            }
 
             // Services
             AuctionService auctionService = new AuctionService();

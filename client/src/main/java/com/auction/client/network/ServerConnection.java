@@ -177,11 +177,10 @@ public class ServerConnection {
     CompletableFuture<String> responseFuture = new CompletableFuture<>();
     pendingRequests.put(requestId, responseFuture);
 
-    String rawJson = "{\"requestId\":\"" + requestId + "\",\"command\":\"" + command + "\"}";
-
+    // Gửi raw text command (text protocol) — server mong đợi định dạng "COMMAND:payload"
     synchronized (out) {
-      out.println(rawJson);
-      LOGGER.fine("ServerConnection -> SERVER: " + rawJson);
+      out.println(command);
+      LOGGER.fine("ServerConnection -> SERVER (text): " + command);
     }
 
     try {
@@ -232,12 +231,13 @@ public class ServerConnection {
         String firstKey = pendingRequests.keySet().iterator().next();
         CompletableFuture<String> future = pendingRequests.remove(firstKey);
         if (future != null) {
+          LOGGER.info("ServerConnection: Completing pending request with raw text response: " + rawJson);
           future.complete(rawJson);
           return;
         }
       }
-      // Không có pending request → log nhẹ (không phải warning nghiêm trọng)
-      LOGGER.fine("ServerConnection: Nhận text thuần (không phải JSON): " + rawJson);
+      // Không có pending request → log nội dung nhận được để debug
+      LOGGER.info("ServerConnection: Nhận text thuần (không phải JSON): " + rawJson);
       realtimeListener.dispatch("INBOUND_TEXT", rawJson);
       return;
     }
