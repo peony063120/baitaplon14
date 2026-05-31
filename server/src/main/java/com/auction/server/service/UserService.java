@@ -2,7 +2,9 @@ package com.auction.server.service;
 
 import com.auction.common.dto.LoginResponse;
 import com.auction.common.dto.UserDTO;
+import com.auction.common.entity.Admin;
 import com.auction.common.entity.Bidder;
+import com.auction.common.entity.Seller;
 import com.auction.common.entity.User;
 import com.auction.common.exception.AuctionException;
 import com.auction.common.exception.AuctionNotFoundException;
@@ -21,12 +23,48 @@ public class UserService {
 
     // Đăng ký (giữ nguyên logic cũ)
     public void register(UserDTO request) {
-        User newUser = new Member(
-                request.getUsername(),
-                request.getPassword(),
-                request.getEmail(),
-                request.getFullName()
-        );
+        User newUser;
+        String role = request.getRole();
+        
+        if (role == null) {
+            role = "MEMBER";
+        }
+        
+        switch (role.toUpperCase()) {
+            case "BIDDER":
+                newUser = new Bidder(
+                        request.getUsername(),
+                        request.getPassword(),
+                        request.getEmail(),
+                        request.getFullName(),
+                        request.getBalance()
+                );
+                break;
+            case "SELLER":
+                newUser = new Seller(
+                        request.getUsername(),
+                        request.getPassword(),
+                        request.getEmail(),
+                        request.getFullName()
+                );
+                break;
+            case "ADMIN":
+                newUser = new Admin(
+                        request.getUsername(),
+                        request.getPassword(),
+                        request.getEmail(),
+                        request.getFullName(),
+                        "SUPER"
+                );
+                break;
+            default:
+                newUser = new Member(
+                        request.getUsername(),
+                        request.getPassword(),
+                        request.getEmail(),
+                        request.getFullName()
+                );
+        }
         userDAO.saveUser(newUser);
     }
 
