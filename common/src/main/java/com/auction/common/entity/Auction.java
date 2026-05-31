@@ -14,6 +14,7 @@ public class Auction {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private double currentPrice;
+    private double startingPrice;  // Giá khởi điểm
     private String currentWinnerId;
     private AuctionStatus status;
     private List<BidTransaction> bidHistory;
@@ -34,6 +35,7 @@ public class Auction {
         this.startTime = startTime;
         this.endTime = endTime;
         this.currentPrice = startingPrice;
+        this.startingPrice = startingPrice;
         this.status = AuctionStatus.DRAFT;
         this.bidHistory = new ArrayList<>();
         this.participants = new ArrayList<>();
@@ -54,6 +56,7 @@ public class Auction {
         this.currentPrice = currentPrice;
         this.currentWinnerId = currentWinnerId;
         this.status = status;
+        this.startingPrice = currentPrice; // Default to current price if not set
         this.bidHistory = new ArrayList<>();
         this.participants = new ArrayList<>();
         this.antiSnipingEnabled = false;
@@ -105,6 +108,9 @@ public class Auction {
 
     public double getCurrentPrice() { return currentPrice; }
     public void setCurrentPrice(double currentPrice) { this.currentPrice = currentPrice; }
+
+    public double getStartingPrice() { return startingPrice; }
+    public void setStartingPrice(double startingPrice) { this.startingPrice = startingPrice; }
 
     public String getCurrentWinnerId() { return currentWinnerId; }
     public void setCurrentWinnerId(String currentWinnerId) { this.currentWinnerId = currentWinnerId; }

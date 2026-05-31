@@ -46,4 +46,11 @@ public class BidController {
     public void cancelAutoBid(String auctionId, String userId) {
         biddingService.cancelAutoBid(auctionId, userId);
     }
+
+    /**
+     * Cancel the current bid and refund the bidder
+     */
+    public void cancelBid(String auctionId, String bidderId) {
+        biddingService.cancelBid(auctionId, bidderId);
+    }
 }

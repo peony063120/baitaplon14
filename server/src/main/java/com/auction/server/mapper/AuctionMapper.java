@@ -34,12 +34,13 @@ public class AuctionMapper {
         if (dto == null) return null;
 
         // Tạo Auction với constructor đầy đủ
+        double startingPrice = dto.getStartingPrice() > 0 ? dto.getStartingPrice() : (dto.getCurrentPrice() > 0 ? dto.getCurrentPrice() : 0.0);
         Auction auction = new Auction(
                 dto.getItemId() != null ? dto.getItemId() : "unknown",
                 dto.getSellerId() != null ? dto.getSellerId() : "unknown",
                 dto.getStartTime() != null ? dto.getStartTime() : LocalDateTime.now(),
                 dto.getEndTime() != null ? dto.getEndTime() : LocalDateTime.now().plusDays(7),
-                dto.getStartingPrice() > 0 ? dto.getStartingPrice() : dto.getCurrentPrice()
+                startingPrice
         );
 
         // Set ID nếu có
@@ -50,6 +51,9 @@ public class AuctionMapper {
         // Set các trường khác
         if (dto.getCurrentPrice() > 0) {
             auction.setCurrentPrice(dto.getCurrentPrice());
+        }
+        if (dto.getStartingPrice() > 0) {
+            auction.setStartingPrice(dto.getStartingPrice());
         }
         if (dto.getCurrentWinnerId() != null) {
             auction.setCurrentWinnerId(dto.getCurrentWinnerId());
@@ -74,9 +78,6 @@ public class AuctionMapper {
         }
         if (dto.getSellerId() != null) {
             auction.setSellerId(dto.getSellerId());
-        }
-        if (dto.getStartingPrice() > 0) {
-            auction.setCurrentPrice(dto.getStartingPrice());
         }
 
         return auction;
