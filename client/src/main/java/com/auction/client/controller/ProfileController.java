@@ -224,7 +224,7 @@ public class ProfileController {
     @FXML
     public void viewMyBids() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/bid_history.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/bid_history.fxml"));
             Stage stage = new Stage();
             stage.setScene(new Scene(loader.load()));
 

@@ -5,6 +5,7 @@ import com.auction.common.entity.Auction;
 import com.auction.common.enums.AuctionStatus;
 import com.auction.common.exception.AuctionNotFoundException;
 import com.auction.server.dao.AuctionDAO;
+import com.auction.server.mapper.AuctionMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

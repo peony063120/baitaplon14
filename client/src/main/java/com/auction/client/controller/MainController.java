@@ -150,7 +150,10 @@ public class MainController {
 
     private <T> T loadContent(String resourcePath) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(resourcePath));
+            String resolvedPath = resourcePath != null && resourcePath.startsWith("/view/")
+                    ? "/com/auction/client" + resourcePath
+                    : resourcePath;
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(resolvedPath));
             Node view = loader.load();
             contentPane.getChildren().setAll(view);
             return loader.getController();

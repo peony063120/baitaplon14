@@ -19,7 +19,7 @@ public class ClientApp extends Application {
         serverConnection = ServerConnection.getInstance();
 
         try {
-            serverConnection.connect("localhost", 9999);
+            serverConnection.connect("localhost", 5000);
         } catch (Exception e) {
             System.err.println("Could not connect to the server:" + e.getMessage());
         }
@@ -34,18 +34,18 @@ public class ClientApp extends Application {
     }
 
     public static void showLoginScreen() throws Exception {
-        FXMLLoader loader = new FXMLLoader(ClientApp.class.getResource("/view/login.fxml"));
+        FXMLLoader loader = new FXMLLoader(ClientApp.class.getResource("/com/auction/client/view/login.fxml"));
         Parent root = loader.load();
         Scene scene = new Scene(root);
-        scene.getStylesheets().add(ClientApp.class.getResource("/styles/main.css").toExternalForm());
+        scene.getStylesheets().add(ClientApp.class.getResource("/com/auction/client/styles/main.css").toExternalForm());
         primaryStage.setScene(scene);
     }
 
     public static void showMainScreen() throws Exception {
-        FXMLLoader loader = new FXMLLoader(ClientApp.class.getResource("/view/main.fxml"));
+        FXMLLoader loader = new FXMLLoader(ClientApp.class.getResource("/com/auction/client/view/main.fxml"));
         Parent root = loader.load();
         Scene scene = new Scene(root);
-        scene.getStylesheets().add(ClientApp.class.getResource("/styles/main.css").toExternalForm());
+        scene.getStylesheets().add(ClientApp.class.getResource("/com/auction/client/styles/main.css").toExternalForm());
         primaryStage.setScene(scene);
     }
 
