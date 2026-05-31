@@ -4,6 +4,7 @@ import com.auction.common.entity.Auction;
 import com.auction.common.enums.AuctionStatus;
 import com.auction.server.dao.AuctionDAO;
 import com.auction.server.service.AutoBidService;
+import com.auction.server.service.BiddingService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,12 +22,15 @@ class AutoBidProcessorTest {
 
     @Mock private AuctionDAO auctionDAO;
     @Mock private AutoBidService autoBidService;
+    @Mock private BiddingService biddingService;
     private AutoBidProcessor processor;
 
     @BeforeEach
     void setUp() {
         // Dùng constructor test thay vì getInstance()
-        processor = new AutoBidProcessor(auctionDAO, autoBidService);
+        processor = new AutoBidProcessor(auctionDAO);
+        processor.setAutoBidService(autoBidService);   // inject qua setter
+        processor.setBiddingService(biddingService);   // inject qua setter
     }
 
     @Test
@@ -40,14 +44,13 @@ class AutoBidProcessorTest {
         finishedAuction.setStatus(AuctionStatus.FINISHED);
 
         when(auctionDAO.getAuctionsByStatus(AuctionStatus.RUNNING)).thenReturn(List.of(runningAuction));
-        doNothing().when(autoBidService).processAutoBids(runningAuction);
 
-        // Gọi method package-private
         processor.processAllActiveAuctions();
 
         verify(auctionDAO, times(1)).getAuctionsByStatus(AuctionStatus.RUNNING);
-        verify(autoBidService, times(1)).processAutoBids(runningAuction);
-        verify(autoBidService, never()).processAutoBids(finishedAuction);
+        // processAutoBids nhận 2 tham số: (auction, biddingService)
+        verify(autoBidService, times(1)).processAutoBids(runningAuction, biddingService);
+        verify(autoBidService, never()).processAutoBids(eq(finishedAuction), any());
     }
 
     @Test
@@ -57,7 +60,7 @@ class AutoBidProcessorTest {
         processor.processAllActiveAuctions();
 
         verify(auctionDAO, times(1)).getAuctionsByStatus(AuctionStatus.RUNNING);
-        verify(autoBidService, never()).processAutoBids(any());
+        verify(autoBidService, never()).processAutoBids(any(), any());
     }
 
     @AfterEach

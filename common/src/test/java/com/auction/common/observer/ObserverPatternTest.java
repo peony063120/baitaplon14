@@ -30,12 +30,12 @@ class ObserverPatternTest {
 
     @BeforeEach
     void setUp() {
-        subject = new AuctionSubject();
+        subject = AuctionSubject.getInstance();
         auction = new Auction(
-                "item-1", "seller-1",
-                LocalDateTime.now().minusMinutes(5),
-                LocalDateTime.now().plusHours(1),
-                1000000
+            "item-1", "seller-1",
+            LocalDateTime.now().minusMinutes(5),
+            LocalDateTime.now().plusHours(1),
+            1000000
         );
         auction.setStatus(AuctionStatus.RUNNING);
     }
@@ -51,6 +51,9 @@ class ObserverPatternTest {
 
         assertEquals(1, obs.received.size());
         assertEquals(auction.getId(), obs.received.get(0).getId());
+
+        // Clean up sau khi test xong để không ảnh hưởng test case khác (do dùng chung 1 Instance Singleton)
+        subject.removeObserver(obs);
     }
 
     @Test
@@ -65,6 +68,10 @@ class ObserverPatternTest {
 
         assertEquals(1, obs1.received.size());
         assertEquals(1, obs2.received.size());
+
+        // Clean up
+        subject.removeObserver(obs1);
+        subject.removeObserver(obs2);
     }
 
     @Test
@@ -77,6 +84,9 @@ class ObserverPatternTest {
         subject.notifyObservers(auction);
 
         assertEquals(1, obs.received.size());
+
+        // Clean up
+        subject.removeObserver(obs);
     }
 
     @Test
@@ -112,6 +122,9 @@ class ObserverPatternTest {
 
         assertEquals(0, obs1.received.size());
         assertEquals(1, obs2.received.size());
+
+        // Clean up
+        subject.removeObserver(obs2);
     }
 
     // ======== notifyObservers ========
@@ -127,6 +140,9 @@ class ObserverPatternTest {
         subject.notifyObservers(auction);
 
         assertEquals(3, obs.received.size());
+
+        // Clean up
+        subject.removeObserver(obs);
     }
 
     @Test

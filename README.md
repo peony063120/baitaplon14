@@ -42,12 +42,237 @@ An online auction platform enabling:
 ## 📁 Project Structure
 
 ```
-auction-system/
-├── common/          # Shared: Entity, DTO, Strategy, Observer, Factory, Utils
-├── server/          # Server: Socket server, Service, DAO, Scheduler
-├── client/          # Client: JavaFX UI, Controller, Network layer
-├── database/        # SQL schema, reference data, migrations
-└── docs/            # Docs, class diagram
+online-auction-system/
+│
+├── common/                          # Shared between client & server
+│   └── src/main/java/com/auction/common/
+│       ├── entity/                  # Core business entities
+│       │   ├── Entity.java
+│       │   ├── User.java
+│       │   ├── Bidder.java
+│       │   ├── Seller.java
+│       │   ├── Admin.java
+│       │   ├── Item.java
+│       │   ├── Electronics.java
+│       │   ├── Art.java
+│       │   ├── Vehicle.java
+│       │   ├── Auction.java
+│       │   ├── BidTransaction.java
+│       │   └── AutoBidConfig.java
+│       │
+│       ├── enums/                   # Enumerations
+│       │   ├── AuctionStatus.java   # DRAFT, OPEN, RUNNING, FINISHED, PAID, CANCELLED
+│       │   ├── UserRole.java        # BIDDER, SELLER, ADMIN
+│       │   └── ItemType.java        # ELECTRONICS, ART, VEHICLE
+│       │
+│       ├── observer/                # Observer pattern (realtime update)
+│       │   ├── Observer.java
+│       │   ├── Subject.java
+│       │   ├── AuctionSubject.java
+│       │   └── ClientObserver.java
+│       │
+│       ├── strategy/                # Strategy pattern (bidding algorithms)
+│       │   ├── BiddingStrategy.java
+│       │   ├── NormalBiddingStrategy.java
+│       │   ├── AutoBiddingStrategy.java
+│       │   └── AntiSnipingStrategy.java
+│       │
+│       ├── factory/                 # Factory pattern
+│       │   ├── ItemFactory.java
+│       │   └── AuctionFactory.java
+│       │
+│       ├── dto/                     # Data Transfer Objects
+│       │   ├── LoginRequest.java
+│       │   ├── LoginResponse.java
+│       │   ├── BidRequest.java
+│       │   ├── AuctionDTO.java
+│       │   ├── UserDTO.java
+│       │   ├── AutoBidRequest.java
+│       │   └── BidHistoryDTO.java
+│       │
+│       ├── exception/               # Custom exceptions
+│       │   ├── AuctionException.java
+│       │   ├── InvalidBidException.java
+│       │   ├── AuctionNotFoundException.java
+│       │   ├── InsufficientBalanceException.java
+│       │   ├── AuthenticationException.java
+│       │   └── ConcurrentBidException.java
+│       │
+│       └── utils/                   # Utility classes
+│           ├── DateUtils.java
+│           ├── ValidationUtils.java
+│           ├── JsonUtils.java
+│           └── PriceUtils.java
+│
+├── server/
+│   └── src/main/java/com/auction/server/
+│       ├── controller/              # Server controllers (handle client requests)
+│       │   ├── AuctionController.java
+│       │   ├── UserController.java
+│       │   ├── BidController.java
+│       │   └── ClientHandler.java   # Thread-per-client
+│       │
+│       ├── service/                 # Business logic layer
+│       │   ├── AuctionService.java
+│       │   ├── UserService.java
+│       │   ├── BiddingService.java      # synchronized placeBid()
+│       │   ├── AutoBidService.java      # PriorityQueue for auto-bids
+│       │   ├── NotificationService.java
+│       │   ├── AntiSnipingService.java  # extends bidding time on late bids
+│       │   └── ConcurrentBidManager.java # handles race conditions
+│       │
+│       ├── dao/                     # Data Access Objects (Singleton)
+│       │   ├── UserDAO.java
+│       │   ├── AuctionDAO.java
+│       │   ├── BidTransactionDAO.java
+│       │   └── DatabaseConnection.java
+│       │
+│       ├── model/                   # Server-side models (business logic support)
+│       │   ├── AuctionManager.java      # Singleton - manages running auctions
+│       │   ├── SessionManager.java      # Singleton - manages user sessions
+│       │   ├── PriceCalculator.java
+│       │   └── BidQueueManager.java     # processes concurrent bids in order
+│       │
+│       ├── scheduler/               # Scheduled tasks (java.util.concurrent)
+│       │   ├── AuctionScheduler.java
+│       │   ├── StartAuctionTask.java
+│       │   ├── EndAuctionTask.java      # includes anti-sniping check
+│       │   └── AutoBidProcessor.java    # periodic auto-bid execution
+│       │
+│       ├── config/                  # Configuration classes
+│       │   ├── ServerConfig.java
+│       │   ├── DatabaseConfig.java
+│       │   ├── AppConfig.java
+│       │   └── AntiSnipingConfig.java   # threshold & extension seconds
+│       │
+│       ├── listener/                # Event listeners (internal events)
+│       │   ├── AuctionEventListener.java
+│       │   └── BidEventListener.java
+│       │
+│       └── ServerApp.java           # Main server entry point
+│
+├── client/
+│   └── src/main/java/com/auction/client/
+│       ├── ClientApp.java           # Main client entry point (JavaFX)
+│       │
+│       ├── config/                  # Client configuration
+│       │   └── AppConfig.java       # USE_MOCK, AUTO_FALLBACK flags
+│       │
+│       ├── service/                 # Client service layer (Hybrid)
+│       │   ├── DataService.java     # Singleton - decides mock vs API
+│       │   └── MockDataProvider.java # Provides mock data for testing
+│       │
+│       ├── controller/              # GUI Controllers (FXML)
+│       │   ├── LoginController.java
+│       │   ├── RegisterController.java
+│       │   ├── MainController.java
+│       │   ├── AuctionDetailController.java   # with realtime price chart
+│       │   ├── CreateAuctionController.java
+│       │   ├── MyAuctionsController.java
+│       │   ├── ProfileController.java
+│       │   └── BidHistoryController.java
+│       │
+│       ├── model/                   # Client-side models
+│       │   ├── ClientModel.java     # Singleton - manages user session
+│       │   ├── Session.java
+│       │   ├── BidHistoryModel.java
+│       │   └── PriceChartModel.java
+│       │
+│       ├── network/                 # Network communication
+│       │   ├── ServerConnection.java   # Singleton - TCP socket
+│       │   ├── RequestBuilder.java
+│       │   ├── ResponseHandler.java    # Parse text/JSON responses
+│       │   ├── MessageProtocol.java    # JSON encoding/decoding
+│       │   └── RealtimeListener.java   # Observer on client side
+│       │
+│       ├── components/              # Custom JavaFX components
+│       │   ├── PriceChart.java         # LineChart for bid history visualization
+│       │   ├── BidCard.java
+│       │   ├── AuctionCard.java
+│       │   ├── TimerLabel.java
+│       │   └── AutoBidConfigPane.java
+│       │
+│       ├── view/                    # FXML files
+│       │   ├── login.fxml
+│       │   ├── register.fxml
+│       │   ├── main.fxml
+│       │   ├── auction_detail.fxml
+│       │   ├── create_auction.fxml
+│       │   ├── my_auctions.fxml
+│       │   ├── profile.fxml
+│       │   ├── bid_history.fxml
+│       │   └── price_chart.fxml      # Optional, embedded in auction_detail
+│       │
+│       ├── styles/                  # CSS files
+│       │   ├── main.css
+│       │   ├── dark-theme.css
+│       │   └── components.css
+│       │
+│       └── resources/               # Images, icons, etc.
+│           ├── images/
+│           │   ├── logo.png
+│           │   ├── icon-bid.png
+│           │   └── icon-auction.png
+│           └── i18n/
+│               ├── messages.properties
+│               └── messages_vi.properties
+│
+├── test/
+│   └── src/test/java/
+│       ├── com/auction/server/
+│       │   ├── service/
+│       │   │   ├── AuctionServiceTest.java
+│       │   │   ├── BiddingServiceTest.java
+│       │   │   ├── AutoBidServiceTest.java
+│       │   │   └── AntiSnipingServiceTest.java
+│       │   ├── dao/
+│       │   │   ├── UserDAOTest.java
+│       │   │   └── AuctionDAOTest.java
+│       │   ├── model/
+│       │   │   └── AuctionManagerTest.java
+│       │   └── concurrent/
+│       │       └── ConcurrentBiddingTest.java
+│       │
+│       └── com/auction/common/
+│           ├── entity/
+│           │   └── EntityTest.java
+│           ├── factory/
+│           │   └── ItemFactoryTest.java
+│           ├── observer/
+│           │   └── ObserverPatternTest.java
+│           └── utils/
+│               └── ValidationUtilsTest.java
+│
+├── database/
+│   ├── schema.sql
+│   ├── init_data.sql
+│   └── migrations/
+│       ├── V1__create_users_table.sql
+│       ├── V2__create_auctions_table.sql
+│       ├── V3__create_bid_transactions_table.sql
+│       └── V4__create_auto_bid_configs_table.sql
+│
+├── docs/
+│   ├── class-diagram.drawio
+│   ├── client-diagram.drawio          # Updated with Hybrid mode
+│   ├── sequence-diagrams/
+│   │   ├── bidding-sequence.png
+│   │   ├── auto-bid-sequence.png
+│   │   └── anti-sniping-sequence.png
+│   └── api-documentation.md
+│
+├── scripts/
+│   ├── start-server.sh
+│   ├── start-client.sh
+│   └── run-tests.sh
+│
+├── pom.xml                          # Maven parent POM
+├── common/pom.xml
+├── server/pom.xml
+├── client/pom.xml
+├── README.md
+├── LICENSE
+└── .gitignore
 ```
 
 ### Main Modules
