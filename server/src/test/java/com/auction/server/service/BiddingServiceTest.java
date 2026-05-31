@@ -41,9 +41,11 @@ class BiddingServiceTest {
         biddingService = new BiddingService(auctionDAO, bidDAO, userDAO,
             subject, antiSnipingService, autoBidService);
 
+        // ĐỔI THÀNH plusHours(2): Đảm bảo thời gian kết thúc luôn nằm ngoài khoảng 30 phút của Anti-Sniping,
+        // giúp bài test chạy ổn định tuyệt đối trên môi trường CI/CD (không lo server ảo bị delay).
         auction = new Auction("item1", "seller1",
             LocalDateTime.now().minusMinutes(10),
-            LocalDateTime.now().plusMinutes(30),
+            LocalDateTime.now().plusHours(2),
             100.0);
         auction.setId("auc1");
         auction.setStatus(AuctionStatus.RUNNING);
@@ -68,7 +70,6 @@ class BiddingServiceTest {
         assertDoesNotThrow(() -> biddingService.placeBid(validRequest));
 
         assertEquals(150.0, auction.getCurrentPrice());
-        // Verify balance deducted via save, not direct field (service may work on same object)
         verify(bidDAO, times(1)).saveBidTransaction(any(BidTransaction.class));
         verify(auctionDAO, times(1)).saveAuction(auction);
         verify(autoBidService, times(1)).processAutoBids(auction);
