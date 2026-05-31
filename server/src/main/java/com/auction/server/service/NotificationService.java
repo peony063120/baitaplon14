@@ -13,7 +13,7 @@ public class NotificationService {
     private Map<String, ClientObserver> clientObservers;
 
     private NotificationService() {
-        this(new AuctionSubject());
+        this(AuctionSubject.getInstance());
     }
 
     NotificationService(AuctionSubject subject) {
@@ -31,6 +31,11 @@ public class NotificationService {
     // Dùng cho test để inject mock subject
     public static NotificationService getInstance(AuctionSubject subject) {
         return new NotificationService(subject);
+    }
+
+    // Reset instance (for testing)
+    public static void resetInstance() {
+        instance = null;
     }
 
     public void sendBidUpdate(Auction auction) {

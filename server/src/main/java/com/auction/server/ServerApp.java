@@ -56,8 +56,17 @@ public class ServerApp {
             // Services
             AuctionService auctionService = new AuctionService();
             UserService userService = new UserService();
-            BiddingService biddingService = new BiddingService();
+            
+            // Create AutoBidService first to avoid circular dependency
             AutoBidService autoBidService = new AutoBidService();
+            
+            // Create BiddingService with AutoBidService
+            BiddingService biddingService = new BiddingService();
+            biddingService.setAutoBidService(autoBidService);
+            
+            // Set BiddingService back to AutoBidService
+            autoBidService.setBiddingService(biddingService);
+            
             NotificationService notificationService = NotificationService.getInstance();
             AntiSnipingService antiSnipingService = new AntiSnipingService();
             ConcurrentBidManager concurrentBidManager = new ConcurrentBidManager();
@@ -67,16 +76,23 @@ public class ServerApp {
             UserController userController = new UserController(userService);
             BidController bidController = new BidController(biddingService);
 
-            // AuctionSubject cho observer
-            AuctionSubject auctionSubject = new AuctionSubject();
+            // AuctionSubject cho observer (singleton)
+            AuctionSubject auctionSubject = AuctionSubject.getInstance();
+
+            // Inject AuctionSubject vào AuctionService
+            auctionService.setAuctionSubject(auctionSubject);
 
             // Listeners (có thể gắn sau)
             AuctionEventListener auctionListener = new AuctionEventListenerImpl();
             BidEventListener bidListener = new BidEventListenerImpl();
 
             // Scheduler
-            AuctionScheduler scheduler = AuctionScheduler.getInstance();
+            AuctionScheduler auctionScheduler = AuctionScheduler.getInstance();
             AutoBidProcessor autoBidProcessor = AutoBidProcessor.getInstance();
+            // Inject BiddingService into AutoBidService via AutoBidProcessor
+            autoBidProcessor.setBiddingService(biddingService);
+            // ALSO inject the same AutoBidService that BiddingService uses
+            autoBidProcessor.setAutoBidService(autoBidService);
             autoBidProcessor.start();
 
             clientThreadPool = Executors.newCachedThreadPool();

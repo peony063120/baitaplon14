@@ -4,6 +4,8 @@ import com.auction.common.dto.AuctionDTO;
 import com.auction.common.entity.Auction;
 import com.auction.common.enums.AuctionStatus;
 import com.auction.common.exception.AuctionNotFoundException;
+import com.auction.common.observer.AuctionSubject;
+import com.auction.server.config.ServerConfig;
 import com.auction.server.dao.AuctionDAO;
 import com.auction.server.mapper.AuctionMapper;
 
@@ -15,16 +17,26 @@ import java.util.stream.Collectors;
 public class AuctionService {
     private final AuctionDAO auctionDAO;
     private final AuctionMapper mapper;
+    private final long defaultAuctionDurationHours;
+    private AuctionSubject auctionSubject;
 
     public AuctionService() {
         this.auctionDAO = AuctionDAO.getInstance();
         this.mapper = new AuctionMapper();
+        this.defaultAuctionDurationHours = ServerConfig.getInstance().getDefaultAuctionDurationHours();
+        this.auctionSubject = AuctionSubject.getInstance();
     }
 
     // Thêm constructor này để test có thể inject mock
     public AuctionService(AuctionDAO auctionDAO) {
         this.auctionDAO = auctionDAO;
         this.mapper = new AuctionMapper();
+        this.defaultAuctionDurationHours = 24; // Default 24 hours for tests
+        this.auctionSubject = AuctionSubject.getInstance();
+    }
+
+    public void setAuctionSubject(AuctionSubject auctionSubject) {
+        this.auctionSubject = auctionSubject;
     }
     
     public List<AuctionDTO> getAllAuctions() {
@@ -61,7 +73,8 @@ public class AuctionService {
             auction.setStartTime(LocalDateTime.now());
         }
         if (auction.getEndTime() == null) {
-            auction.setEndTime(LocalDateTime.now().plusDays(7));
+            // Sử dụng thời gian mặc định từ cấu hình (24 giờ)
+            auction.setEndTime(LocalDateTime.now().plusHours(defaultAuctionDurationHours));
         }
         auctionDAO.saveAuction(auction);
     }
