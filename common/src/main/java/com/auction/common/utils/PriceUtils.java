@@ -5,22 +5,25 @@ import java.util.Locale;
 
 public class PriceUtils {
 
-    private static final NumberFormat VND_FORMATTER = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
-    private static final NumberFormat USD_FORMATTER = NumberFormat.getCurrencyInstance(Locale.US);
+    private static final NumberFormat CURRENCY_FORMATTER = NumberFormat.getCurrencyInstance(Locale.US);
 
     static {
-        VND_FORMATTER.setMaximumFractionDigits(0);
-        USD_FORMATTER.setMaximumFractionDigits(2);
+        CURRENCY_FORMATTER.setMaximumFractionDigits(0);
     }
 
-    // Format as VND currency (e.g., "1,000,000 ₫")
+    // Format as currency (e.g., "$1,000,000")
+    public static String formatCurrency(double amount) {
+        return CURRENCY_FORMATTER.format(amount);
+    }
+
+    // Alias for backward compatibility
     public static String formatVND(double amount) {
-        return VND_FORMATTER.format(amount);
+        return formatCurrency(amount);
     }
 
     // Format as USD currency (e.g., "$100.00")
     public static String formatUSD(double amount) {
-        return USD_FORMATTER.format(amount);
+        return CURRENCY_FORMATTER.format(amount);
     }
 
     // Simple format with 2 decimal places (no currency symbol)

@@ -7,8 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * UserDAO (Singleton)
- * Quản lý lưu trữ và truy xuất dữ liệu người dùng.
- * Sử dụng in-memory map nội bộ.
+ * Manages user data storage and retrieval.
+ * Uses in-memory map.
  */
 public class UserDAO {
 
@@ -32,7 +32,7 @@ public class UserDAO {
 
   public void saveUser(User user) {
     if (user == null || user.getUsername() == null) {
-      throw new IllegalArgumentException("User hoặc username không được null");
+      throw new IllegalArgumentException("User or username must not be null");
     }
     store.put(user.getUsername(), user);
   }

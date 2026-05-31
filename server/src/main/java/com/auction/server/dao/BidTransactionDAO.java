@@ -8,15 +8,15 @@ import java.util.stream.Collectors;
 
 /**
  * BidTransactionDAO
- * Quản lý lưu trữ và truy xuất lịch sử giao dịch đấu giá.
- * Sử dụng Singleton pattern.
+ * Manages bid transaction history storage and retrieval.
+ * Uses Singleton pattern.
  */
 public class BidTransactionDAO {
 
   private static BidTransactionDAO instance;
   private final List<BidTransaction> transactionList;
 
-  // Private constructor cho Singleton
+  // Private constructor for Singleton
   private BidTransactionDAO() {
     this.transactionList = new ArrayList<>();
   }
@@ -25,7 +25,7 @@ public class BidTransactionDAO {
     transactionList.clear();
   }
 
-  // Phương thức getInstance (Singleton)
+  // getInstance method (Singleton)
   public static synchronized BidTransactionDAO getInstance() {
     if (instance == null) {
       instance = new BidTransactionDAO();
@@ -35,7 +35,7 @@ public class BidTransactionDAO {
 
   public synchronized void saveBidTransaction(BidTransaction tx) {
     if (tx == null) {
-      throw new IllegalArgumentException("BidTransaction không được null");
+      throw new IllegalArgumentException("BidTransaction must not be null");
     }
     transactionList.add(tx);
   }

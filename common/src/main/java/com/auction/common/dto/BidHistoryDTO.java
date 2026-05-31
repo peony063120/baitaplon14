@@ -36,8 +36,8 @@ public class BidHistoryDTO implements Serializable {
     public void setAutoBid(boolean autoBid) { isAutoBid = autoBid; }
 
     /**
-     * Lấy chuỗi thời gian đã định dạng để hiển thị trên TableView.
-     * @return Chuỗi thời gian định dạng "dd/MM/yyyy HH:mm:ss"
+     * Get formatted timestamp string for TableView display.
+     * @return Formatted time string "dd/MM/yyyy HH:mm:ss"
      */
     public String getTimestampString() {
         if (timestamp == null) return "";
@@ -46,7 +46,7 @@ public class BidHistoryDTO implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("%s - %,.0f VNĐ by %s%s",
+        return String.format("%s - $%,.0f by %s%s",
                 getTimestampString(),
                 amount,
                 bidderName,

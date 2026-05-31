@@ -89,7 +89,7 @@ public class DataService {
     public void login(String username, String password, String role,
                       Consumer<LoginResponse> onSuccess, Consumer<String> onError) {
         if (AppConfig.isUseMock()) {
-            if (onSuccess != null) onSuccess.accept(MockDataProvider.getLoginResponse());
+            if (onSuccess != null) onSuccess.accept(MockDataProvider.getLoginResponse(role));
             return;
         }
         new Thread(() -> {
@@ -100,7 +100,7 @@ public class DataService {
                 if (onSuccess != null) Platform.runLater(() -> onSuccess.accept(result));
             } catch (IOException e) {
                 if (AppConfig.isAutoFallback()) {
-                    if (onSuccess != null) Platform.runLater(() -> onSuccess.accept(MockDataProvider.getLoginResponse()));
+                    if (onSuccess != null) Platform.runLater(() -> onSuccess.accept(MockDataProvider.getLoginResponse(role)));
                 } else if (onError != null) {
                     Platform.runLater(() -> onError.accept(e.getMessage()));
                 }

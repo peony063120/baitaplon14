@@ -1,13 +1,13 @@
 package com.auction.common.enums;
 
 public enum AuctionStatus {
-    PENDING("Chờ duyệt"),
-    DRAFT("Bản nháp"),
-    OPEN("Đang mở"),
-    RUNNING("Đang diễn ra"),
-    FINISHED("Đã kết thúc"),
-    PAID("Đã thanh toán"),
-    CANCELLED("Đã hủy");
+    PENDING("Pending Approval"),
+    DRAFT("Draft"),
+    OPEN("Open"),
+    RUNNING("Running"),
+    FINISHED("Finished"),
+    PAID("Paid"),
+    CANCELLED("Cancelled");
 
     private final String displayName;
     AuctionStatus(String displayName){

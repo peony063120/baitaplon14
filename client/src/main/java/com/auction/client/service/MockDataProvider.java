@@ -76,10 +76,25 @@ public class MockDataProvider {
         return list;
     }
 
+    public static LoginResponse getLoginResponse(String role) {
+        String mockId = switch (role.toUpperCase()) {
+            case "ADMIN" -> "user_admin_mock";
+            case "SELLER" -> "user_seller_mock";
+            default -> "user_bidder_mock";
+        };
+        String mockUser = switch (role.toUpperCase()) {
+            case "ADMIN" -> "admin_mock";
+            case "SELLER" -> "seller_mock";
+            default -> "bidder_mock";
+        };
+        double balance = "BIDDER".equalsIgnoreCase(role) ? 50_000_000 : 0.0;
+        return new LoginResponse(true, "Login successful (mock " + role + ")",
+                mockId, mockUser, role.toUpperCase(),
+                "mock_session_123", balance);
+    }
+
     public static LoginResponse getLoginResponse() {
-        return new LoginResponse(true, "Login successful (demo mode)",
-                "user_demo", "demo_user", "BIDDER",
-                "mock_session_123", 50_000_000);
+        return getLoginResponse("BIDDER");
     }
 
     public static UserDTO getCurrentUser() {

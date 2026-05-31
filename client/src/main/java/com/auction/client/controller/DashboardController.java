@@ -63,8 +63,8 @@ public class DashboardController {
                 },
                 error -> {
                     if (activeAuctionsCount != null)
-                        activeAuctionsCount.setText("Lỗi kết nối");
-                    System.err.println("Không thể tải danh sách đấu giá: " + error);
+                        activeAuctionsCount.setText("Connection Error");
+                    System.err.println("Failed to load auction list: " + error);
                 }
         );
     }
@@ -107,7 +107,7 @@ public class DashboardController {
                 .filter(a -> a.getStatus() == AuctionStatus.FINISHED || a.getStatus() == AuctionStatus.PAID)
                 .mapToDouble(AuctionDTO::getCurrentPrice)
                 .sum();
-        totalRevenue.setText(String.format("₫ %,.0f", revenue));
+        totalRevenue.setText(String.format("$%,.0f", revenue));
     }
 
     private void applyFilter() {
@@ -162,7 +162,7 @@ public class DashboardController {
     }
 
     /**
-     * Mở chi tiết phiên đấu giá dạng POPUP (Modal dialog) thay vì Stage mới.
+     * Open auction detail as a POPUP (Modal dialog) instead of a new Stage.
      */
     private void openAuctionDetailPopup(AuctionDTO auction) {
         try {
@@ -189,7 +189,7 @@ public class DashboardController {
             popupStage.showAndWait(); // Modal: chặn window cha cho đến khi đóng
         } catch (Exception e) {
             e.printStackTrace();
-            showErrorPopup("Không thể mở chi tiết: " + e.getMessage());
+            showErrorPopup("Could not open details: " + e.getMessage());
         }
     }
 
@@ -198,17 +198,17 @@ public class DashboardController {
         errStage.initModality(Modality.APPLICATION_MODAL);
         Label lbl = new Label(message);
         lbl.setWrapText(true);
-        Button btn = new Button("Đóng");
+        Button btn = new Button("Close");
         btn.setOnAction(e -> errStage.close());
         VBox box = new VBox(16, lbl, btn);
         box.setAlignment(Pos.CENTER);
         box.setPadding(new Insets(24));
         errStage.setScene(new Scene(box, 360, 150));
-        errStage.setTitle("Lỗi");
+        errStage.setTitle("Error");
         errStage.show();
     }
 
-    // ==================== PHƯƠNG THỨC GỌI TỪ MAIN CONTROLLER ====================
+    // ==================== METHODS CALLED FROM MAIN CONTROLLER ====================
 
     @FXML
     public void filterByCategory(javafx.event.ActionEvent event) {

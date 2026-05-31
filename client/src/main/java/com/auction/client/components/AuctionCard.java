@@ -58,7 +58,7 @@ public class AuctionCard extends VBox {
         priceBox.setAlignment(Pos.CENTER_LEFT);
 
         VBox currentPriceBox = new VBox(2);
-        Label currentPriceLabel = new Label("Gia hien tai");
+        Label currentPriceLabel = new Label("Current Price");
         currentPriceLabel.getStyleClass().add("muted-text");
         currentPriceLabel.setStyle("-fx-font-size: 11px;");
         Label currentPriceValue = new Label(formatPrice(auction.getCurrentPrice()));
@@ -66,7 +66,7 @@ public class AuctionCard extends VBox {
         currentPriceBox.getChildren().addAll(currentPriceLabel, currentPriceValue);
 
         VBox startPriceBox = new VBox(2);
-        Label startPriceLabel = new Label("Khoi diem");
+        Label startPriceLabel = new Label("Starting Price");
         startPriceLabel.getStyleClass().add("muted-text");
         startPriceLabel.setStyle("-fx-font-size: 11px;");
         Label startPriceValue = new Label(formatPrice(auction.getStartPrice()));
@@ -78,7 +78,7 @@ public class AuctionCard extends VBox {
 
         HBox metaBox = new HBox(12);
         metaBox.setAlignment(Pos.CENTER_LEFT);
-        Label bidCountLabel = new Label(auction.getTotalBids() + " luot dat");
+        Label bidCountLabel = new Label(auction.getTotalBids() + " bids");
         bidCountLabel.getStyleClass().add("muted-text");
         bidCountLabel.setStyle("-fx-font-size: 12px;");
 
@@ -86,7 +86,7 @@ public class AuctionCard extends VBox {
         HBox.setHgrow(timerLabel, Priority.ALWAYS);
         metaBox.getChildren().addAll(bidCountLabel, timerLabel);
 
-        Button bidButton = new Button("Dat gia ngay");
+        Button bidButton = new Button("Bid Now");
         bidButton.getStyleClass().add("bid-button");
         bidButton.setOnAction(e -> {
             if (onBidCallback != null) {
@@ -111,17 +111,17 @@ public class AuctionCard extends VBox {
 
         String category = auction.getCategory();
         if (category == null || category.isBlank()) {
-            return "San pham";
+            return "Product";
         }
 
         return switch (category.toLowerCase()) {
-            case "xe", "xe co", "vehicle" -> "Phuong tien";
-            case "dien-tu", "dien tu", "electronics" -> "Dien tu";
-            case "nghe-thuat", "nghe thuat", "art" -> "Nghe thuat";
-            case "trang-suc", "trang suc", "jewelry" -> "Trang suc";
-            case "bat-dong-san", "bat dong san", "realestate" -> "Bat dong san";
-            case "dong-ho", "dong ho", "watch" -> "Dong ho";
-            case "co-vat", "co vat", "antique" -> "Co vat";
+            case "xe", "xe co", "vehicle" -> "Vehicle";
+            case "dien-tu", "dien tu", "electronics" -> "Electronics";
+            case "nghe-thuat", "nghe thuat", "art" -> "Art";
+            case "trang-suc", "trang suc", "jewelry" -> "Jewelry";
+            case "bat-dong-san", "bat dong san", "realestate" -> "Real Estate";
+            case "dong-ho", "dong ho", "watch" -> "Watch";
+            case "co-vat", "co vat", "antique" -> "Antique";
             default -> category;
         };
     }
@@ -129,24 +129,24 @@ public class AuctionCard extends VBox {
     private String getStatusText() {
         AuctionStatus status = auction.getStatus();
         if (status == null) {
-            return "SAP MO";
+            return "COMING SOON";
         }
         return switch (status) {
-            case RUNNING -> "DANG DIEN RA";
-            case FINISHED -> "KET THUC";
-            case PAID -> "DA THANH TOAN";
-            case CANCELLED -> "DA HUY";
-            default -> "SAP MO";
+            case RUNNING -> "LIVE";
+            case FINISHED -> "ENDED";
+            case PAID -> "PAID";
+            case CANCELLED -> "CANCELLED";
+            default -> "COMING SOON";
         };
     }
 
     private String formatPrice(double price) {
         if (price >= 1_000_000_000) {
-            return String.format("VND %.1f Ty", price / 1_000_000_000);
+            return String.format("$%.1fB", price / 1_000_000_000);
         } else if (price >= 1_000_000) {
-            return String.format("VND %.0f Tr", price / 1_000_000);
+            return String.format("$%.0fM", price / 1_000_000);
         }
-        return String.format("VND %,.0f", price);
+        return String.format("$%,.0f", price);
     }
 
     private void startCountdown() {

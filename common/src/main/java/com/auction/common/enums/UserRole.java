@@ -1,9 +1,9 @@
 package com.auction.common.enums;
 
 public enum UserRole {
-    BIDDER("Người đấu giá"),
-    SELLER("Người bán"),
-    ADMIN("Quản trị viên");
+    BIDDER("Bidder"),
+    SELLER("Seller"),
+    ADMIN("Admin");
 
     private final String description;
     UserRole(String description){

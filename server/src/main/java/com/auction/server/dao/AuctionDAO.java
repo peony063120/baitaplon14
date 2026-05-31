@@ -11,8 +11,8 @@ import java.util.stream.Collectors;
 
 /**
  * AuctionDAO (Singleton)
- * Quản lý lưu trữ và truy xuất dữ liệu phiên đấu giá.
- * Sử dụng in-memory cache (ConcurrentHashMap) thay thế database.
+ * Manages auction data storage and retrieval.
+ * Uses in-memory cache (ConcurrentHashMap) instead of database.
  */
 public class AuctionDAO {
 
@@ -36,7 +36,7 @@ public class AuctionDAO {
 
   public void saveAuction(Auction auction) {
     if (auction == null || auction.getId() == null) {
-      throw new IllegalArgumentException("Auction hoặc auction ID không được null");
+      throw new IllegalArgumentException("Auction or auction ID must not be null");
     }
     auctionCache.put(auction.getId(), auction);
   }
@@ -52,7 +52,7 @@ public class AuctionDAO {
 
   public void deleteAuction(String id) {
     if (id == null) {
-      throw new IllegalArgumentException("Auction ID không được null");
+      throw new IllegalArgumentException("Auction ID must not be null");
     }
     auctionCache.remove(id);
   }

@@ -1,8 +1,8 @@
 package com.auction.client.controller;
 
 /**
- * Màn hình tạo phiên đấu giá mới dành cho Seller.
- * Nhập thông tin sản phẩm, chọn loại item, giá khởi điểm, thời gian bắt đầu và thời lượng → validate → gửi lên server.
+ * Create Auction screen for Seller.
+ * Enter product info, select item type, starting price, start time and duration → validate → send to server.
  */
 
 import com.auction.client.model.ClientModel;
@@ -44,6 +44,36 @@ public class CreateAuctionController {
         durationSpinner.setValueFactory(factory);
 
         imagePathLabel.setText("No image selected");
+
+        setupNumberFormatting(startingPriceField);
+        setupNumberFormatting(minIncrementField);
+    }
+
+    private void setupNumberFormatting(TextField field) {
+        field.setTextFormatter(new TextFormatter<>(change -> {
+            if (change.isContentChange()) {
+                if (!change.getControlNewText().matches("\\d*")) {
+                    return null;
+                }
+            }
+            return change;
+        }));
+        field.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) {
+                String raw = field.getText().replaceAll("\\D", "");
+                if (!raw.isEmpty()) {
+                    StringBuilder sb = new StringBuilder(raw);
+                    for (int i = sb.length() - 3; i > 0; i -= 3) {
+                        sb.insert(i, ' ');
+                    }
+                    field.setText(sb.toString());
+                }
+            }
+        });
+    }
+
+    private double parseNumberField(TextField field) {
+        return Double.parseDouble(field.getText().replaceAll("\\D", ""));
     }
 
     /**
@@ -93,16 +123,17 @@ public class CreateAuctionController {
         AuctionDTO dto = new AuctionDTO();
         dto.setItemName(itemNameField.getText().trim());
         dto.setItemDescription(itemDescriptionArea.getText().trim());
-        dto.setStartingPrice(Double.parseDouble(startingPriceField.getText().trim()));
-        dto.setCurrentPrice(Double.parseDouble(startingPriceField.getText().trim()));
+        dto.setStartingPrice(parseNumberField(startingPriceField));
+        dto.setCurrentPrice(parseNumberField(startingPriceField));
         dto.setSellerId(clientModel.getCurrentUser().getUsername());
         dto.setStartTime(getStartTime());
         dto.setEndTime(getStartTime().plusHours(durationSpinner.getValue()));
         dto.setStatus(AuctionStatus.PENDING);
-        dto.setMinIncrement(Double.parseDouble(minIncrementField.getText().isBlank() ? "1.0" : minIncrementField.getText().trim()));
+        dto.setMinIncrement(minIncrementField.getText().replaceAll("\\D", "").isBlank()
+                ? 1.0 : parseNumberField(minIncrementField));
         dto.setCategory(itemTypeComboBox.getValue());
 
-        // Gửi request trong background thread (không block UI)
+        // Send request in background thread (non-blocking)
         new Thread(() -> createAuction(dto)).start();
     }
 
@@ -119,7 +150,7 @@ public class CreateAuctionController {
     @FXML
     public void handleUploadImages() {
         FileChooser chooser = new FileChooser();
-        // CHANGED: "Chọn ảnh sản phẩm" -> "Select Product Images"
+        
         chooser.setTitle("Select Product Images");
         chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg"));
         List<File> files = chooser.showOpenMultipleDialog(itemNameField.getScene().getWindow());
@@ -139,12 +170,10 @@ public class CreateAuctionController {
 
     public boolean validateAuctionData() {
         if (itemNameField.getText().isBlank()) {
-            // CHANGED: "Vui lòng nhập tên sản phẩm" -> "Please enter the product name"
             showError("Please enter the product name");
             return false;
         }
         if (itemDescriptionArea.getText().isBlank()) {
-            // CHANGED: "Vui lòng nhập mô tả sản phẩm" -> "Please enter the product description"
             showError("Please enter the product description");
             return false;
         }
@@ -154,31 +183,27 @@ public class CreateAuctionController {
             return false;
         }
         try {
-            double price = Double.parseDouble(startingPriceField.getText().trim());
+            double price = parseNumberField(startingPriceField);
             if (price <= 0) {
-                // CHANGED: "Giá khởi điểm phải > 0" -> "Starting price must be greater than 0"
+                
                 showError("Starting price must be greater than 0");
                 return false;
             }
         } catch (NumberFormatException e) {
-            // CHANGED: "Giá khởi điểm không hợp lệ" -> "Invalid starting price"
             showError("Invalid starting price");
             return false;
         }
         if (startDatePicker.getValue() == null) {
-            // CHANGED: "Vui lòng chọn ngày bắt đầu" -> "Please select a start date"
             showError("Please select a start date");
             return false;
         }
         try {
             int hour = Integer.parseInt(startHourField.getText().trim());
             if (hour < 0 || hour > 23) {
-                // CHANGED: "Giờ bắt đầu phải từ 0-23" -> "Start hour must be between 0 and 23"
                 showError("Start hour must be between 0 and 23");
                 return false;
             }
         } catch (NumberFormatException e) {
-            // CHANGED: "Giờ bắt đầu không hợp lệ" -> "Invalid start hour"
             showError("Invalid start hour");
             return false;
         }
@@ -204,11 +229,11 @@ public class CreateAuctionController {
 
     private void showSuccess() {
         errorLabel.setStyle("-fx-text-fill: #16A34A;");
-        // CHANGED: "✅ Tạo phiên đấu giá thành công!" -> "✅ Auction created successfully!"
+        
         errorLabel.setText("✅ Auction created successfully!");
         errorLabel.setVisible(true);
 
-        // Đóng cửa sổ sau 1.5 giây
+        // Close window after 1.5 seconds
         new Thread(() -> {
             try { Thread.sleep(1500); } catch (InterruptedException ignored) {}
             javafx.application.Platform.runLater(() -> {

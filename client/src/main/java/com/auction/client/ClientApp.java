@@ -32,7 +32,7 @@ public class ClientApp extends Application {
                 alert.showAndWait();
             }
         } else {
-            System.out.println("[ClientApp] Mock mode enabled — không cần kết nối server.");
+            System.out.println("[ClientApp] Mock mode enabled — no server connection needed.");
         }
 
         showLoginScreen();

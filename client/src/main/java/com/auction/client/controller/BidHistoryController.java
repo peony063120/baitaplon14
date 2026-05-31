@@ -1,9 +1,9 @@
 package com.auction.client.controller;
 
 /**
- * Màn hình lịch sử đặt giá của 1 phiên.
- * Hiển thị bảng gồm tên bidder, số tiền, thời gian, có phải auto-bid không.
- * Hỗ trợ lọc theo ngày, sắp xếp theo giá, và xuất ra file CSV
+ * Bid history screen for an auction session.
+ * Displays a table with bidder name, amount, time, and whether auto-bid.
+ * Supports date filtering, sorting by price, and CSV export.
  */
 
 import com.auction.client.network.ResponseHandler;
@@ -55,7 +55,7 @@ public class BidHistoryController {
                 if (empty || item == null) {
                     setText(null);
                 } else {
-                    // Dịch "Auto" và "Thủ công" sang "Auto" và "Manual"
+                    // Show "Auto" and "Manual" labels
                     setText(item ? "🤖 Auto" : "👤 Manual");
                 }
             }
@@ -69,16 +69,15 @@ public class BidHistoryController {
                 if (empty || item == null) {
                     setText(null);
                 } else {
-                    // Chuyển đổi "VNĐ" sang format chuẩn quốc tế "VND" đặt phía trước
-                    setText(String.format("VND %,.0f", item));
+                    setText(String.format("$%,.0f", item));
                 }
             }
         });
     }
 
     /**
-     * Load lịch sử đấu giá từ server dựa trên auctionId.
-     * @param auctionId ID của phiên đấu giá
+     * Load bid history from server by auctionId.
+     * @param auctionId The auction ID
      */
     public void loadBidHistory(String auctionId) {
         this.currentAuctionId = auctionId;
@@ -87,13 +86,13 @@ public class BidHistoryController {
             // Gửi request lên server
             String response = ServerConnection.getInstance().sendRequest("GET_BID_HISTORY:" + auctionId);
 
-            // SỬA: Dùng ResponseHandler.parseBidHistory() trả về List<BidTransaction>
+            // Use ResponseHandler.parseBidHistory() returning List<BidTransaction>
             List<BidTransaction> transactions = ResponseHandler.parseBidHistory(response);
             allBids = convertToBidHistoryDTO(transactions);
 
             Platform.runLater(() -> {
                 historyTable.getItems().setAll(allBids);
-                // Dịch thông báo tổng lượt đặt giá
+                // Show total bid count
                 statusLabel.setText("📊 Total: " + allBids.size() + (allBids.size() <= 1 ? " bid" : " bids"));
             });
         } catch (IOException e) {
@@ -104,9 +103,9 @@ public class BidHistoryController {
     }
 
     /**
-     * Chuyển đổi từ List<BidTransaction> sang List<BidHistoryDTO>.
-     * @param transactions Danh sách giao dịch từ server
-     * @return Danh sách DTO để hiển thị trên TableView
+     * Convert List<BidTransaction> to List<BidHistoryDTO>.
+     * @param transactions Transaction list from server
+     * @return DTO list for TableView display
      */
     private List<BidHistoryDTO> convertToBidHistoryDTO(List<BidTransaction> transactions) {
         if (transactions == null || transactions.isEmpty()) {
@@ -124,8 +123,8 @@ public class BidHistoryController {
     }
 
     /**
-     * Xuất lịch sử ra file CSV.
-     * @param filename Tên file xuất
+     * Export history to CSV file.
+     * @param filename Output filename
      */
     public void exportToCSV(String filename) {
         if (allBids == null || allBids.isEmpty()) {
@@ -155,9 +154,9 @@ public class BidHistoryController {
     }
 
     /**
-     * Lọc lịch sử theo khoảng thời gian.
-     * @param start Thời gian bắt đầu
-     * @param end Thời gian kết thúc
+     * Filter history by date range.
+     * @param start Start time
+     * @param end End time
      */
     public void filterByDate(LocalDateTime start, LocalDateTime end) {
         if (allBids == null) return;
@@ -195,8 +194,8 @@ public class BidHistoryController {
     }
 
     /**
-     * Sắp xếp theo giá.
-     * @param ascending true: tăng dần, false: giảm dần
+     * Sort by amount.
+     * @param ascending true: ascending, false: descending
      */
     public void sortByAmount(boolean ascending) {
         if (allBids == null) return;
@@ -214,8 +213,8 @@ public class BidHistoryController {
     }
 
     /**
-     * Load lịch sử đặt giá theo userId (cho ProfileController).
-     * @param userId ID của người dùng
+     * Load bid history by userId (for ProfileController).
+     * @param userId User ID
      */
     public void loadBidHistoryByUser(String userId) {
         new Thread(() -> {

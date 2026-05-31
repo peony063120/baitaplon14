@@ -11,7 +11,7 @@ public interface BiddingStrategy {
   default void validateNotNull(Auction auction, BidRequest request)
       throws InvalidBidException {
     if (auction == null || request == null) {
-      throw new InvalidBidException("Dữ liệu Phiên đấu giá (Auction) và Yêu cầu đặt giá (BidRequest) không được để trống (null).");
+      throw new InvalidBidException("Auction and BidRequest must not be null.");
     }
   }
 }

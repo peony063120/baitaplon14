@@ -14,8 +14,8 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- * ResponseHandler - Xử lý phản hồi từ server
- * Hỗ trợ cả 2 định dạng: JSON (qua MessageProtocol) và TEXT thuần
+ * ResponseHandler - Handles server responses
+ * Supports both JSON (via MessageProtocol) and plain TEXT formats
  */
 public final class ResponseHandler {
 
@@ -23,7 +23,7 @@ public final class ResponseHandler {
 
   private ResponseHandler() {}
 
-  // ==================== PHẦN 1: PARSE JSON (Dùng MessageProtocol) ====================
+  // ==================== PART 1: JSON PARSING (via MessageProtocol) ====================
 
   public static boolean isSuccess(String rawJson) {
     try {
@@ -43,11 +43,11 @@ public final class ResponseHandler {
       if (payload instanceof String) return (String) payload;
       if (payload instanceof Map) {
         Object msg = ((Map<?, ?>) payload).get("message");
-        return msg != null ? msg.toString() : "Lỗi không xác định";
+        return msg != null ? msg.toString() : "Unknown error";
       }
-      return "Lỗi không xác định";
+      return "Unknown error";
     } catch (Exception e) {
-      return "Lỗi đọc phản hồi: " + e.getMessage();
+      return "Error reading response: " + e.getMessage();
     }
   }
 
@@ -137,7 +137,7 @@ public final class ResponseHandler {
     }
   }
 
-  // ==================== PHẦN 2: PARSE TEXT THUẦN (Dùng cho server text format) ====================
+  // ==================== PART 2: PLAIN TEXT PARSING (for server text format) ====================
 
   /**
    * Parse danh sách AuctionDTO từ response dạng text
@@ -244,7 +244,7 @@ public final class ResponseHandler {
    */
   public static LoginResponse parseLoginResponse(String response) {
     if (response == null) {
-      return new LoginResponse(false, "Không có phản hồi từ server");
+      return new LoginResponse(false, "No response from server");
     }
 
     // Thử parse JSON (MessageProtocol) trước — server có thể trả JSON envelope
@@ -266,7 +266,7 @@ public final class ResponseHandler {
           if (sessionToken != null && userId != null) {
             return new LoginResponse(true, "Login successful", userId, username, role, sessionToken, balance);
           } else {
-            return new LoginResponse(false, "Định dạng phản hồi JSON không hợp lệ");
+            return new LoginResponse(false, "Invalid JSON response format");
           }
         }
       }
@@ -286,11 +286,11 @@ public final class ResponseHandler {
         double balance = Double.parseDouble(parts[5]);
         return new LoginResponse(true, "Login successful", userId, username, role, sessionToken, balance);
       }
-      return new LoginResponse(false, "Định dạng phản hồi không hợp lệ");
+      return new LoginResponse(false, "Invalid response format");
     } else if (response.startsWith("LOGIN_FAIL:")) {
       return new LoginResponse(false, response.substring(11));
     }
-    return new LoginResponse(false, "Phản hồi không xác định: " + response);
+    return new LoginResponse(false, "Unknown response: " + response);
   }
 
   /**
@@ -310,7 +310,7 @@ public final class ResponseHandler {
     return response;
   }
 
-  // ==================== PHẦN 3: TIỆN ÍCH ====================
+  // ==================== PART 3: UTILITIES ====================
 
   private static MessageProtocol protocol() {
     return ServerConnection.getInstance().getProtocol();

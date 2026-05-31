@@ -42,18 +42,9 @@ public class Vehicle extends Item {
     @Override
     public String displayInfo() {
         return String.format(
-                "[VEHICLE] %s | Hãng: %s | Dòng xe: %s | Năm: %d | Biển số: %s | Số km: %.1f | Giá KĐ: %.0f VNĐ",
+                "[VEHICLE] %s | Make: %s | Model: %s | Year: %d | Plate: %s | Mileage: %.1f km | Starting Price: $%.0f",
                 getName(), make, model, year, licensePlate, mileage, getStartingPrice()
         );
-//        System.out.println("====== Vehicle ======");
-//        System.out.println("Tên     : " + getName());
-//        System.out.println("Hãng    : " + make);
-//        System.out.println("Dòng xe : " + model);
-//        System.out.println("Năm SX  : " + year);
-//        System.out.println("Biển số : " + licensePlate);
-//        System.out.printf ("Số km   : %.1f km%n", mileage);
-//        System.out.printf ("Giá KĐ  : %.0f VNĐ%n", getStartingPrice());
-//        System.out.println("Mô tả   : " + getDescription());
     }
 
     // Getters & Setters

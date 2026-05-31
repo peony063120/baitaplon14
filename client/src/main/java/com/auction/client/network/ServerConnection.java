@@ -13,13 +13,13 @@ import java.util.concurrent.*;
 import java.util.logging.Logger;
 
 /**
- * ServerConnection — Quản lý kết nối persistent TCP socket duy nhất giữa
- * ứng dụng JavaFX Client và máy chủ đấu giá (Auction Server).
- * QUAN TRỌNG — Quy tắc sử dụng sendRequest():
- *   sendRequest() sẽ block luồng gọi tối đa 10 giây chờ phản hồi từ server.
- *   Tuyệt đối KHÔNG gọi phương thức này từ JavaFX Application Thread (
- *   không gọi trực tiếp trong setOnAction, initialize, hay bất kỳ callback UI nào).
- *   Luôn bọc trong javafx.concurrent.Task hoặc ExecutorService
+ * ServerConnection — Manages a single persistent TCP socket connection between
+ * the JavaFX Client and the Auction Server.
+ * IMPORTANT — sendRequest() usage rules:
+ *   sendRequest() blocks the calling thread for up to 10 seconds waiting for a response.
+ *   Do NOT call this method from the JavaFX Application Thread
+ *   (not directly in setOnAction, initialize, or any UI callback).
+ *   Always wrap in javafx.concurrent.Task or ExecutorService.
  */
 public class ServerConnection {
 
@@ -38,15 +38,15 @@ public class ServerConnection {
   }
 
   /**
-   * Hủy bỏ Singleton instance hiện tại và ngắt kết nối socket.
-   * Gọi phương thức này trước khi tạo kết nối mới (sau khi mạng bị
-   * mất và muốn reconnect), hoặc khi ứng dụng tắt.
+   * Destroy current singleton instance and disconnect socket.
+   * Call this before creating a new connection (after network loss
+   * and wanting to reconnect), or when the application shuts down.
    */
   public static synchronized void resetInstance() {
     if (instance != null) {
       instance.disconnect();
       instance = null;
-      LOGGER.info("ServerConnection: Instance đã được reset — sẵn sàng kết nối lại.");
+      LOGGER.info("ServerConnection: Instance reset — ready for reconnection.");
     }
   }
 
@@ -60,7 +60,7 @@ public class ServerConnection {
 
   private volatile boolean connected = false;
 
-  /** Theo dõi các yêu cầu đồng bộ đang chờ dòng phản hồi tương ứng từ phía máy chủ (Server). */
+  /** Tracks synchronous requests waiting for matching response lines from the server. */
   private final Map<String, CompletableFuture<String>> pendingRequests = new ConcurrentHashMap<>();
 
   private ServerConnection() {
@@ -69,14 +69,14 @@ public class ServerConnection {
   }
 
   /**
-   * Thiết lập kết nối Socket đến máy chủ và khởi chạy luồng phụ lắng nghe dữ liệu ngầm.
-   * @param host Địa chỉ máy chủ
-   * @param port Cổng kết nối
-   * @throws IOException Nếu không thể thiết lập kết nối
+   * Establish socket connection to server and start background listener thread.
+   * @param host Server address
+   * @param port Connection port
+   * @throws IOException If connection cannot be established
    */
   public synchronized void connect(String host, int port) throws IOException {
     if (connected) {
-      LOGGER.warning("ServerConnection: Đã kết nối — bỏ qua yêu cầu connect().");
+      LOGGER.warning("ServerConnection: Already connected — ignoring connect().");
       return;
     }
 
@@ -85,9 +85,9 @@ public class ServerConnection {
     in     = new BufferedReader(new InputStreamReader(socket.getInputStream()));
     connected = true;
 
-    LOGGER.info("ServerConnection: Kết nối thành công đến máy chủ tại " + host + ":" + port);
+    LOGGER.info("ServerConnection: Successfully connected to server at " + host + ":" + port);
 
-    // Tạo luồng Daemon chạy ngầm không gây treo ứng dụng khi tắt Client
+    // Create daemon thread that won't block application shutdown
     listenerThread = Executors.newSingleThreadExecutor(r -> {
       Thread t = new Thread(r, "auction-server-listener");
       t.setDaemon(true);
@@ -97,8 +97,8 @@ public class ServerConnection {
   }
 
   /**
-   * Thực hiện ngắt kết nối an toàn, đóng Socket và giải phóng tài nguyên hệ thống.
-   * Sau khi gọi disconnect(), phải gọi resetInstance() rồi mới có thể connect() lại.
+   * Safely disconnect, close socket and release system resources.
+   * After disconnect(), call resetInstance() before connecting again.
    */
   public void disconnect() {
     connected = false;
@@ -107,27 +107,27 @@ public class ServerConnection {
         socket.close();
       }
     } catch (IOException e) {
-      LOGGER.warning("ServerConnection: Lỗi xảy ra khi ngắt kết nối — " + e.getMessage());
+      LOGGER.warning("ServerConnection: Error during disconnect — " + e.getMessage());
     }
     if (listenerThread != null) {
       listenerThread.shutdownNow();
     }
-    // Hủy bỏ toàn bộ các yêu cầu đồng bộ đang chờ phản hồi để tránh rò rỉ bộ nhớ
+    // Cancel all pending synchronous requests to prevent memory leaks
     pendingRequests.forEach((id, future) -> future.cancel(true));
     pendingRequests.clear();
-    LOGGER.info("ServerConnection: Đã ngắt kết nối và giải phóng các yêu cầu đang chờ.");
+    LOGGER.info("ServerConnection: Disconnected and released pending requests.");
   }
 
   /**
-   * Gửi một yêu cầu đến server và chặn luồng (block) đồng bộ cho đến khi nhận được
-   * phản hồi khớp dữ liệu hoặc hết thời gian chờ (timeout).
-   * Phương thức này BLOCK luồng gọi tối đa 10 giây.
-   * Tuyệt đối KHÔNG gọi từ JavaFX Application Thread — giao diện sẽ đóng băng.
-   * Luôn gọi từ background thread (javafx.concurrent.Task hoặc ExecutorService).
+   * Send a request to the server and block synchronously until a matching
+   * response is received or timeout occurs.
+   * This method BLOCKS the calling thread for up to 10 seconds.
+   * Do NOT call from JavaFX Application Thread — will freeze the UI.
+   * Always call from a background thread (javafx.concurrent.Task or ExecutorService).
    *
-   * @param requestMessage Bản đồ thông điệp được tạo qua {@link MessageProtocol#buildRequestMessage}
-   * @return Chuỗi định dạng JSON thô nhận được từ server
-   * @throws IOException Nếu mất kết nối mạng, lỗi truyền tải hoặc hết thời gian chờ (timeout)
+   * @param requestMessage Message map created via {@link MessageProtocol#buildRequestMessage}
+   * @return Raw JSON string received from server
+   * @throws IOException If connection lost, transport error, or timeout
    */
   public String sendRequest(Map<String, Object> requestMessage) throws IOException {
     if (!connected || out == null) {
@@ -142,42 +142,42 @@ public class ServerConnection {
       pendingRequests.put(requestId, responseFuture);
     }
 
-    // Đảm bảo đồng bộ hóa đầu ra ghi dữ liệu tránh xung đột luồng ghi
+    // Synchronize output to prevent concurrent write conflicts
     synchronized (out) {
       out.println(rawJson);
       LOGGER.fine("ServerConnection -> SERVER: " + rawJson);
     }
 
     if (requestId == null) {
-      return ""; // Không cần chờ phản hồi đối với các thông báo một chiều
+      return ""; // No response needed for one-way messages
     }
 
     try {
-      // Chặn luồng và đợi phản hồi từ server với thời gian tối đa là 10 giây
+      // Block and wait for server response with up to 10-second timeout
       return responseFuture.get(10, TimeUnit.SECONDS);
     } catch (TimeoutException e) {
       pendingRequests.remove(requestId);
-      throw new IOException("ServerConnection: Hết thời gian chờ phản hồi từ Server cho mã ID: " + requestId);
+      throw new IOException("ServerConnection: Timeout waiting for server response for request ID: " + requestId);
     } catch (InterruptedException | ExecutionException e) {
       pendingRequests.remove(requestId);
-      throw new IOException("ServerConnection: Yêu cầu bị gián đoạn hoặc quá trình xử lý thất bại: " + e.getMessage());
+      throw new IOException("ServerConnection: Request interrupted or processing failed: " + e.getMessage());
     }
   }
 
   /**
-   * Gửi yêu cầu đơn giản dạng text (không dùng Map)
-   * Phương thức này BLOCK luồng gọi.
+   * Send simple text request (without Map).
+   * This method BLOCKS the calling thread.
    */
   public String sendRequest(String command) throws IOException {
     if (!connected || out == null) {
-      throw new IOException("ServerConnection: Không thể gửi yêu cầu — Mạng bị ngắt kết nối.");
+      throw new IOException("ServerConnection: Cannot send request — Network disconnected.");
     }
 
     String requestId = java.util.UUID.randomUUID().toString();
     CompletableFuture<String> responseFuture = new CompletableFuture<>();
     pendingRequests.put(requestId, responseFuture);
 
-    // Gửi raw text command (text protocol) — server mong đợi định dạng "COMMAND:payload"
+    // Send raw text command (text protocol) — server expects "COMMAND:payload" format
     synchronized (out) {
       out.println(command);
       LOGGER.fine("ServerConnection -> SERVER (text): " + command);
@@ -187,18 +187,18 @@ public class ServerConnection {
       return responseFuture.get(10, TimeUnit.SECONDS);
     } catch (TimeoutException e) {
       pendingRequests.remove(requestId);
-      throw new IOException("ServerConnection: Hết thời gian chờ phản hồi từ Server");
+      throw new IOException("ServerConnection: Timeout waiting for response from Server");
     } catch (InterruptedException | ExecutionException e) {
       pendingRequests.remove(requestId);
-      throw new IOException("ServerConnection: Yêu cầu bị gián đoạn: " + e.getMessage());
+      throw new IOException("ServerConnection: Request interrupted: " + e.getMessage());
     }
   }
 
   /**
-   * Vòng lặp chạy ngầm liên tục đọc dữ liệu theo dòng từ luồng nhận của Socket.
+   * Background loop continuously reading line-delimited data from the socket input stream.
    */
   private void listenLoop() {
-    LOGGER.info("ServerConnection: Luồng lắng nghe (Listener thread) đã khởi động.");
+    LOGGER.info("ServerConnection: Listener thread started.");
     try {
       String line;
       while (connected && (line = in.readLine()) != null) {
@@ -206,48 +206,48 @@ public class ServerConnection {
       }
     } catch (IOException e) {
       if (connected) {
-        LOGGER.warning("ServerConnection: Kết nối bị ngắt đột ngột — " + e.getMessage());
+        LOGGER.warning("ServerConnection: Connection lost unexpectedly — " + e.getMessage());
         connected = false;
-        // Phát đi thông điệp hệ thống thông báo mất mạng
+        // Dispatch system message about connection loss
         realtimeListener.dispatch("CONNECTION_LOST", e.getMessage());
       }
     }
-    LOGGER.info("ServerConnection: Luồng lắng nghe đã kết thúc.");
+    LOGGER.info("ServerConnection: Listener thread ended.");
   }
 
   /**
-   * Phân tích cú pháp dữ liệu JSON thô nhận về từ máy chủ và điều phối đến đích chính xác.
+   * Parse raw JSON data received from server and dispatch to the correct destination.
    */
   private void handleIncoming(String rawJson) {
-    // --- Bước 1: Thử parse JSON ---
+    // --- Step 1: Try parsing as JSON ---
     Map<String, Object> envelope = null;
     try {
       envelope = protocol.decodeToMap(rawJson);
     } catch (Exception jsonEx) {
-      // Server có thể trả về text thuần như "ERROR:...", "LOGIN_OK:...", v.v.
-      // Hoàn thành bất kỳ pending request nào đang chờ bằng raw text này
+      // Server may return plain text like "ERROR:...", "LOGIN_OK:...", etc.
+      // Complete any pending request with this raw text
       if (!pendingRequests.isEmpty()) {
-        // Lấy future đầu tiên đang chờ (text protocol không có requestId)
+        // Get the first waiting future (text protocol has no requestId)
         String firstKey = pendingRequests.keySet().iterator().next();
         CompletableFuture<String> future = pendingRequests.remove(firstKey);
         if (future != null) {
-          LOGGER.info("ServerConnection: Completing pending request with raw text response: " + rawJson);
+          LOGGER.fine("ServerConnection: Completing pending request with raw text response: " + rawJson);
           future.complete(rawJson);
           return;
         }
       }
-      // Không có pending request → log nội dung nhận được để debug
-      LOGGER.info("ServerConnection: Nhận text thuần (không phải JSON): " + rawJson);
+      // No pending request → log received content for debugging
+      LOGGER.fine("ServerConnection: Received plain text (not JSON): " + rawJson);
       realtimeListener.dispatch("INBOUND_TEXT", rawJson);
       return;
     }
 
-    // --- Bước 2: Điều phối theo requestId hoặc loại thông điệp ---
+    // --- Step 2: Dispatch by requestId or message type ---
     try {
       String type      = protocol.getMessageType(envelope);
       String requestId = (String) envelope.get("requestId");
 
-      // Kiểm tra xem đây có phải phản hồi của một yêu cầu đồng bộ đang chờ hay không
+      // Check if this is a response to a pending synchronous request
       if (requestId != null && pendingRequests.containsKey(requestId)) {
         CompletableFuture<String> future = pendingRequests.remove(requestId);
         if (future != null) {
@@ -256,7 +256,7 @@ public class ServerConnection {
         }
       }
 
-      // Nếu không, xử lý gói tin như một thông báo đẩy thời gian thực bất đồng bộ
+      // Otherwise, handle as an asynchronous real-time push notification
       switch (type) {
         case MessageProtocol.TYPE_BID_UPDATE: {
           String payloadJson   = protocol.writeValueAsString(envelope.get("payload"));
@@ -283,7 +283,7 @@ public class ServerConnection {
           break;
       }
     } catch (Exception e) {
-      LOGGER.warning("ServerConnection: Xử lý thông điệp đến thất bại — " + e.getMessage());
+      LOGGER.warning("ServerConnection: Failed to process incoming message — " + e.getMessage());
       realtimeListener.dispatch("INBOUND_PARSE_ERROR", e.getMessage());
     }
   }

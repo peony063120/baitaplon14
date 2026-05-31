@@ -21,20 +21,18 @@ public class PriceChart extends LineChart<Number, Number> {
         xAxis = (NumberAxis) getXAxis();
         yAxis = (NumberAxis) getYAxis();
 
-        // "Lan dat gia" -> "Bid Sequence" hoặc "Bids" (Số thứ tự/lượt đặt giá)
         xAxis.setLabel("Bid Count");
 
-        // "Gia (trieu VND)" -> "Price (VND Millions)" hoặc "Price (M VND)"
-        yAxis.setLabel("Price (M VND)");
+        yAxis.setLabel("Price (M USD)");
         yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis) {
             @Override
             public String toString(Number object) {
-                // "Tr" -> "M" (Million - Triệu)
+                // Format in millions
                 return String.format("%,.0f M", object.doubleValue());
             }
         });
 
-        // "Bieu do dau gia" -> "Auction Price History" hoặc "Bid History Chart"
+        // Chart title
         setTitle("Price History");
         setLegendVisible(false);
         setCreateSymbols(true);

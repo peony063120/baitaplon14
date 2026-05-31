@@ -2,10 +2,12 @@ package com.auction.client.controller;
 
 import com.auction.client.components.PriceChart;
 import com.auction.client.components.TimerLabel;
+import com.auction.client.config.AppConfig;
 import com.auction.client.model.ClientModel;
 import com.auction.client.network.RealtimeListener;
 import com.auction.client.network.ServerConnection;
 import com.auction.client.service.DataService;
+import com.auction.client.service.MockAuctionStore;
 import com.auction.common.dto.AuctionDTO;
 import com.auction.common.entity.BidTransaction;
 import com.auction.common.enums.AuctionStatus;
@@ -36,7 +38,6 @@ public class AuctionDetailController {
 
     @FXML
     public void initialize() {
-        // Chỉ cho phép nhập số khi gõ
         bidAmountField.setTextFormatter(new TextFormatter<>(change -> {
             if (change.isContentChange()) {
                 if (!change.getControlNewText().matches("\\d*")) {
@@ -45,7 +46,7 @@ public class AuctionDetailController {
             }
             return change;
         }));
-        // Format với space khi mất focus
+        // Format with spaces on focus loss
         bidAmountField.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal) {
                 String raw = bidAmountField.getText().replaceAll("\\D", "");
@@ -93,6 +94,7 @@ public class AuctionDetailController {
     private void subscribeRealtime() {
         realtimeListener.registerCallback("BID_UPDATE", this::onBidReceived);
         realtimeListener.registerCallback("AUCTION_UPDATE", this::onAuctionUpdate);
+        if (AppConfig.isUseMock()) return;
         try {
             ServerConnection.getInstance().sendRequest("SUBSCRIBE");
         } catch (Exception e) {
@@ -124,6 +126,20 @@ public class AuctionDetailController {
         }
 
         String userId = clientModel.getCurrentUser() != null ? clientModel.getCurrentUser().getId() : "unknown";
+
+        if (AppConfig.isUseMock()) {
+            boolean ok = MockAuctionStore.getInstance().placeBid(
+                    currentAuction.getId(), userId, userId, amount);
+            if (ok) {
+                currentAuction.setCurrentPrice(amount);
+                bidAmountField.clear();
+                showSuccess("Bid placed successfully.");
+            } else {
+                showError("Bid failed: auction not running or amount too low.");
+            }
+            return;
+        }
+
         try {
             String response = ServerConnection.getInstance().sendRequest(
                     "PLACE_BID:" + currentAuction.getId() + ":" + userId + ":" + amount + ":false"
@@ -146,7 +162,10 @@ public class AuctionDetailController {
 
     @FXML
     public void cancelAutoBid() {
-        if (currentAuction == null) {
+        if (currentAuction == null) return;
+
+        if (AppConfig.isUseMock()) {
+            showSuccess("Auto-bid cancelled (mock).");
             return;
         }
 
@@ -213,7 +232,7 @@ public class AuctionDetailController {
     private void addBidHistoryRow(BidTransaction bid) {
         String time = bid.getBidTime() != null ? bid.getBidTime().toString() : "";
 
-        // CHỈNH SỬA: Viết hoa chữ đầu " (Auto)" để đồng bộ và chuẩn hóa format tiếng Anh chuyên nghiệp hơn
+        
         String suffix = bid.isAutoBid() ? " (Auto)" : "";
 
         bidHistoryBox.getChildren().add(new Label(

@@ -1,9 +1,9 @@
 package com.auction.client.controller;
 
 /**
- * Xử lý màn hình đăng ký tài khoản mới.
- * Validate đầu vào (password khớp, email hợp lệ, đủ thông tin) → gửi UserDTO lên server
- * → nếu thành công thì chuyển về trang đăng nhập.
+ * Handles new account registration.
+ * Validates input (password match, valid email, required fields) → sends UserDTO to server
+ * → on success, navigates back to login page.
  */
 
 import com.auction.client.model.ClientModel;
@@ -39,9 +39,9 @@ public class RegisterController {
     public void handleRegister() {
         if (!validateInput()) return;
 
-        // Hiển thị trạng thái đang xử lý
+        // Show processing status
         errorLabel.setStyle("-fx-text-fill: #2563EB;");
-        showError("🔄 Đang xử lý đăng ký...");
+        showError("🔄 Processing registration...");
 
         String username = usernameField.getText().trim();
         String password = passwordField.getText().trim();
@@ -49,20 +49,20 @@ public class RegisterController {
         String fullName = fullNameField.getText().trim();
         String role = roleComboBox.getValue();
 
-        // Chạy trong background thread
+        // Run in background thread
         new Thread(() -> {
             try {
-                // Kiểm tra username đã tồn tại chưa
+                // Check if username already exists
                 boolean exists = checkUsernameExists(username);
                 if (exists) {
                     Platform.runLater(() -> {
-                        showError("❌ Tên đăng nhập đã tồn tại");
+                        showError("❌ Username already exists");
                         errorLabel.setStyle("-fx-text-fill: #DC2626;");
                     });
                     return;
                 }
 
-                // Tạo DTO và đăng ký
+                // Create DTO and register
                 UserDTO dto = new UserDTO(
                         null,
                         username,
@@ -77,21 +77,21 @@ public class RegisterController {
 
                 Platform.runLater(() -> {
                     if (success) {
-                        showError("✅ Đăng ký thành công! Chuyển đến trang đăng nhập...");
+                        showError("✅ Registration successful! Redirecting to login...");
                         errorLabel.setStyle("-fx-text-fill: #16A34A;");
-                        // Chuyển về màn hình login sau 1.5 giây
+                        // Redirect to login after 1.5 seconds
                         new Thread(() -> {
                             try { Thread.sleep(1500); } catch (InterruptedException ignored) {}
                             Platform.runLater(this::goToLogin);
                         }).start();
                     } else {
-                        showError("❌ Đăng ký thất bại. Vui lòng thử lại.");
+                        showError("❌ Registration failed. Please try again.");
                         errorLabel.setStyle("-fx-text-fill: #DC2626;");
                     }
                 });
             } catch (IOException e) {
                 Platform.runLater(() -> {
-                    showError("❌ Lỗi kết nối server: " + e.getMessage());
+                    showError("❌ Server connection error: " + e.getMessage());
                     errorLabel.setStyle("-fx-text-fill: #DC2626;");
                 });
             }
@@ -99,10 +99,10 @@ public class RegisterController {
     }
 
     /**
-     * Kiểm tra username đã tồn tại trên server.
-     * @param username Tên đăng nhập cần kiểm tra
-     * @return true nếu đã tồn tại, false nếu chưa
-     * @throws IOException Nếu lỗi kết nối
+     * Check if username already exists on server.
+     * @param username Username to check
+     * @return true if exists, false otherwise
+     * @throws IOException If connection fails
      */
     public boolean checkUsernameExists(String username) throws IOException {
         String response = ServerConnection.getInstance().sendRequest("CHECK_USERNAME:" + username);
@@ -110,8 +110,8 @@ public class RegisterController {
     }
 
     /**
-     * Validate dữ liệu đầu vào.
-     * @return true nếu hợp lệ, false nếu không
+     * Validate input data.
+     * @return true if valid, false otherwise
      */
     public boolean validateInput() {
         String username = usernameField.getText().trim();
@@ -121,35 +121,35 @@ public class RegisterController {
         String fullName = fullNameField.getText().trim();
 
         if (username.isEmpty()) {
-            showError("⚠️ Vui lòng nhập tên đăng nhập");
+            showError("⚠️ Please enter a username");
             return false;
         }
         if (username.length() < 3) {
-            showError("⚠️ Tên đăng nhập phải có ít nhất 3 ký tự");
+            showError("⚠️ Username must be at least 3 characters");
             return false;
         }
         if (password.isEmpty()) {
-            showError("⚠️ Vui lòng nhập mật khẩu");
+            showError("⚠️ Please enter a password");
             return false;
         }
         if (password.length() < 6) {
-            showError("⚠️ Mật khẩu phải có ít nhất 6 ký tự");
+            showError("⚠️ Password must be at least 6 characters");
             return false;
         }
         if (!password.equals(confirm)) {
-            showError("⚠️ Mật khẩu xác nhận không khớp");
+            showError("⚠️ Passwords do not match");
             return false;
         }
         if (email.isEmpty()) {
-            showError("⚠️ Vui lòng nhập email");
+            showError("⚠️ Please enter an email");
             return false;
         }
         if (!email.contains("@") || !email.contains(".")) {
-            showError("⚠️ Email không hợp lệ");
+            showError("⚠️ Invalid email format");
             return false;
         }
         if (fullName.isEmpty()) {
-            showError("⚠️ Vui lòng nhập họ và tên");
+            showError("⚠️ Please enter your full name");
             return false;
         }
 
@@ -165,7 +165,7 @@ public class RegisterController {
             stage.setScene(new Scene(loader.load()));
             stage.setTitle("Login");
         } catch (Exception e) {
-            showError("❌ Lỗi điều hướng: " + e.getMessage());
+            showError("❌ Navigation error: " + e.getMessage());
         }
     }
 

@@ -44,7 +44,7 @@
             </padding>
             <VBox spacing="8" styleClass="wallet-card">
                 <Text styleClass="muted-text" text="Available Balance" />
-                <Text fx:id="balanceLabel" styleClass="wallet-amount" text="VND 0" />
+                <Text fx:id="balanceLabel" styleClass="wallet-amount" text="$0" />
                 <HBox spacing="10">
                     <Button onAction="#onDeposit" styleClass="wallet-btn deposit" text="Deposit" />
                     <Button onAction="#onWithdraw" styleClass="wallet-btn withdraw" text="Withdraw" />
