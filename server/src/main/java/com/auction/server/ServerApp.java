@@ -20,6 +20,7 @@ import com.auction.server.service.*;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -33,6 +34,7 @@ public class ServerApp {
         System.out.println("Starting Online Auction Server...");
         try {
             DatabaseConnection.getInstance(); // Khởi tạo storage
+            org.h2.tools.Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8082").start();
             System.out.println("Database connection established.");
 
             UserDAO.getInstance();
@@ -76,7 +78,7 @@ public class ServerApp {
                         auctionController, userController, bidController, auctionSubject);
                 clientThreadPool.submit(handler);
             }
-        } catch (IOException e) {
+        } catch (IOException | SQLException e) {
             System.err.println("Server error: " + e.getMessage());
             e.printStackTrace();
         } finally {
