@@ -32,8 +32,7 @@ public class RegisterController {
 
     @FXML
     public void initialize() {
-        roleComboBox.getItems().addAll("BIDDER", "SELLER");
-        roleComboBox.setValue("BIDDER");
+        // Items are already defined in register.fxml (BIDDER, SELLER) with BIDDER as default
     }
 
     @FXML
