@@ -4,12 +4,15 @@ import com.auction.client.components.PriceChart;
 import com.auction.client.components.TimerLabel;
 import com.auction.client.config.AppConfig;
 import com.auction.client.model.ClientModel;
-import com.auction.client.network.RealtimeListener;
 import com.auction.client.network.ServerConnection;
+import com.auction.client.network.RealtimeListener;
 import com.auction.client.service.DataService;
 import com.auction.client.service.MockAuctionStore;
 import com.auction.common.dto.AuctionDTO;
+import com.auction.common.dto.BidRequest;
 import com.auction.common.entity.BidTransaction;
+import com.auction.common.entity.Bidder;
+import com.auction.common.entity.User;
 import com.auction.common.enums.AuctionStatus;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -125,13 +128,24 @@ public class AuctionDetailController {
             return;
         }
 
-        String userId = clientModel.getCurrentUser() != null ? clientModel.getCurrentUser().getId() : "unknown";
+        User currentUser = clientModel.getCurrentUser();
+        String userId = currentUser != null ? currentUser.getId() : "unknown";
 
         if (AppConfig.isUseMock()) {
+            if (!(currentUser instanceof Bidder bidder)) {
+                showError("Bidder account required.");
+                return;
+            }
+            if (bidder.getBalance() < amount) {
+                showError("Insufficient balance! You have " + formatCurrency(bidder.getBalance()));
+                return;
+            }
             boolean ok = MockAuctionStore.getInstance().placeBid(
                     currentAuction.getId(), userId, userId, amount);
             if (ok) {
                 currentAuction.setCurrentPrice(amount);
+                bidder.deductBalance(amount);
+                MainController.refreshBalance();
                 bidAmountField.clear();
                 showSuccess("Bid placed successfully.");
             } else {
@@ -145,10 +159,14 @@ public class AuctionDetailController {
                     "PLACE_BID:" + currentAuction.getId() + ":" + userId + ":" + amount + ":false"
             );
             if (response != null && response.startsWith("BID_OK")) {
+                if (currentUser instanceof Bidder bidder) {
+                    bidder.deductBalance(amount);
+                    MainController.refreshBalance();
+                }
                 bidAmountField.clear();
                 showSuccess("Bid placed successfully.");
             } else {
-                showError("Bid failed: " + response);
+                showError("Bid failed: " + (response != null ? response : "Unknown error"));
             }
         } catch (Exception e) {
             showError("Connection error: " + e.getMessage());
