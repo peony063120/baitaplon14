@@ -30,6 +30,7 @@ public class AuctionDetailController {
     @FXML private Label currentWinnerLabel;
     @FXML private Label statusLabel;
     @FXML private TextField bidAmountField;
+    @FXML private VBox bidPanel;
     @FXML private VBox bidHistoryBox;
     @FXML private PriceChart priceChart;
     @FXML private TimerLabel timerLabel;
@@ -95,6 +96,18 @@ public class AuctionDetailController {
         if (currentAuction.getEndTime() != null && timerLabel != null) {
             timerLabel.startCountdown(currentAuction.getEndTime());
         }
+
+        configureBidPanelVisibility();
+    }
+
+    private void configureBidPanelVisibility() {
+        if (bidPanel == null) {
+            return;
+        }
+        User currentUser = clientModel.getCurrentUser();
+        boolean isBidder = currentUser instanceof Bidder;
+        bidPanel.setVisible(isBidder);
+        bidPanel.setManaged(isBidder);
     }
 
     private void subscribeRealtime() {
@@ -152,11 +165,14 @@ public class AuctionDetailController {
             boolean ok = MockAuctionStore.getInstance().placeBid(
                     currentAuction.getId(), userId, userId, amount);
             if (ok) {
-                currentAuction.setCurrentPrice(amount);
-                bidder.deductBalance(amount);
-                MainController.refreshBalance();
+                double delta = amount - currentAuction.getCurrentPrice();
+                if (delta > 0) {
+                    bidder.deductBalance(delta);
+                }
+                applySuccessfulBid(amount, userId);
                 bidAmountField.clear();
                 showSuccess("Bid placed successfully.");
+                MainController.refreshBalance();
             } else {
                 showError("Bid failed: auction not running or amount too low.");
             }
@@ -164,19 +180,15 @@ public class AuctionDetailController {
         }
 
         try {
-            // ĐÃ KIỂM SOÁT TẬN GỐC: Gửi request đồng bộ bình thường và an toàn tuyệt đối
             String response = ServerConnection.getInstance().sendRequest(
                     "PLACE_BID:" + currentAuction.getId() + ":" + userId + ":" + amount + ":false"
             );
 
             if (response != null && response.startsWith("BID_OK")) {
-                if (currentUser instanceof Bidder bidder) {
-                    bidder.deductBalance(amount);
-                    MainController.refreshBalance();
-                }
+                applySuccessfulBid(amount, userId);
                 bidAmountField.clear();
-                showSuccess("Bid placed successfully."); // Chữ xanh thành công hiện lên mượt mà!
-                getBidHistory();
+                showSuccess("Bid placed successfully.");
+                MainController.syncBalanceFromServer();
             } else {
                 showError("Bid failed: " + (response != null ? response : "Unknown error"));
             }
@@ -208,6 +220,17 @@ public class AuctionDetailController {
         }
     }
 
+    private void applySuccessfulBid(double amount, String userId) {
+        currentAuction.setCurrentPrice(amount);
+        currentAuction.setCurrentWinnerId(userId);
+        User currentUser = clientModel.getCurrentUser();
+        currentAuction.setCurrentWinnerName(
+                currentUser != null ? currentUser.getUsername() : userId);
+        currentAuction.setTotalBids(currentAuction.getTotalBids() + 1);
+        updateUI();
+        getBidHistory();
+    }
+
     public void onBidReceived(Object data) {
         if (!(data instanceof BidTransaction bid) || currentAuction == null) {
             return;
@@ -219,8 +242,9 @@ public class AuctionDetailController {
         Platform.runLater(() -> {
             currentAuction.setCurrentPrice(bid.getAmount());
             currentAuction.setCurrentWinnerId(bid.getBidderId());
+            currentAuction.setCurrentWinnerName(displayBidderName(bid));
             currentPriceLabel.setText(formatCurrency(bid.getAmount()));
-            currentWinnerLabel.setText(bid.getBidderId());
+            currentWinnerLabel.setText(displayBidderName(bid));
             if (priceChart != null) {
                 priceChart.addPricePoint(bid.getTimestamp(), bid.getAmount());
             }
@@ -237,7 +261,23 @@ public class AuctionDetailController {
         }
 
         Platform.runLater(() -> {
-            currentAuction = dto;
+            if (dto.getCurrentPrice() > 0) {
+                currentAuction.setCurrentPrice(dto.getCurrentPrice());
+            }
+            if (dto.getCurrentWinnerId() != null) {
+                currentAuction.setCurrentWinnerId(dto.getCurrentWinnerId());
+                currentAuction.setCurrentWinnerName(
+                        dto.getCurrentWinnerName() != null ? dto.getCurrentWinnerName() : dto.getCurrentWinnerId());
+            }
+            if (dto.getStatus() != null) {
+                currentAuction.setStatus(dto.getStatus());
+            }
+            if (dto.getStartingPrice() > 0) {
+                currentAuction.setStartingPrice(dto.getStartingPrice());
+            }
+            if (dto.getMinIncrement() > 0) {
+                currentAuction.setMinIncrement(dto.getMinIncrement());
+            }
             updateUI();
         });
     }
@@ -254,6 +294,16 @@ public class AuctionDetailController {
                     for (BidTransaction bid : history) {
                         addBidHistoryRow(bid);
                     }
+                    if (!history.isEmpty()) {
+                        BidTransaction latest = history.get(history.size() - 1);
+                        currentAuction.setCurrentPrice(latest.getAmount());
+                        if (latest.getBidderId() != null) {
+                            currentAuction.setCurrentWinnerId(latest.getBidderId());
+                            currentAuction.setCurrentWinnerName(displayBidderName(latest));
+                        }
+                        currentAuction.setTotalBids(history.size());
+                        updateUI();
+                    }
                     if (priceChart != null) {
                         priceChart.updateWithBidHistory(history);
                     }
@@ -267,8 +317,20 @@ public class AuctionDetailController {
         String suffix = bid.isAutoBid() ? " (Auto)" : "";
 
         bidHistoryBox.getChildren().add(new Label(
-                bid.getBidderId() + " - " + formatCurrency(bid.getAmount()) + " - " + time + suffix
+                displayBidderName(bid) + " - " + formatCurrency(bid.getAmount()) + " - " + time + suffix
         ));
+    }
+
+    private String displayBidderName(BidTransaction bid) {
+        if (bid.getBidderName() != null && !bid.getBidderName().isBlank()) {
+            return bid.getBidderName();
+        }
+        User currentUser = clientModel.getCurrentUser();
+        if (currentUser != null && bid.getBidderId() != null
+                && bid.getBidderId().equals(currentUser.getId())) {
+            return currentUser.getUsername();
+        }
+        return bid.getBidderId() != null ? bid.getBidderId() : "Unknown";
     }
 
     private void showError(String message) {

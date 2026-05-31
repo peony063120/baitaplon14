@@ -4,7 +4,10 @@ import com.auction.common.dto.*;
 import com.auction.common.exception.InvalidBidException;
 import com.auction.common.observer.AuctionSubject;
 import com.auction.common.observer.ClientObserver;
+import com.auction.server.observer.ServerClientObserver;
 import com.auction.server.config.ServerConfig;
+import com.auction.server.dao.UserDAO;
+import com.auction.common.entity.User;
 import com.auction.common.exception.AuctionNotFoundException;
 import com.auction.common.enums.AuctionStatus;
 
@@ -51,7 +54,7 @@ public class ClientHandler implements Runnable {
         try {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
-            clientObserver = new ClientObserver(socket);
+            clientObserver = new ServerClientObserver(socket);
             System.out.println("Client connected: " + socket.getRemoteSocketAddress());
 
             String message;
@@ -90,6 +93,7 @@ public class ClientHandler implements Runnable {
                 case "APPROVE_AUCTION" -> handleApproveAuction(payload);
                 case "REJECT_AUCTION" -> handleRejectAuction(payload);
                 case "GET_USER_COUNT" -> handleGetUserCount();
+                case "GET_BALANCE" -> handleGetBalance(payload);
                 case "SUBSCRIBE" -> handleSubscribe();
                 case "UNSUBSCRIBE" -> handleUnsubscribe();
                 default -> out.println("ERROR:Unknown command");
@@ -147,6 +151,15 @@ public class ClientHandler implements Runnable {
         out.println("USER_COUNT:" + count);
     }
 
+    private void handleGetBalance(String userId) {
+        UserDTO dto = userController.getUserProfile(userId);
+        if (dto != null) {
+            out.println("BALANCE:" + dto.getBalance());
+        } else {
+            out.println("ERROR:User not found");
+        }
+    }
+
     private void handleGetPendingAuctions() {
         java.util.List<com.auction.common.dto.AuctionDTO> all = auctionController.getAllAuctions();
         java.util.List<com.auction.common.dto.AuctionDTO> pending = new java.util.ArrayList<>();
@@ -191,7 +204,10 @@ public class ClientHandler implements Runnable {
             sb.append("||AUCTION:").append(a.getId()).append(":").append(a.getItemName())
                     .append(":").append(a.getCurrentPrice()).append(":").append(a.getStatus().name())
                     .append(":").append(a.getCategory())
-                    .append(":").append(a.getRemainingTimeMillis());
+                    .append(":").append(a.getRemainingTimeMillis())
+                    .append(":").append(a.getStartingPrice())
+                    .append(":").append(a.getTotalBids())
+                    .append(":").append(imageRef(a));
         }
         out.println(sb.toString());
     }
@@ -205,7 +221,10 @@ public class ClientHandler implements Runnable {
             sb.append("||AUCTION:").append(a.getId()).append(":").append(a.getItemName())
                     .append(":").append(a.getCurrentPrice()).append(":").append(a.getStatus().name())
                     .append(":").append(a.getCategory())
-                    .append(":").append(a.getRemainingTimeMillis());
+                    .append(":").append(a.getRemainingTimeMillis())
+                    .append(":").append(a.getStartingPrice())
+                    .append(":").append(a.getTotalBids())
+                    .append(":").append(imageRef(a));
         }
         out.println(sb.toString());
     }
@@ -214,16 +233,37 @@ public class ClientHandler implements Runnable {
         try {
             AuctionDTO a = auctionController.getAuction(id);
             if (a != null) {
+                String winnerName = resolveUsername(a.getCurrentWinnerId());
                 out.println("AUCTION:" + a.getId() + ":" + a.getItemName()
                         + ":" + a.getCurrentPrice() + ":" + a.getStatus().name()
-                        + ":" + a.getCurrentWinnerId() + ":" + a.getTotalBids()
-                        + ":" + a.getRemainingTimeMillis());
+                        + ":" + (a.getCurrentWinnerId() != null ? a.getCurrentWinnerId() : "")
+                        + ":" + a.getTotalBids()
+                        + ":" + a.getRemainingTimeMillis()
+                        + ":" + a.getStartingPrice()
+                        + ":" + a.getMinIncrement()
+                        + ":" + imageRef(a)
+                        + ":" + winnerName);
             } else {
                 out.println("ERROR:Auction not found");
             }
         } catch (AuctionNotFoundException e) {
             out.println("ERROR:" + e.getMessage());
         }
+    }
+
+    private static String resolveUsername(String userId) {
+        if (userId == null || userId.isBlank()) {
+            return "";
+        }
+        User user = UserDAO.getInstance().findUserById(userId);
+        return user != null ? user.getUsername() : userId;
+    }
+
+    private static String imageRef(AuctionDTO a) {
+        if (a.getImagePath() == null) {
+            return "";
+        }
+        return a.getImagePath();
     }
 
     private void handleGetMyAuctions(String sellerId) {
@@ -336,8 +376,13 @@ public class ClientHandler implements Runnable {
         sb.append("BID_HISTORY_COUNT:").append(history.size());
 
         for (com.auction.common.entity.BidTransaction b : history) {
-            sb.append("||BID:").append(b.getBidderId()).append(":").append(b.getAmount())
-                    .append(":").append(b.getBidTime()).append(":").append(b.isAutoBid());
+            long bidTimeMillis = b.getBidTime() != null
+                    ? b.getBidTime().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    : 0L;
+            String bidderName = resolveUsername(b.getBidderId());
+            sb.append("||BID:").append(auctionId).append(":").append(b.getBidderId()).append(":")
+                    .append(bidderName).append(":").append(b.getAmount())
+                    .append(":").append(bidTimeMillis).append(":").append(b.isAutoBid());
         }
         out.println(sb.toString());
     }

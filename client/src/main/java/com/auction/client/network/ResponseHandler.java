@@ -6,7 +6,9 @@ import com.auction.common.entity.Auction;
 import com.auction.common.entity.BidTransaction;
 import com.auction.common.enums.AuctionStatus;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -141,7 +143,7 @@ public final class ResponseHandler {
 
   /**
    * Parse danh sách AuctionDTO từ response dạng text
-   * Format: AUCTIONS_COUNT:2\nAUCTION:id:name:price:status:category:time\n...
+   * Format: AUCTIONS_COUNT:2||AUCTION:id:name:price:status:category:time[:startingPrice:totalBids:imageRef]
   */
   public static List<AuctionDTO> parseAuctionListFromText(String response) {
     List<AuctionDTO> result = new ArrayList<>();
@@ -172,6 +174,15 @@ public final class ResponseHandler {
               // ignore reflection errors
             }
           }
+          if (parts.length > 6) {
+            dto.setStartingPrice(Double.parseDouble(parts[6]));
+          }
+          if (parts.length > 7) {
+            dto.setTotalBids(Integer.parseInt(parts[7]));
+          }
+          if (parts.length > 8 && !parts[8].isEmpty()) {
+            dto.setImagePath(parts[8]);
+          }
           result.add(dto);
         }
       }
@@ -180,8 +191,55 @@ public final class ResponseHandler {
   }
 
   /**
+   * Parse realtime AUCTION_UPDATE từ server text format.
+   * Format: AUCTION_UPDATE:ID:uuid:PRICE:123:WINNER:userId:STATUS:RUNNING
+   */
+  public static AuctionDTO parseAuctionUpdateFromText(String response) {
+    if (response == null || !response.startsWith("AUCTION_UPDATE:")) {
+      return null;
+    }
+
+    AuctionDTO dto = new AuctionDTO();
+    String body = response.substring("AUCTION_UPDATE:".length());
+    String[] tokens = body.split(":");
+    for (int i = 0; i + 1 < tokens.length; i += 2) {
+      switch (tokens[i]) {
+        case "ID" -> dto.setId(tokens[i + 1]);
+        case "PRICE" -> dto.setCurrentPrice(Double.parseDouble(tokens[i + 1]));
+        case "WINNER" -> {
+          if (!tokens[i + 1].isEmpty() && !"null".equalsIgnoreCase(tokens[i + 1])) {
+            dto.setCurrentWinnerId(tokens[i + 1]);
+          }
+        }
+        case "WINNER_NAME" -> dto.setCurrentWinnerName(tokens[i + 1]);
+        case "STATUS" -> {
+          try {
+            dto.setStatus(AuctionStatus.valueOf(tokens[i + 1]));
+          } catch (IllegalArgumentException e) {
+            dto.setStatus(AuctionStatus.DRAFT);
+          }
+        }
+        default -> { /* ignore unknown keys */ }
+      }
+    }
+    if (dto.getId() == null) {
+      return null;
+    }
+    applyWinnerNameFallback(dto);
+    return dto;
+  }
+
+  private static void applyWinnerNameFallback(AuctionDTO dto) {
+    if (dto.getCurrentWinnerName() == null || dto.getCurrentWinnerName().isBlank()) {
+      if (dto.getCurrentWinnerId() != null && !dto.getCurrentWinnerId().isBlank()) {
+        dto.setCurrentWinnerName(dto.getCurrentWinnerId());
+      }
+    }
+  }
+
+  /**
    * Parse chi tiết một AuctionDTO từ response dạng text
-   * Format: AUCTION:id:name:price:status:winnerId:totalBids:remainingTime
+   * Format: AUCTION:id:name:price:status:winnerId:totalBids:remainingTime[:startingPrice:minIncrement[:imageRef]]
    */
   public static AuctionDTO parseAuctionDetailFromText(String response) {
     if (response == null || !response.startsWith("AUCTION:")) return null;
@@ -197,7 +255,9 @@ public final class ResponseHandler {
       } catch (IllegalArgumentException e) {
         dto.setStatus(AuctionStatus.DRAFT);
       }
-      dto.setCurrentWinnerId(parts[4]);
+      if (!parts[4].isEmpty() && !"null".equalsIgnoreCase(parts[4])) {
+        dto.setCurrentWinnerId(parts[4]);
+      }
       dto.setTotalBids(Integer.parseInt(parts[5]));
       try {
         java.lang.reflect.Method m = dto.getClass().getMethod("setRemainingTimeMillis", long.class);
@@ -207,6 +267,17 @@ public final class ResponseHandler {
       } catch (Exception ex) {
         LOGGER.warning("Failed to set remainingTimeMillis via reflection: " + ex.getMessage());
       }
+      if (parts.length >= 9) {
+        dto.setStartingPrice(Double.parseDouble(parts[7]));
+        dto.setMinIncrement(Double.parseDouble(parts[8]));
+      }
+      if (parts.length >= 10 && !parts[9].isEmpty()) {
+        dto.setImagePath(parts[9]);
+      }
+      if (parts.length >= 11 && !parts[10].isEmpty()) {
+        dto.setCurrentWinnerName(parts[10]);
+      }
+      applyWinnerNameFallback(dto);
       return dto;
     }
     return null;
@@ -214,28 +285,85 @@ public final class ResponseHandler {
 
   /**
    * Parse lịch sử đặt giá từ response dạng text
-   * Format: BID_HISTORY_COUNT:2\nBID:bidderId:amount:time:isAutoBid\n...
+   * Format: BID_HISTORY_COUNT:n||BID:auctionId:bidderId:amount:epochMillis:isAutoBid
    */
   public static List<BidTransaction> parseBidHistoryFromText(String response) {
     List<BidTransaction> result = new ArrayList<>();
     if (response == null || response.isEmpty()) return result;
 
-    // Tách chuỗi bằng ký hiệu || thay vì \n
     String[] lines = response.split("\\|\\|");
     for (String line : lines) {
-      if (line.startsWith("BID:")) {
-        String[] parts = line.substring(4).split(":");
-        if (parts.length >= 4) {
-          String bidderId = parts[0];
-          double amount = Double.parseDouble(parts[1]);
-          LocalDateTime time = LocalDateTime.parse(parts[2]);
-          boolean isAutoBid = Boolean.parseBoolean(parts[3]);
-          BidTransaction bid = new BidTransaction("", bidderId, amount, time, isAutoBid);
-          result.add(bid);
-        }
+      BidTransaction bid = parseBidLine(line);
+      if (bid != null) {
+        result.add(bid);
       }
     }
     return result;
+  }
+
+  private static BidTransaction parseBidLine(String line) {
+    if (line == null || !line.startsWith("BID:")) {
+      return null;
+    }
+    String body = line.substring(4);
+    String[] parts = body.split(":");
+    if (parts.length >= 6) {
+      try {
+        String auctionId = parts[0];
+        String bidderId = parts[1];
+        String bidderName = parts[2];
+        double amount = Double.parseDouble(parts[3]);
+        LocalDateTime time = parseBidTime(parts[4]);
+        boolean isAutoBid = Boolean.parseBoolean(parts[5]);
+        BidTransaction bid = new BidTransaction(auctionId, bidderId, amount, time, isAutoBid);
+        bid.setBidderName(bidderName);
+        return bid;
+      } catch (Exception ex) {
+        LOGGER.warning("parseBidLine failed: " + ex.getMessage());
+        return null;
+      }
+    }
+    String[] legacyParts = body.split(":", 5);
+    if (legacyParts.length >= 5) {
+      try {
+        String auctionId = legacyParts[0];
+        String bidderId = legacyParts[1];
+        double amount = Double.parseDouble(legacyParts[2]);
+        LocalDateTime time = parseBidTime(legacyParts[3]);
+        boolean isAutoBid = Boolean.parseBoolean(legacyParts[4]);
+        BidTransaction bid = new BidTransaction(auctionId, bidderId, amount, time, isAutoBid);
+        bid.setBidderName(bidderId);
+        return bid;
+      } catch (Exception ex) {
+        LOGGER.warning("parseBidLine failed: " + ex.getMessage());
+        return null;
+      }
+    }
+    if (legacyParts.length >= 4) {
+      try {
+        String bidderId = legacyParts[0];
+        double amount = Double.parseDouble(legacyParts[1]);
+        LocalDateTime time = parseBidTime(legacyParts[2]);
+        boolean isAutoBid = Boolean.parseBoolean(legacyParts[3]);
+        BidTransaction bid = new BidTransaction("", bidderId, amount, time, isAutoBid);
+        bid.setBidderName(bidderId);
+        return bid;
+      } catch (Exception ex) {
+        LOGGER.warning("parseBidLine legacy failed: " + ex.getMessage());
+        return null;
+      }
+    }
+    return null;
+  }
+
+  private static LocalDateTime parseBidTime(String raw) {
+    if (raw == null || raw.isBlank()) {
+      return LocalDateTime.now();
+    }
+    if (raw.chars().allMatch(Character::isDigit)) {
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(Long.parseLong(raw)), ZoneId.systemDefault());
+    }
+    return LocalDateTime.parse(raw);
   }
 
   /**
