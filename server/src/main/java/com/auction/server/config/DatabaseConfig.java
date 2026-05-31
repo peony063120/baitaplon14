@@ -18,7 +18,7 @@ public class DatabaseConfig {
                 props.load(input);
             } else {
                 // Giá trị mặc định (ví dụ H2 in-memory)
-                props.setProperty("db.url", "jdbc:h2:mem:auctiondb;DB_CLOSE_DELAY=-1");
+                props.setProperty("db.url", "jdbc:h2:./data/auctiondb;INIT=RUNSCRIPT FROM 'classpath:schema.sql'");
                 props.setProperty("db.user", "sa");
                 props.setProperty("db.password", "");
                 props.setProperty("db.driver", "org.h2.Driver");

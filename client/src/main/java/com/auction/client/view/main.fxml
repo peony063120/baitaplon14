@@ -32,8 +32,24 @@
             <TextField fx:id="searchField" onAction="#handleSearch" promptText="Search auctions..." styleClass="search-field" />
             <Region HBox.hgrow="ALWAYS" />
             <Label fx:id="clockLabel" styleClass="clock" />
-            <Button fx:id="notifBtn" onAction="#showNotifications" styleClass="icon-btn" text="!" />
-            <Button fx:id="avatarBtn" onAction="#showProfile" styleClass="avatar-btn" text="U" />
+            <Button fx:id="notifBtn" onAction="#showNotifications" styleClass="icon-btn">
+                <graphic>
+                    <ImageView fitHeight="20" fitWidth="20" preserveRatio="true">
+                        <image>
+                            <Image url="@thongbao-removebg-preview.png" />
+                        </image>
+                    </ImageView>
+                </graphic>
+            </Button>
+            <Button fx:id="avatarBtn" onAction="#showProfile" styleClass="avatar-btn">
+                <graphic>
+                    <ImageView fitHeight="22" fitWidth="22" preserveRatio="true">
+                        <image>
+                            <Image url="@profile-removebg-preview.png" />
+                        </image>
+                    </ImageView>
+                </graphic>
+            </Button>
             <Button onAction="#onLogout" styleClass="logout-btn" text="Logout" />
         </HBox>
     </top>

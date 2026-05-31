@@ -17,13 +17,23 @@ public class SqlDataLoader {
     public static void loadSeedData() {
         System.out.println("[SqlDataLoader] Loading seed data from " + SEED_FILE + " ...");
         try {
+            Connection conn = DatabaseConnection.getInstance().getConnection();
+
+            // Only seed if the users table is empty (avoid duplicates on restart)
+            if (hasExistingData(conn)) {
+                System.out.println("[SqlDataLoader] Database already has data, skipping seed.");
+                loadUsersFromDb(conn);
+                loadAuctionsFromDb(conn);
+                loadBidTransactionsFromDb(conn);
+                return;
+            }
+
             String sql = readSqlFile(SEED_FILE);
             if (sql == null || sql.isBlank()) {
                 System.out.println("[SqlDataLoader] No seed file found, skipping.");
                 return;
             }
 
-            Connection conn = DatabaseConnection.getInstance().getConnection();
             executeSql(conn, sql);
 
             loadUsersFromDb(conn);
@@ -33,6 +43,16 @@ public class SqlDataLoader {
             System.out.println("[SqlDataLoader] Seed data loaded successfully.");
         } catch (Exception e) {
             System.err.println("[SqlDataLoader] Failed to load seed data: " + e.getMessage());
+        }
+    }
+
+    private static boolean hasExistingData(Connection conn) {
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM users")) {
+            rs.next();
+            return rs.getInt(1) > 0;
+        } catch (Exception e) {
+            return false;
         }
     }
 

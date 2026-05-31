@@ -78,12 +78,12 @@ CREATE TABLE IF NOT EXISTS auto_bid_configs (
     );
 
 -- Indexes để tối ưu truy vấn
-CREATE INDEX idx_users_username ON users(username);
-CREATE INDEX idx_users_role ON users(role);
-CREATE INDEX idx_items_seller ON items(seller_id);
-CREATE INDEX idx_auctions_seller ON auctions(seller_id);
-CREATE INDEX idx_auctions_status ON auctions(status);
-CREATE INDEX idx_auctions_end_time ON auctions(end_time);
-CREATE INDEX idx_bid_transactions_auction ON bid_transactions(auction_id);
-CREATE INDEX idx_bid_transactions_bidder ON bid_transactions(bidder_id);
-CREATE INDEX idx_auto_bid_configs_auction ON auto_bid_configs(auction_id);
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_items_seller ON items(seller_id);
+CREATE INDEX IF NOT EXISTS idx_auctions_seller ON auctions(seller_id);
+CREATE INDEX IF NOT EXISTS idx_auctions_status ON auctions(status);
+CREATE INDEX IF NOT EXISTS idx_auctions_end_time ON auctions(end_time);
+CREATE INDEX IF NOT EXISTS idx_bid_transactions_auction ON bid_transactions(auction_id);
+CREATE INDEX IF NOT EXISTS idx_bid_transactions_bidder ON bid_transactions(bidder_id);
+CREATE INDEX IF NOT EXISTS idx_auto_bid_configs_auction ON auto_bid_configs(auction_id);
