@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
@@ -11,16 +14,40 @@
             fx:controller="com.auction.client.controller.MyAuctionsController"
             stylesheets="@../styles/main.css">
     <center>
-        <VBox spacing="16" styleClass="content-page">
-            <padding>
-                <Insets top="24" right="24" bottom="24" left="24"/>
-            </padding>
-            <Text text="My Auctions" styleClass="page-title"/>
-            <Label fx:id="statusLabel" styleClass="muted-text"/>
-            <!-- TODO(asset): Rows should show product thumbnails when seller auction images are persisted. -->
-            <ScrollPane fitToWidth="true" styleClass="dashboard-scroll">
-                <VBox fx:id="auctionListBox" spacing="12"/>
+        <VBox spacing="0" styleClass="content-page">
+
+            <!-- Page Header -->
+            <HBox alignment="CENTER_LEFT" spacing="16"
+                  style="-fx-background-color: white; -fx-padding: 20 28 20 28;
+                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 4, 0, 0, 2);">
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Text text="Phiên đấu giá của tôi" styleClass="page-title"
+                          style="-fx-font-size: 22px; -fx-font-weight: 800;"/>
+                    <Label fx:id="statusLabel" styleClass="muted-text"
+                           style="-fx-text-fill: #888; -fx-font-size: 13px;"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="＋ Tạo phiên mới" styleClass="primary-btn"
+                        onAction="#onCreateNew"
+                        style="-fx-cursor: hand; -fx-background-color: #0e7490;
+                               -fx-text-fill: white; -fx-font-weight: 700;
+                               -fx-padding: 8 18; -fx-background-radius: 8;"/>
+                <Button text="↻ Tải lại" styleClass="secondary-btn"
+                        onAction="#onRefresh"
+                        style="-fx-cursor: hand; -fx-padding: 8 14; -fx-background-radius: 8;"/>
+            </HBox>
+
+            <!-- Auction list -->
+            <ScrollPane fitToWidth="true" styleClass="dashboard-scroll" VBox.vgrow="ALWAYS"
+                        style="-fx-background-color: #f4f6f9; -fx-background: #f4f6f9;">
+                <VBox fx:id="auctionListBox" spacing="12"
+                      style="-fx-background-color: #f4f6f9;">
+                    <padding>
+                        <Insets top="20" right="24" bottom="24" left="24"/>
+                    </padding>
+                </VBox>
             </ScrollPane>
+
         </VBox>
     </center>
 </BorderPane>

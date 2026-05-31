@@ -220,8 +220,30 @@ public class ServerConnection {
    * Phân tích cú pháp dữ liệu JSON thô nhận về từ máy chủ và điều phối đến đích chính xác.
    */
   private void handleIncoming(String rawJson) {
+    // --- Bước 1: Thử parse JSON ---
+    Map<String, Object> envelope = null;
     try {
-      Map<String, Object> envelope = protocol.decodeToMap(rawJson);
+      envelope = protocol.decodeToMap(rawJson);
+    } catch (Exception jsonEx) {
+      // Server có thể trả về text thuần như "ERROR:...", "LOGIN_OK:...", v.v.
+      // Hoàn thành bất kỳ pending request nào đang chờ bằng raw text này
+      if (!pendingRequests.isEmpty()) {
+        // Lấy future đầu tiên đang chờ (text protocol không có requestId)
+        String firstKey = pendingRequests.keySet().iterator().next();
+        CompletableFuture<String> future = pendingRequests.remove(firstKey);
+        if (future != null) {
+          future.complete(rawJson);
+          return;
+        }
+      }
+      // Không có pending request → log nhẹ (không phải warning nghiêm trọng)
+      LOGGER.fine("ServerConnection: Nhận text thuần (không phải JSON): " + rawJson);
+      realtimeListener.dispatch("INBOUND_TEXT", rawJson);
+      return;
+    }
+
+    // --- Bước 2: Điều phối theo requestId hoặc loại thông điệp ---
+    try {
       String type      = protocol.getMessageType(envelope);
       String requestId = (String) envelope.get("requestId");
 
@@ -230,7 +252,7 @@ public class ServerConnection {
         CompletableFuture<String> future = pendingRequests.remove(requestId);
         if (future != null) {
           future.complete(rawJson);
-          return; // Ngắt xử lý sớm: không đẩy gói tin này sang Observer realtime chung
+          return;
         }
       }
 
@@ -262,7 +284,6 @@ public class ServerConnection {
       }
     } catch (Exception e) {
       LOGGER.warning("ServerConnection: Xử lý thông điệp đến thất bại — " + e.getMessage());
-      // Cơ chế dự phòng: phát tín hiệu lỗi để thông báo cho UI dữ liệu bị lỗi giải mã
       realtimeListener.dispatch("INBOUND_PARSE_ERROR", e.getMessage());
     }
   }
