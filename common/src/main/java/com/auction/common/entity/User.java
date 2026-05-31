@@ -6,6 +6,7 @@ public abstract class User extends Entity {   // thêm public
     private String email;
     private String fullName;
     private boolean active;
+    private boolean isBanned;
 
     public User(String username, String password, String email, String fullName) {
         this.username = username;
@@ -13,6 +14,7 @@ public abstract class User extends Entity {   // thêm public
         this.email = email;
         this.fullName = fullName;
         this.active = true;
+        this.isBanned = false;
     }
 
     public String getUsername() { return username; }
@@ -30,8 +32,11 @@ public abstract class User extends Entity {   // thêm public
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
 
+    public boolean isBanned() { return isBanned; }
+    public void setBanned(boolean banned) { isBanned = banned; }
+
     public boolean authenticate(String password) {
-        if (!this.active) return false;
+        if (!this.active || this.isBanned) return false;
         return this.password.equals(password);
     }
 
