@@ -5,9 +5,6 @@ import com.auction.common.exception.InvalidBidException;
 import com.auction.common.observer.AuctionSubject;
 import com.auction.common.observer.ClientObserver;
 import com.auction.server.config.ServerConfig;
-import com.auction.server.controller.AuctionController;
-import com.auction.server.controller.BidController;
-import com.auction.server.controller.UserController;
 import com.auction.common.exception.AuctionNotFoundException;
 import com.auction.common.enums.AuctionStatus;
 
@@ -16,7 +13,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -279,7 +275,6 @@ public class ClientHandler implements Runnable {
     }
 
     private void handlePlaceBid(String payload) throws InvalidBidException {
-        // Log debug giúp kiểm tra cấu trúc chuỗi truyền từ Client lên
         System.out.println("[SERVER DEBUG] PLACE_BID Payload received: " + payload);
 
         String[] p = payload.split(":");
@@ -301,7 +296,6 @@ public class ClientHandler implements Runnable {
 
         boolean isAutoBid = p.length > 3 && Boolean.parseBoolean(p[3]);
 
-        // Chống spam lượt bid liên tục từ cùng 1 user
         String bidKey = bidderId + ":" + auctionId;
         long now = System.currentTimeMillis();
         Long lastBidTime = lastBidTimes.get(bidKey);
@@ -319,6 +313,8 @@ public class ClientHandler implements Runnable {
 
         BidRequest req = new BidRequest(auctionId, bidderId, amount, isAutoBid);
         bidController.placeBid(req);
+
+        // TRẢ VỀ PHẢN HỒI CHUẨN ĐỒNG BỘ ĐỂ CLIENT NHẬN DIỆN LỆNH THÀNH CÔNG
         out.println("BID_OK");
     }
 

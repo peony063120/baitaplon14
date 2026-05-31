@@ -50,7 +50,6 @@ public class AuctionDetailController {
             return change;
         }));
 
-        // Định dạng thêm khoảng trắng phân tách hàng nghìn khi rời focus
         bidAmountField.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal) {
                 String raw = bidAmountField.getText().replaceAll("\\D", "");
@@ -90,7 +89,6 @@ public class AuctionDetailController {
         currentWinnerLabel.setText(textOrDefault(currentAuction.getCurrentWinnerName(), "No bids yet"));
         statusLabel.setText(currentAuction.getStatus() != null ? currentAuction.getStatus().getDisplayName() : "Pending");
 
-        // TỰ ĐỘNG GỢI Ý GIÁ ĐẶT HỢP LỆ: Giá hiện tại + Bước giá tối thiểu
         double nextMinBid = currentAuction.getCurrentPrice() + currentAuction.getMinIncrement();
         bidAmountField.setText(String.format("%.0f", nextMinBid));
 
@@ -133,7 +131,6 @@ public class AuctionDetailController {
             return;
         }
 
-        // KIỂM TRA CHẶN LỖI ĐƠN VỊ: Tính bước giá tối thiểu được chấp nhận
         double minRequiredAmount = currentAuction.getCurrentPrice() + currentAuction.getMinIncrement();
         if (amount < minRequiredAmount) {
             showError("Bid must be at least " + formatCurrency(minRequiredAmount));
@@ -167,25 +164,18 @@ public class AuctionDetailController {
         }
 
         try {
-            // Gửi chuỗi định dạng chuẩn lên Server
+            // ĐÃ KIỂM SOÁT TẬN GỐC: Gửi request đồng bộ bình thường và an toàn tuyệt đối
             String response = ServerConnection.getInstance().sendRequest(
                     "PLACE_BID:" + currentAuction.getId() + ":" + userId + ":" + amount + ":false"
             );
 
-            // ĐÃ SỬA: Chấp nhận cả "BID_OK" và bản tin "AUCTION_UPDATE" làm tín hiệu thành công
-            if (response != null && (response.startsWith("BID_OK") || response.startsWith("AUCTION_UPDATE"))) {
+            if (response != null && response.startsWith("BID_OK")) {
                 if (currentUser instanceof Bidder bidder) {
                     bidder.deductBalance(amount);
                     MainController.refreshBalance();
                 }
                 bidAmountField.clear();
-                showSuccess("Bid placed successfully.");
-
-                // Cập nhật nóng giá trị trên giao diện
-                currentAuction.setCurrentPrice(amount);
-                currentPriceLabel.setText(formatCurrency(amount));
-
-                // Gọi nạp lại lịch sử thầu để cập nhật danh sách và biểu đồ
+                showSuccess("Bid placed successfully."); // Chữ xanh thành công hiện lên mượt mà!
                 getBidHistory();
             } else {
                 showError("Bid failed: " + (response != null ? response : "Unknown error"));
@@ -236,7 +226,6 @@ public class AuctionDetailController {
             }
             addBidHistoryRow(bid);
 
-            // Cập nhật lại luôn con số gợi ý trong ô nhập liệu khi có người khác trả giá cao hơn
             double nextMinBid = bid.getAmount() + currentAuction.getMinIncrement();
             bidAmountField.setText(String.format("%.0f", nextMinBid));
         });
