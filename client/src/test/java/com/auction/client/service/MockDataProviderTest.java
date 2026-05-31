@@ -41,7 +41,7 @@ public class MockDataProviderTest {
 
     assertNotNull(response);
     assertTrue(response.isSuccess());
-    assertEquals("user_demo", response.getUserId());
+    assertEquals("user_bidder_mock", response.getUserId());
   }
 
   @Test
