@@ -27,6 +27,7 @@ public class Auction {
     private String itemName;
     private String itemDescription;
     private String imagePath;
+    private String imageBase64;  // Base64 encoded image
 
     public Auction(String itemId, LocalDateTime startTime, LocalDateTime endTime, double startingPrice) {
         this.id = UUID.randomUUID().toString();
@@ -161,4 +162,7 @@ public class Auction {
 
     public String getImagePath() { return imagePath; }
     public void setImagePath(String imagePath) { this.imagePath = imagePath; }
+
+    public String getImageBase64() { return imageBase64; }
+    public void setImageBase64(String imageBase64) { this.imageBase64 = imageBase64; }
 }

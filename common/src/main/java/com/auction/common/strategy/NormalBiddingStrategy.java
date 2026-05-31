@@ -64,8 +64,7 @@ public class NormalBiddingStrategy implements BiddingStrategy {
 
     if (!accepted) {
       throw new InvalidBidException(String.format(
-          "System rejected bid %.2f from user '%s' on auction '%s'. "
-              + "Another concurrent bid may have raised the price higher.",
+          "System rejected bid %.2f from user '%s' on auction '%s'. Another concurrent bid may have raised the price higher.",
           request.getAmount(), request.getBidderId(), auction.getId()
       ));
     }

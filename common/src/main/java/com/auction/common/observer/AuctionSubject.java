@@ -8,17 +8,19 @@ public class AuctionSubject implements Subject {
     private static volatile AuctionSubject instance;
     private final List<Observer> observers = new ArrayList<>();
 
-    private AuctionSubject() {}
+    // Package-private constructor for testing
+    AuctionSubject() {}
 
-    public static AuctionSubject getInstance() {
+    public static synchronized AuctionSubject getInstance() {
         if (instance == null) {
-            synchronized (AuctionSubject.class) {
-                if (instance == null) {
-                    instance = new AuctionSubject();
-                }
-            }
+            instance = new AuctionSubject();
         }
         return instance;
+    }
+
+    // For testing: reset the singleton instance
+    static void resetInstance() {
+        instance = null;
     }
 
     @Override
