@@ -158,7 +158,7 @@ mvn test
 
 ## 📄 Report & Demo
 
-- 📝 **Report PDF**: *(add link here)*
+- 📝 **Report PDF**: *https://docs.google.com/document/d/1S36VNNq40cxFLd_YeehnZef-XDtD7I3eRyls9ktEyzw/edit?usp=sharing*
 - 🎥 **Video demo**: *(add link here)*
 
 ---
