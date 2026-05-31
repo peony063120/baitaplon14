@@ -24,7 +24,8 @@ public class ServerClientObserver extends ClientObserver {
         String winnerId = auction.getCurrentWinnerId() != null ? auction.getCurrentWinnerId() : "";
         String winnerName = resolveUsername(winnerId);
         sendAuctionUpdate(auction.getId(), auction.getCurrentPrice(), winnerId, winnerName,
-                auction.getStatus().name());
+                auction.getStatus().name(),
+                auction.getBidHistory() != null ? auction.getBidHistory().size() : 0);
     }
 
     private static String resolveUsername(String userId) {

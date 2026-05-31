@@ -354,6 +354,8 @@ public class AuctionDetailController {
         }
 
         Platform.runLater(() -> {
+            double previousPrice = currentAuction.getCurrentPrice();
+            int previousTotalBids = currentAuction.getTotalBids();
             if (dto.getCurrentPrice() > 0) {
                 currentAuction.setCurrentPrice(dto.getCurrentPrice());
             }
@@ -371,7 +373,16 @@ public class AuctionDetailController {
             if (dto.getMinIncrement() > 0) {
                 currentAuction.setMinIncrement(dto.getMinIncrement());
             }
+            if (dto.getTotalBids() >= 0) {
+                currentAuction.setTotalBids(dto.getTotalBids());
+            }
             updateUI();
+
+            boolean priceChanged = Double.compare(previousPrice, currentAuction.getCurrentPrice()) != 0;
+            boolean bidCountChanged = currentAuction.getTotalBids() != previousTotalBids;
+            if (priceChanged || bidCountChanged) {
+                getBidHistory();
+            }
         });
     }
 

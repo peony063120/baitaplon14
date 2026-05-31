@@ -130,4 +130,36 @@ public class DataService {
             }
         }).start();
     }
+
+    // ==================== DELETE AUCTION ====================
+    public void deleteAuction(String auctionId, Consumer<Boolean> onSuccess, Consumer<String> onError) {
+        if (auctionId == null || auctionId.isBlank()) {
+            if (onError != null) {
+                onError.accept("Invalid auction id");
+            }
+            return;
+        }
+        if (AppConfig.isUseMock()) {
+            if (onSuccess != null) {
+                onSuccess.accept(true);
+            }
+            return;
+        }
+        new Thread(() -> {
+            try {
+                String response = ServerConnection.getInstance().sendRequest("DELETE_AUCTION:" + auctionId);
+                boolean ok = response != null && response.startsWith("DELETE_OK");
+                if (ok) {
+                    if (onSuccess != null) Platform.runLater(() -> onSuccess.accept(true));
+                } else if (onError != null) {
+                    String msg = response != null ? response : "Unknown error";
+                    Platform.runLater(() -> onError.accept(msg));
+                }
+            } catch (IOException e) {
+                if (onError != null) {
+                    Platform.runLater(() -> onError.accept(e.getMessage()));
+                }
+            }
+        }, "delete-auction").start();
+    }
 }

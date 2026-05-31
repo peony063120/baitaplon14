@@ -175,10 +175,16 @@ public class MyAuctionsController {
                 "Are you sure you want to delete this auction?", ButtonType.YES, ButtonType.NO);
         confirm.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.YES) {
-                // Mock: xóa khỏi list local
-                myAuctions.removeIf(a -> auctionId.equals(a.getId()));
-                renderAuctionList();
-                statusLabel.setText("✅ Auction deleted (demo)");
+                DataService.getInstance().deleteAuction(
+                        auctionId,
+                        ok -> {
+                            myAuctions.removeIf(a -> auctionId.equals(a.getId()));
+                            renderAuctionList();
+                            statusLabel.setText("✅ Auction deleted.");
+                            loadMyAuctions();
+                        },
+                        error -> statusLabel.setText("❌ Failed to delete auction: " + error)
+                );
             }
         });
     }

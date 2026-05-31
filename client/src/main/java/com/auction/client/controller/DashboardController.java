@@ -91,8 +91,10 @@ public class DashboardController {
             return;
         }
         Platform.runLater(() -> {
+            boolean found = false;
             for (AuctionDTO existing : allAuctions) {
                 if (existing.getId().equals(dto.getId())) {
+                    found = true;
                     existing.setCurrentPrice(dto.getCurrentPrice());
                     if (dto.getStatus() != null) {
                         existing.setStatus(dto.getStatus());
@@ -100,8 +102,15 @@ public class DashboardController {
                     if (dto.getCurrentWinnerId() != null) {
                         existing.setCurrentWinnerId(dto.getCurrentWinnerId());
                     }
+                    if (dto.getTotalBids() >= 0) {
+                        existing.setTotalBids(dto.getTotalBids());
+                    }
                     break;
                 }
+            }
+            if (!found) {
+                loadAuctions();
+                return;
             }
             applyFilter();
             updateStats();

@@ -237,6 +237,13 @@ public final class ResponseHandler {
             dto.setStatus(AuctionStatus.DRAFT);
           }
         }
+        case "TOTAL_BIDS" -> {
+          try {
+            dto.setTotalBids(Integer.parseInt(tokens[i + 1]));
+          } catch (NumberFormatException ignored) {
+            dto.setTotalBids(0);
+          }
+        }
         default -> { /* ignore unknown keys */ }
       }
     }
