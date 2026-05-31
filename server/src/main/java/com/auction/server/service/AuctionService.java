@@ -112,6 +112,16 @@ public class AuctionService {
             throw new AuctionNotFoundException("Auction not found: " + id);
         }
         AuctionStatus oldStatus = existing.getStatus();
+        
+        // When approving auction (PENDING/DRAFT -> RUNNING/OPEN), ensure it starts now
+        if ((oldStatus == AuctionStatus.PENDING || oldStatus == AuctionStatus.DRAFT) 
+                && (status == AuctionStatus.RUNNING || status == AuctionStatus.OPEN)) {
+            // If startTime is in the future, set it to now so auction is immediately active
+            if (existing.getStartTime() != null && existing.getStartTime().isAfter(LocalDateTime.now())) {
+                existing.setStartTime(LocalDateTime.now());
+            }
+        }
+        
         existing.setStatus(status);
         auctionDAO.saveAuction(existing);
         

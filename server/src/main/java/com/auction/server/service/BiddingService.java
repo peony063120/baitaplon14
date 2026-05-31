@@ -80,9 +80,9 @@ public class BiddingService {
 
         // Khóa chính trên auction để đảm bảo không có 2 bid xử lý đồng thời trên cùng phiên
         synchronized (auction) {
-            // Kiểm tra trạng thái
-            if (auction.getStatus() != AuctionStatus.RUNNING) {
-                throw new InvalidBidException("Auction is not running");
+            // Kiểm tra trạng thái và thời gian
+            if (!auction.isActive()) {
+                throw new InvalidBidException("Auction is not active (not running or outside time window)");
             }
 
             // Seller không được đấu giá sản phẩm của mình
