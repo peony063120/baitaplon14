@@ -29,8 +29,7 @@ public class ClientHandler implements Runnable {
     private BufferedReader in;
     private PrintWriter out;
     private ClientObserver clientObserver;
-    
-    // Track last bid time to prevent spam bidding (userId + auctionId -> timestamp)
+
     private static final Map<String, Long> lastBidTimes = new ConcurrentHashMap<>();
     private final long defaultAuctionDurationHours;
     private final long minBidIntervalSeconds;
@@ -45,8 +44,7 @@ public class ClientHandler implements Runnable {
         this.userController = userController;
         this.bidController = bidController;
         this.auctionSubject = auctionSubject;
-        
-        // Load auction time configurations
+
         ServerConfig config = ServerConfig.getInstance();
         this.defaultAuctionDurationHours = config.getDefaultAuctionDurationHours();
         this.minBidIntervalSeconds = config.getMinBidIntervalSeconds();
@@ -111,7 +109,6 @@ public class ClientHandler implements Runnable {
         LoginResponse resp = userController.login(req);
 
         if (resp != null && resp.isSuccess()) {
-            // SỬA DÒNG NÀY: Chèn thêm p[0] (tên username người dùng nhập) vào chuỗi gửi về Client
             out.println("LOGIN_OK:" + resp.getSessionToken() + ":" + resp.getUserId() + ":" + p[0] + ":" + resp.getRole() + ":" + resp.getBalance());
         } else {
             out.println("LOGIN_FAIL:" + (resp != null ? resp.getMessage() : "Invalid credentials"));
@@ -120,7 +117,6 @@ public class ClientHandler implements Runnable {
 
     private void handleRegister(String payload) {
         String[] p = payload.split(":");
-        // username, password, email, fullName, role
         UserDTO dto = new UserDTO(null, p[0], p[1], p[2], p[3], p[4], 0.0);
         dto.setActive(true);
         userController.register(dto);
@@ -129,7 +125,6 @@ public class ClientHandler implements Runnable {
 
     private void handleAddBalance(String payload) {
         String[] p = payload.split(":");
-        // p[0]=userId, p[1]=amount
         String userId = p[0];
         double amount = Double.parseDouble(p[1]);
         userController.addBalance(userId, amount);
@@ -138,7 +133,6 @@ public class ClientHandler implements Runnable {
 
     private void handleUpdateProfile(String payload) {
         String[] p = payload.split(":");
-        // p[0]=userId, p[1]=fullName, p[2]=email
         UserDTO dto = new UserDTO();
         dto.setFullName(p[1]);
         dto.setEmail(p[2]);
@@ -148,12 +142,11 @@ public class ClientHandler implements Runnable {
 
     private void handleChangePassword(String payload) {
         String[] p = payload.split(":");
-        // p[0]=userId, p[1]=oldPassword, p[2]=newPassword
         userController.changePassword(p[0], p[1], p[2]);
         out.println("CHANGE_OK");
     }
 
-        private void handleGetUserCount() {
+    private void handleGetUserCount() {
         int count = com.auction.server.dao.UserDAO.getInstance().getAllUsers().size();
         out.println("USER_COUNT:" + count);
     }
@@ -194,7 +187,6 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleGetAllAuctions() {
-        // Đã đổi var thành List<AuctionDTO> chuẩn Java 8
         java.util.List<com.auction.common.dto.AuctionDTO> auctions = auctionController.getAllAuctions();
         StringBuilder sb = new StringBuilder();
         sb.append("AUCTIONS_COUNT:").append(auctions.size());
@@ -255,7 +247,6 @@ public class ClientHandler implements Runnable {
 
     private void handleCreateAuction(String payload) {
         try {
-            // Format: itemName|itemDescription|startingPrice|sellerUsername|startTime|endTime|minIncrement|category
             String[] p = payload.split("\\|", -1);
             AuctionDTO dto = new AuctionDTO();
             String itemName = p.length > 0 ? p[0].replace("\\n", "\n") : "";
@@ -288,29 +279,44 @@ public class ClientHandler implements Runnable {
     }
 
     private void handlePlaceBid(String payload) throws InvalidBidException {
+        // Log debug giúp kiểm tra cấu trúc chuỗi truyền từ Client lên
+        System.out.println("[SERVER DEBUG] PLACE_BID Payload received: " + payload);
+
         String[] p = payload.split(":");
+        if (p.length < 3) {
+            out.println("ERROR:Invalid payload format for PLACE_BID");
+            return;
+        }
+
         String auctionId = p[0];
         String bidderId = p[1];
-        double amount = Double.parseDouble(p[2]);
+        double amount = 0;
+
+        try {
+            amount = Double.parseDouble(p[2]);
+        } catch (NumberFormatException e) {
+            out.println("ERROR:Server failed to parse bid amount");
+            return;
+        }
+
         boolean isAutoBid = p.length > 3 && Boolean.parseBoolean(p[3]);
-        
-        // Check minimum time interval between bids from same user in same auction
+
+        // Chống spam lượt bid liên tục từ cùng 1 user
         String bidKey = bidderId + ":" + auctionId;
         long now = System.currentTimeMillis();
         Long lastBidTime = lastBidTimes.get(bidKey);
-        
+
         if (lastBidTime != null) {
             long elapsed = now - lastBidTime;
             if (elapsed < minBidIntervalSeconds * 1000) {
-                out.println("ERROR:Bidding too fast. Please wait " + 
-                           (minBidIntervalSeconds - elapsed/1000) + " more seconds.");
+                out.println("ERROR:Bidding too fast. Please wait " +
+                        (minBidIntervalSeconds - elapsed/1000) + " more seconds.");
                 return;
             }
         }
-        
-        // Update last bid time
+
         lastBidTimes.put(bidKey, now);
-        
+
         BidRequest req = new BidRequest(auctionId, bidderId, amount, isAutoBid);
         bidController.placeBid(req);
         out.println("BID_OK");
@@ -329,13 +335,11 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleGetBidHistory(String auctionId) {
-        // Đã đổi var thành List<BidTransaction> chuẩn Java 8
         java.util.List<com.auction.common.entity.BidTransaction> history = bidController.getBidHistory(auctionId);
         StringBuilder sb = new StringBuilder();
         sb.append("BID_HISTORY_COUNT:").append(history.size());
 
         for (com.auction.common.entity.BidTransaction b : history) {
-            // Mẹo: Nếu b.getTime() báo đỏ, bạn hãy đổi chữ ".getTime()" thành ".getBidTime()" theo entity của bạn nhé
             sb.append("||BID:").append(b.getBidderId()).append(":").append(b.getAmount())
                     .append(":").append(b.getBidTime()).append(":").append(b.isAutoBid());
         }
