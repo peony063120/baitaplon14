@@ -60,4 +60,12 @@ public class UserController {
             e.printStackTrace();
         }
     }
+
+    public void changePassword(String userId, String oldPassword, String newPassword) {
+        try {
+            userService.changePassword(userId, oldPassword, newPassword);
+        } catch (AuctionNotFoundException | IllegalArgumentException e) {
+            e.printStackTrace();
+        }
+    }
 }

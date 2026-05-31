@@ -34,11 +34,14 @@ public class MainController {
     @FXML private ToggleButton walletNav;
     @FXML private ToggleButton profileNav;
 
+    private static MainController instance;
+
     private final ClientModel clientModel = ClientModel.getInstance();
     private DashboardController dashboardController;
 
     @FXML
     public void initialize() {
+        instance = this;
         updateHeader();
         showDashboard();
     }
@@ -173,6 +176,19 @@ public class MainController {
             if (button != null) {
                 button.setSelected(button == selected);
             }
+        }
+    }
+
+    public static void refreshBalance() {
+        if (instance != null) {
+            Platform.runLater(() -> instance.updateBalanceDisplay());
+        }
+    }
+
+    private void updateBalanceDisplay() {
+        User currentUser = clientModel.getCurrentUser();
+        if (currentUser instanceof Bidder bidder) {
+            balanceLabel.setText(String.format("$%,.0f", bidder.getBalance()));
         }
     }
 

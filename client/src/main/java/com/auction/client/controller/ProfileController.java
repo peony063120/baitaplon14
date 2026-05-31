@@ -5,6 +5,7 @@ package com.auction.client.controller;
  * Update name, email; change password; top-up balance (for Bidder); view bid history
  */
 
+import com.auction.client.config.AppConfig;
 import com.auction.client.model.ClientModel;
 import com.auction.client.network.ServerConnection;
 import com.auction.common.dto.UserDTO;
@@ -155,13 +156,28 @@ public class ProfileController {
 
         String username = clientModel.getCurrentUser().getUsername();
 
+        if (AppConfig.isUseMock()) {
+            User user = clientModel.getCurrentUser();
+            if (user instanceof Bidder bidder) {
+                bidder.addBalance(amount);
+                Platform.runLater(() -> {
+                    balanceLabel.setText(String.format("$%,.0f", bidder.getBalance()));
+                    statusLabel.setText("✅ Balance topped up successfully!");
+                    statusLabel.setStyle("-fx-text-fill: #16A34A;");
+                    addBalanceField.clear();
+                    MainController.refreshBalance();
+                    clearStatusAfterDelay();
+                });
+            }
+            return;
+        }
+
         new Thread(() -> {
             try {
                 String response = ServerConnection.getInstance().sendRequest("ADD_BALANCE:" + username + ":" + amount);
 
                 Platform.runLater(() -> {
                     if (response != null && response.startsWith("BALANCE_OK")) {
-                        // Update balance in ClientModel
                         User user = clientModel.getCurrentUser();
                         if (user instanceof Bidder bidder) {
                             bidder.addBalance(amount);
@@ -174,6 +190,7 @@ public class ProfileController {
                         statusLabel.setText("❌ Top-up failed: " + response);
                         statusLabel.setStyle("-fx-text-fill: #DC2626;");
                     }
+                    MainController.refreshBalance();
                     clearStatusAfterDelay();
                 });
             } catch (IOException e) {
@@ -214,12 +231,34 @@ public class ProfileController {
 
         String username = clientModel.getCurrentUser().getUsername();
 
+        if (AppConfig.isUseMock()) {
+            User user = clientModel.getCurrentUser();
+            if (user != null && user.authenticate(oldPassword)) {
+                user.setPassword(newPassword);
+                Platform.runLater(() -> {
+                    statusLabel.setText("✅ Password changed successfully!");
+                    statusLabel.setStyle("-fx-text-fill: #16A34A;");
+                    oldPasswordField.clear();
+                    newPasswordField.clear();
+                    clearStatusAfterDelay();
+                });
+            } else {
+                Platform.runLater(() -> {
+                    statusLabel.setText("❌ Current password is incorrect");
+                    statusLabel.setStyle("-fx-text-fill: #DC2626;");
+                    clearStatusAfterDelay();
+                });
+            }
+            return;
+        }
+
         new Thread(() -> {
             try {
                 String response = ServerConnection.getInstance().sendRequest("CHANGE_PASSWORD:" + username + ":" + oldPassword + ":" + newPassword);
 
                 Platform.runLater(() -> {
                     if (response != null && response.startsWith("CHANGE_OK")) {
+                        clientModel.getCurrentUser().setPassword(newPassword);
                         statusLabel.setText("✅ Password changed successfully!");
                         statusLabel.setStyle("-fx-text-fill: #16A34A;");
                         oldPasswordField.clear();

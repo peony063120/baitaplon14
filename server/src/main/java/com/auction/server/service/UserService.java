@@ -73,6 +73,19 @@ public class UserService {
         userDAO.saveUser(user);   // dùng saveUser thay vì updateUser
     }
 
+    public void changePassword(String userId, String oldPassword, String newPassword)
+            throws AuctionNotFoundException, IllegalArgumentException {
+        User user = userDAO.findUserByUsername(userId);
+        if (user == null) {
+            throw new AuctionNotFoundException("User not found: " + userId);
+        }
+        if (!user.authenticate(oldPassword)) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        user.setPassword(newPassword);
+        userDAO.saveUser(user);
+    }
+
     // Nạp tiền – ném exception nếu có lỗi
     public void addBalance(String userId, double amount)
             throws InvalidBidException, AuctionNotFoundException, AuctionException {
