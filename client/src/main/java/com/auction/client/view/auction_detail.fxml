@@ -17,7 +17,7 @@
             fx:controller="com.auction.client.controller.AuctionDetailController"
             stylesheets="@../styles/main.css">
     <center>
-        <ScrollPane fitToWidth="true" styleClass="dashboard-scroll">
+        <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="dashboard-scroll">
             <VBox spacing="24" styleClass="content-page">
                 <padding>
                     <Insets top="28" right="28" bottom="28" left="28"/>
@@ -51,7 +51,7 @@
                     </VBox>
                 </GridPane>
 
-                <VBox spacing="12" styleClass="surface">
+                <VBox spacing="12" styleClass="surface" fx:id="bidPanel">
                     <Text text="Place Your Bid" styleClass="section-title"/>
                     <HBox spacing="12" alignment="CENTER_LEFT">
                         <TextField fx:id="bidAmountField" promptText="Enter amount" styleClass="bid-field" prefWidth="220"/>
@@ -64,7 +64,7 @@
 
                 <VBox spacing="12">
                     <Text text="Bid History Chart" styleClass="section-title"/>
-                    <PriceChart fx:id="priceChart" prefHeight="280"/>
+                    <PriceChart fx:id="priceChart" prefHeight="380" minHeight="320"/>
                 </VBox>
 
                 <VBox spacing="12">
