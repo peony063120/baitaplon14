@@ -58,11 +58,14 @@ public class CreateAuctionController {
             if (response != null && response.startsWith("CREATE_AUCTION_OK")) {
                 showSuccess();
             } else {
-                String errorMsg = response != null ? response : "Không có phản hồi từ server";
-                showError("Tạo phiên đấu giá thất bại: " + errorMsg);
+                // CHANGED: "Không có phản hồi từ server" -> "No response from server"
+                // CHANGED: "Tạo phiên đấu giá thất bại: " -> "Failed to create auction: "
+                String errorMsg = response != null ? response : "No response from server";
+                showError("Failed to create auction: " + errorMsg);
             }
         } catch (IOException e) {
-            showError("Lỗi kết nối server: " + e.getMessage());
+            // CHANGED: "Lỗi kết nối server: " -> "Server connection error: "
+            showError("Server connection error: " + e.getMessage());
         }
     }
 
@@ -97,7 +100,8 @@ public class CreateAuctionController {
     @FXML
     public void handleUploadImages() {
         FileChooser chooser = new FileChooser();
-        chooser.setTitle("Chọn ảnh sản phẩm");
+        // CHANGED: "Chọn ảnh sản phẩm" -> "Select Product Images"
+        chooser.setTitle("Select Product Images");
         chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg"));
         List<File> files = chooser.showOpenMultipleDialog(itemNameField.getScene().getWindow());
         uploadImages(files);
@@ -116,35 +120,42 @@ public class CreateAuctionController {
 
     public boolean validateAuctionData() {
         if (itemNameField.getText().isBlank()) {
-            showError("Vui lòng nhập tên sản phẩm");
+            // CHANGED: "Vui lòng nhập tên sản phẩm" -> "Please enter the product name"
+            showError("Please enter the product name");
             return false;
         }
         if (itemDescriptionArea.getText().isBlank()) {
-            showError("Vui lòng nhập mô tả sản phẩm");
+            // CHANGED: "Vui lòng nhập mô tả sản phẩm" -> "Please enter the product description"
+            showError("Please enter the product description");
             return false;
         }
         try {
             double price = Double.parseDouble(startingPriceField.getText().trim());
             if (price <= 0) {
-                showError("Giá khởi điểm phải > 0");
+                // CHANGED: "Giá khởi điểm phải > 0" -> "Starting price must be greater than 0"
+                showError("Starting price must be greater than 0");
                 return false;
             }
         } catch (NumberFormatException e) {
-            showError("Giá khởi điểm không hợp lệ");
+            // CHANGED: "Giá khởi điểm không hợp lệ" -> "Invalid starting price"
+            showError("Invalid starting price");
             return false;
         }
         if (startDatePicker.getValue() == null) {
-            showError("Vui lòng chọn ngày bắt đầu");
+            // CHANGED: "Vui lòng chọn ngày bắt đầu" -> "Please select a start date"
+            showError("Please select a start date");
             return false;
         }
         try {
             int hour = Integer.parseInt(startHourField.getText().trim());
             if (hour < 0 || hour > 23) {
-                showError("Giờ bắt đầu phải từ 0-23");
+                // CHANGED: "Giờ bắt đầu phải từ 0-23" -> "Start hour must be between 0 and 23"
+                showError("Start hour must be between 0 and 23");
                 return false;
             }
         } catch (NumberFormatException e) {
-            showError("Giờ bắt đầu không hợp lệ");
+            // CHANGED: "Giờ bắt đầu không hợp lệ" -> "Invalid start hour"
+            showError("Invalid start hour");
             return false;
         }
         errorLabel.setVisible(false);
@@ -169,7 +180,8 @@ public class CreateAuctionController {
 
     private void showSuccess() {
         errorLabel.setStyle("-fx-text-fill: #16A34A;");
-        errorLabel.setText("✅ Tạo phiên đấu giá thành công!");
+        // CHANGED: "✅ Tạo phiên đấu giá thành công!" -> "✅ Auction created successfully!"
+        errorLabel.setText("✅ Auction created successfully!");
         errorLabel.setVisible(true);
 
         // Đóng cửa sổ sau 1.5 giây

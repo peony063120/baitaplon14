@@ -74,7 +74,8 @@ public class RealtimeListener {
    */
   private synchronized void clearAllCallbacks() {
     callbacks.clear();
-    LOGGER.info("RealtimeListener: Đã xóa tất cả callbacks");
+    // CHANGED: "RealtimeListener: Đã xóa tất cả callbacks" -> "RealtimeListener: All callbacks have been cleared"
+    LOGGER.info("RealtimeListener: All callbacks have been cleared");
   }
 
   /**
@@ -86,7 +87,8 @@ public class RealtimeListener {
   public synchronized void registerCallback(String eventType, Consumer<Object> callback) {
     if (callback == null) return;
     callbacks.computeIfAbsent(eventType, k -> new ArrayList<>()).add(callback);
-    LOGGER.fine("RealtimeListener: Đã đăng ký callback thành công cho loại sự kiện '" + eventType + "'");
+    // CHANGED: "RealtimeListener: Đã đăng ký callback thành công cho loại sự kiện '" -> "RealtimeListener: Successfully registered callback for event type '"
+    LOGGER.fine("RealtimeListener: Successfully registered callback for event type '" + eventType + "'");
   }
 
   /**
@@ -99,7 +101,8 @@ public class RealtimeListener {
    */
   public synchronized void unregisterCallbacks(String eventType) {
     callbacks.remove(eventType);
-    LOGGER.fine("RealtimeListener: Đã xóa toàn bộ callback của sự kiện '" + eventType + "'");
+    // CHANGED: "RealtimeListener: Đã xóa toàn bộ callback của sự kiện '" -> "RealtimeListener: Removed all callbacks for event '"
+    LOGGER.fine("RealtimeListener: Removed all callbacks for event '" + eventType + "'");
   }
 
   /**
@@ -116,7 +119,8 @@ public class RealtimeListener {
       if (list.isEmpty()) {
         callbacks.remove(eventType);
       }
-      LOGGER.fine("RealtimeListener: Đã hủy đăng ký callback cụ thể cho sự kiện '" + eventType + "'");
+      // CHANGED: "RealtimeListener: Đã hủy đăng ký callback cụ thể cho sự kiện '" -> "RealtimeListener: Unregistered specific callback for event '"
+      LOGGER.fine("RealtimeListener: Unregistered specific callback for event '" + eventType + "'");
     }
   }
 
@@ -126,8 +130,9 @@ public class RealtimeListener {
    * @param bid Đối tượng giao dịch đặt giá mới nhận từ server
    */
   public void onBidUpdate(BidTransaction bid) {
-    LOGGER.info("RealtimeListener: Nhận sự kiện BID_UPDATE — Mã phiên="
-            + bid.getAuctionId() + " Số tiền=" + bid.getAmount());
+    // CHANGED: "RealtimeListener: Nhận sự kiện BID_UPDATE — Mã phiên=" ... " Số tiền=" -> "RealtimeListener: Received BID_UPDATE event — Auction ID=" ... " Amount="
+    LOGGER.info("RealtimeListener: Received BID_UPDATE event — Auction ID="
+            + bid.getAuctionId() + " Amount=" + bid.getAmount());
     dispatch(MessageProtocol.TYPE_BID_UPDATE, bid);
   }
 
@@ -137,8 +142,9 @@ public class RealtimeListener {
    * @param auction Đối tượng phiên đấu giá đã được cập nhật
    */
   public void onAuctionUpdate(Auction auction) {
-    LOGGER.info("RealtimeListener: Nhận sự kiện AUCTION_UPDATE — Mã phiên=" + auction.getId()
-            + " Trạng thái mới=" + auction.getStatus());
+    // CHANGED: "RealtimeListener: Nhận sự kiện AUCTION_UPDATE — Mã phiên=" ... " Trạng thái mới=" -> "RealtimeListener: Received AUCTION_UPDATE event — Auction ID=" ... " New Status="
+    LOGGER.info("RealtimeListener: Received AUCTION_UPDATE event — Auction ID=" + auction.getId()
+            + " New Status=" + auction.getStatus());
     dispatch(MessageProtocol.TYPE_AUCTION_UPDATE, auction);
   }
 
@@ -155,7 +161,8 @@ public class RealtimeListener {
     synchronized (this) {
       List<Consumer<Object>> registered = callbacks.get(eventType);
       if (registered == null || registered.isEmpty()) {
-        LOGGER.fine("RealtimeListener: Không có hàm callback nào đăng ký cho sự kiện '" + eventType + "'");
+        // CHANGED: "RealtimeListener: Không có hàm callback nào đăng ký cho sự kiện '" -> "RealtimeListener: No callbacks registered for event '"
+        LOGGER.fine("RealtimeListener: No callbacks registered for event '" + eventType + "'");
         return;
       }
       // Tạo bản chụp nhanh (Snapshot) danh sách để giải phóng Lock đồng bộ sớm, tránh Deadlock
@@ -167,7 +174,8 @@ public class RealtimeListener {
         try {
           cb.accept(payload);
         } catch (Exception ex) {
-          LOGGER.warning("RealtimeListener: Lỗi thực thi hàm callback của sự kiện '"
+          // CHANGED: "RealtimeListener: Lỗi thực thi hàm callback của sự kiện '" ... " — " -> "RealtimeListener: Error executing callback for event '" ... " — "
+          LOGGER.warning("RealtimeListener: Error executing callback for event '"
                   + eventType + "' — " + ex.getMessage());
         }
       };

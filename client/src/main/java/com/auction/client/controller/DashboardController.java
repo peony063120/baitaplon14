@@ -52,8 +52,10 @@ public class DashboardController {
                 },
                 error -> {
                     if (activeAuctionsCount != null)
-                        activeAuctionsCount.setText("Lỗi kết nối");
-                    System.err.println("Không thể tải danh sách đấu giá: " + error);
+                        // CHANGED: "Lỗi kết nối" -> "Connection Error"
+                        activeAuctionsCount.setText("Connection Error");
+                    // CHANGED: "Không thể tải danh sách đấu giá: " -> "Cannot load auction list: "
+                    System.err.println("Cannot load auction list: " + error);
                 }
         );
     }
@@ -96,7 +98,8 @@ public class DashboardController {
                 .filter(a -> a.getStatus() == AuctionStatus.FINISHED || a.getStatus() == AuctionStatus.PAID)
                 .mapToDouble(AuctionDTO::getCurrentPrice)
                 .sum();
-        totalRevenue.setText(String.format("₫ %,.0f", revenue));
+        // CHANGED: Thay đổi ký hiệu tiền tệ từ "₫" sang "VND" đặt phía trước theo tiêu chuẩn quốc tế
+        totalRevenue.setText(String.format("VND %,.0f", revenue));
     }
 
     private void applyFilter() {
@@ -157,7 +160,8 @@ public class DashboardController {
             popupStage.initModality(Modality.WINDOW_MODAL);
             popupStage.initOwner(owner);
             popupStage.initStyle(StageStyle.DECORATED);
-            popupStage.setTitle("Chi tiết đấu giá — " + auction.getItemName());
+            // CHANGED: "Chi tiết đấu giá — " -> "Auction Details — "
+            popupStage.setTitle("Auction Details — " + auction.getItemName());
             popupStage.setMinWidth(700);
             popupStage.setMinHeight(600);
 
@@ -170,7 +174,8 @@ public class DashboardController {
             popupStage.showAndWait(); // Modal: chặn window cha cho đến khi đóng
         } catch (Exception e) {
             e.printStackTrace();
-            showErrorPopup("Không thể mở chi tiết: " + e.getMessage());
+            // CHANGED: "Không thể mở chi tiết: " -> "Cannot open details: "
+            showErrorPopup("Cannot open details: " + e.getMessage());
         }
     }
 
@@ -179,13 +184,15 @@ public class DashboardController {
         errStage.initModality(Modality.APPLICATION_MODAL);
         Label lbl = new Label(message);
         lbl.setWrapText(true);
-        Button btn = new Button("Đóng");
+        // CHANGED: "Đóng" -> "Close"
+        Button btn = new Button("Close");
         btn.setOnAction(e -> errStage.close());
         VBox box = new VBox(16, lbl, btn);
         box.setAlignment(Pos.CENTER);
         box.setPadding(new Insets(24));
         errStage.setScene(new Scene(box, 360, 150));
-        errStage.setTitle("Lỗi");
+        // CHANGED: "Lỗi" -> "Error"
+        errStage.setTitle("Error");
         errStage.show();
     }
 

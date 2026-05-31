@@ -179,7 +179,10 @@ public class AuctionDetailController {
 
     private void addBidHistoryRow(BidTransaction bid) {
         String time = bid.getBidTime() != null ? bid.getBidTime().toString() : "";
-        String suffix = bid.isAutoBid() ? " (auto)" : "";
+
+        // CHỈNH SỬA: Viết hoa chữ đầu " (Auto)" để đồng bộ và chuẩn hóa format tiếng Anh chuyên nghiệp hơn
+        String suffix = bid.isAutoBid() ? " (Auto)" : "";
+
         bidHistoryBox.getChildren().add(new Label(
                 bid.getBidderId() + " - " + formatCurrency(bid.getAmount()) + " - " + time + suffix
         ));

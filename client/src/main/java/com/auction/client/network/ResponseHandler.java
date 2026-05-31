@@ -43,11 +43,14 @@ public final class ResponseHandler {
       if (payload instanceof String) return (String) payload;
       if (payload instanceof Map) {
         Object msg = ((Map<?, ?>) payload).get("message");
-        return msg != null ? msg.toString() : "Lỗi không xác định";
+        // CHANGED: "Lỗi không xác định" -> "Unknown error"
+        return msg != null ? msg.toString() : "Unknown error";
       }
-      return "Lỗi không xác định";
+      // CHANGED: "Lỗi không xác định" -> "Unknown error"
+      return "Unknown error";
     } catch (Exception e) {
-      return "Lỗi đọc phản hồi: " + e.getMessage();
+      // CHANGED: "Lỗi đọc phản hồi: " -> "Failed to read response: "
+      return "Failed to read response: " + e.getMessage();
     }
   }
 
@@ -242,7 +245,8 @@ public final class ResponseHandler {
    */
   public static LoginResponse parseLoginResponse(String response) {
     if (response == null) {
-      return new LoginResponse(false, "Không có phản hồi từ server");
+      // CHANGED: "Không có phản hồi từ server" -> "No response from server"
+      return new LoginResponse(false, "No response from server");
     }
 
     // Thử parse JSON (MessageProtocol) trước — server có thể trả JSON envelope
@@ -262,9 +266,10 @@ public final class ResponseHandler {
             try { balance = Double.parseDouble(p.get("balance").toString()); } catch (Exception ex) { /* ignore */ }
           }
           if (sessionToken != null && userId != null) {
-            return new LoginResponse(true, "Đăng nhập thành công", userId, username, role, sessionToken, balance);
+            return new LoginResponse(true, "Login successful", userId, username, role, sessionToken, balance);
           } else {
-            return new LoginResponse(false, "Định dạng phản hồi JSON không hợp lệ");
+            // CHANGED: "Định dạng phản hồi JSON không hợp lệ" -> "Invalid JSON response format"
+            return new LoginResponse(false, "Invalid JSON response format");
           }
         }
       }
@@ -282,13 +287,15 @@ public final class ResponseHandler {
         String username = parts[3]; // Lấy chính xác username từ server trả về
         String role = parts[4];
         double balance = Double.parseDouble(parts[5]);
-        return new LoginResponse(true, "Đăng nhập thành công", userId, username, role, sessionToken, balance);
+        return new LoginResponse(true, "Login successful", userId, username, role, sessionToken, balance);
       }
-      return new LoginResponse(false, "Định dạng phản hồi không hợp lệ");
+      // CHANGED: "Định dạng phản hồi không hợp lệ" -> "Invalid response format"
+      return new LoginResponse(false, "Invalid response format");
     } else if (response.startsWith("LOGIN_FAIL:")) {
       return new LoginResponse(false, response.substring(11));
     }
-    return new LoginResponse(false, "Phản hồi không xác định: " + response);
+    // CHANGED: "Phản hồi không xác định: " -> "Unknown response: "
+    return new LoginResponse(false, "Unknown response: " + response);
   }
 
   /**

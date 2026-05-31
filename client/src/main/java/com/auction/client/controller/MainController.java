@@ -88,6 +88,7 @@ public class MainController {
     @FXML
     public void showWallet() {
         selectNav(walletNav);
+        // CHANGED: "Wallet" & "Wallet actions are available..." -> Chuyển ngữ thông báo popup Ví điện tử
         showInfo("Wallet", "Wallet actions are available from your profile for now.");
     }
 
@@ -103,6 +104,7 @@ public class MainController {
 
     @FXML
     public void showNotifications() {
+        // CHANGED: "Notifications" & "No new notifications." -> Chuyển ngữ thông báo popup Thông báo
         showInfo("Notifications", "No new notifications.");
     }
 
@@ -113,6 +115,7 @@ public class MainController {
 
     @FXML
     public void onWithdraw() {
+        // CHANGED: "Withdraw" & "Withdrawals are not implemented yet." -> Chuyển ngữ thông báo popup Rút tiền
         showInfo("Withdraw", "Withdrawals are not implemented yet.");
     }
 
@@ -122,6 +125,7 @@ public class MainController {
         try {
             ClientApp.showLoginScreen();
         } catch (Exception e) {
+            // CHANGED: "Logout error" -> Chuyển ngữ thông báo tiêu đề lỗi Đăng xuất
             showInfo("Logout error", e.getMessage());
         }
     }
@@ -158,6 +162,7 @@ public class MainController {
             contentPane.getChildren().setAll(view);
             return loader.getController();
         } catch (IOException | RuntimeException e) {
+            // CHANGED: "Screen error" & "Cannot open " -> Chuyển ngữ thông báo lỗi tải màn hình content
             showInfo("Screen error", "Cannot open " + resourcePath + ": " + e.getMessage());
             return null;
         }

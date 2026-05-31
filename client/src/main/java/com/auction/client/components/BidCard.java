@@ -24,8 +24,12 @@ public class BidCard extends HBox {
         // TODO(asset): Replace this initial chip with user avatar image when profile assets are available.
 
         VBox infoBox = new VBox(4);
-        Label nameLabel = new Label(bid.getBidderId());
+
+        // Sử dụng biến isCurrentUser để hiển thị "You" nếu đó là lượt đặt giá của chính người dùng hiện tại
+        String displayName = isCurrentUser ? "You" : bid.getBidderId();
+        Label nameLabel = new Label(displayName);
         nameLabel.setStyle("-fx-font-weight: 800; -fx-font-size: 13px; -fx-text-fill: #111111;");
+
         Label timeLabel = new Label(bid.getBidTime().format(TIME_FORMAT));
         timeLabel.getStyleClass().add("muted-text");
         timeLabel.setStyle("-fx-font-size: 11px;");

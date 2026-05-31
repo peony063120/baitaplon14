@@ -42,7 +42,8 @@ public class RegisterController {
 
         // Hiển thị trạng thái đang xử lý
         errorLabel.setStyle("-fx-text-fill: #2563EB;");
-        showError("🔄 Đang xử lý đăng ký...");
+        // CHANGED: "🔄 Đang xử lý đăng ký..." -> "🔄 Processing registration..."
+        showError("🔄 Processing registration...");
 
         String username = usernameField.getText().trim();
         String password = passwordField.getText().trim();
@@ -57,7 +58,7 @@ public class RegisterController {
                 boolean exists = checkUsernameExists(username);
                 if (exists) {
                     Platform.runLater(() -> {
-                        showError("❌ Tên đăng nhập đã tồn tại");
+                        showError("❌ Username already exists");
                         errorLabel.setStyle("-fx-text-fill: #DC2626;");
                     });
                     return;
@@ -78,7 +79,8 @@ public class RegisterController {
 
                 Platform.runLater(() -> {
                     if (success) {
-                        showError("✅ Đăng ký thành công! Chuyển đến trang đăng nhập...");
+                        // CHANGED: "✅ Đăng ký thành công! Chuyển đến trang đăng nhập..." -> "✅ Registration successful! Redirecting to login..."
+                        showError("✅ Registration successful! Redirecting to login...");
                         errorLabel.setStyle("-fx-text-fill: #16A34A;");
                         // Chuyển về màn hình login sau 1.5 giây
                         new Thread(() -> {
@@ -86,13 +88,14 @@ public class RegisterController {
                             Platform.runLater(this::goToLogin);
                         }).start();
                     } else {
-                        showError("❌ Đăng ký thất bại. Vui lòng thử lại.");
+                        // CHANGED: "❌ Đăng ký thất bại. Vui lòng thử lại." -> "❌ Registration failed. Please try again."
+                        showError("❌ Registration failed. Please try again.");
                         errorLabel.setStyle("-fx-text-fill: #DC2626;");
                     }
                 });
             } catch (IOException e) {
                 Platform.runLater(() -> {
-                    showError("❌ Lỗi kết nối server: " + e.getMessage());
+                    showError("❌ Server connection error: " + e.getMessage());
                     errorLabel.setStyle("-fx-text-fill: #DC2626;");
                 });
             }
@@ -122,35 +125,35 @@ public class RegisterController {
         String fullName = fullNameField.getText().trim();
 
         if (username.isEmpty()) {
-            showError("⚠️ Vui lòng nhập tên đăng nhập");
+            showError("⚠️ Please enter a username");
             return false;
         }
         if (username.length() < 3) {
-            showError("⚠️ Tên đăng nhập phải có ít nhất 3 ký tự");
+            showError("⚠️ Username must be at least 3 characters long");
             return false;
         }
         if (password.isEmpty()) {
-            showError("⚠️ Vui lòng nhập mật khẩu");
+            showError("⚠️ Please enter a password");
             return false;
         }
         if (password.length() < 6) {
-            showError("⚠️ Mật khẩu phải có ít nhất 6 ký tự");
+            showError("⚠️ Password must be at least 6 characters long");
             return false;
         }
         if (!password.equals(confirm)) {
-            showError("⚠️ Mật khẩu xác nhận không khớp");
+            showError("⚠️ Passwords do not match");
             return false;
         }
         if (email.isEmpty()) {
-            showError("⚠️ Vui lòng nhập email");
+            showError("⚠️ Please enter an email address");
             return false;
         }
         if (!email.contains("@") || !email.contains(".")) {
-            showError("⚠️ Email không hợp lệ");
+            showError("⚠️ Invalid email address");
             return false;
         }
         if (fullName.isEmpty()) {
-            showError("⚠️ Vui lòng nhập họ và tên");
+            showError("⚠️ Please enter your full name");
             return false;
         }
 
@@ -164,9 +167,10 @@ public class RegisterController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/login.fxml"));
             Stage stage = (Stage) usernameField.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
-            stage.setTitle("Đăng nhập");
+            stage.setTitle("Login");
         } catch (Exception e) {
-            showError("❌ Lỗi điều hướng: " + e.getMessage());
+            // CHANGED: "❌ Lỗi điều hướng: " -> "❌ Navigation error: "
+            showError("❌ Navigation error: " + e.getMessage());
         }
     }
 

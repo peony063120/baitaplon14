@@ -55,7 +55,8 @@ public class BidHistoryController {
                 if (empty || item == null) {
                     setText(null);
                 } else {
-                    setText(item ? "🤖 Auto" : "👤 Thủ công");
+                    // Dịch "Auto" và "Thủ công" sang "Auto" và "Manual"
+                    setText(item ? "🤖 Auto" : "👤 Manual");
                 }
             }
         });
@@ -68,7 +69,8 @@ public class BidHistoryController {
                 if (empty || item == null) {
                     setText(null);
                 } else {
-                    setText(String.format("%,.0f VNĐ", item));
+                    // Chuyển đổi "VNĐ" sang format chuẩn quốc tế "VND" đặt phía trước
+                    setText(String.format("VND %,.0f", item));
                 }
             }
         });
@@ -91,12 +93,13 @@ public class BidHistoryController {
 
             Platform.runLater(() -> {
                 historyTable.getItems().setAll(allBids);
-                statusLabel.setText("📊 Tổng: " + allBids.size() + " lượt đặt giá");
+                // Dịch thông báo tổng lượt đặt giá
+                statusLabel.setText("📊 Total: " + allBids.size() + (allBids.size() <= 1 ? " bid" : " bids"));
             });
         } catch (IOException e) {
-            showError("Lỗi kết nối: " + e.getMessage());
+            showError("Connection error: " + e.getMessage());
         } catch (Exception e) {
-            showError("Lỗi: " + e.getMessage());
+            showError("Error: " + e.getMessage());
         }
     }
 
@@ -126,7 +129,7 @@ public class BidHistoryController {
      */
     public void exportToCSV(String filename) {
         if (allBids == null || allBids.isEmpty()) {
-            statusLabel.setText("⚠️ Không có dữ liệu để xuất");
+            statusLabel.setText("⚠️ No data available to export");
             return;
         }
 
@@ -139,9 +142,9 @@ public class BidHistoryController {
                         bid.getTimestamp() != null ? bid.getTimestamp().format(TIME_FORMATTER) : "",
                         bid.isAutoBid() ? "Yes" : "No");
             }
-            statusLabel.setText("✅ Xuất CSV thành công: " + filename);
+            statusLabel.setText("✅ CSV exported successfully: " + filename);
         } catch (IOException e) {
-            statusLabel.setText("❌ Lỗi xuất CSV: " + e.getMessage());
+            statusLabel.setText("❌ Failed to export CSV: " + e.getMessage());
         }
     }
 
@@ -166,14 +169,14 @@ public class BidHistoryController {
 
         Platform.runLater(() -> {
             historyTable.getItems().setAll(filtered);
-            statusLabel.setText("🔍 Lọc: " + filtered.size() + " kết quả (tổng " + allBids.size() + ")");
+            statusLabel.setText("🔍 Filtered: " + filtered.size() + " results (Total: " + allBids.size() + ")");
         });
     }
 
     @FXML
     public void handleFilter() {
         if (fromDatePicker.getValue() == null || toDatePicker.getValue() == null) {
-            statusLabel.setText("⚠️ Vui lòng chọn khoảng ngày");
+            statusLabel.setText("⚠️ Please select a date range");
             return;
         }
         filterByDate(fromDatePicker.getValue().atStartOfDay(),
@@ -185,8 +188,7 @@ public class BidHistoryController {
         if (allBids != null) {
             Platform.runLater(() -> {
                 historyTable.getItems().setAll(allBids);
-                statusLabel.setText("📊 Hiển thị tất cả: " + allBids.size() + " lượt");
-            });
+                statusLabel.setText("📊 Displaying all: " + allBids.size() + (allBids.size() <= 1 ? " bid" : " bids"));            });
         }
         fromDatePicker.setValue(null);
         toDatePicker.setValue(null);
@@ -208,8 +210,7 @@ public class BidHistoryController {
 
         Platform.runLater(() -> {
             historyTable.getItems().setAll(sorted);
-            statusLabel.setText("📊 Sắp xếp theo giá " + (ascending ? "tăng dần" : "giảm dần"));
-        });
+            statusLabel.setText("📊 Sorted by price (" + (ascending ? "ascending" : "descending") + ")");        });
     }
 
     /**
@@ -227,10 +228,9 @@ public class BidHistoryController {
                 Platform.runLater(() -> {
                     allBids = dtos;
                     historyTable.getItems().setAll(allBids);
-                    statusLabel.setText("📊 Tổng: " + allBids.size() + " lượt đặt giá");
-                });
+                    statusLabel.setText("📊 Total: " + allBids.size() + (allBids.size() <= 1 ? " bid" : " bids"));                });
             } catch (IOException e) {
-                showError("Lỗi kết nối: " + e.getMessage());
+                showError("Connection error:" + e.getMessage());
             }
         }).start();
     }

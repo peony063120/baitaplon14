@@ -16,10 +16,10 @@ import java.util.logging.Logger;
  * ServerConnection — Quản lý kết nối persistent TCP socket duy nhất giữa
  * ứng dụng JavaFX Client và máy chủ đấu giá (Auction Server).
  * QUAN TRỌNG — Quy tắc sử dụng sendRequest():
- *   sendRequest() sẽ block luồng gọi tối đa 10 giây chờ phản hồi từ server.
- *   Tuyệt đối KHÔNG gọi phương thức này từ JavaFX Application Thread (
- *   không gọi trực tiếp trong setOnAction, initialize, hay bất kỳ callback UI nào).
- *   Luôn bọc trong javafx.concurrent.Task hoặc ExecutorService
+ * sendRequest() sẽ block luồng gọi tối đa 10 giây chờ phản hồi từ server.
+ * Tuyệt đối KHÔNG gọi phương thức này từ JavaFX Application Thread (
+ * không gọi trực tiếp trong setOnAction, initialize, hay bất kỳ callback UI nào).
+ * Luôn bọc trong javafx.concurrent.Task hoặc ExecutorService
  */
 public class ServerConnection {
 
@@ -46,7 +46,8 @@ public class ServerConnection {
     if (instance != null) {
       instance.disconnect();
       instance = null;
-      LOGGER.info("ServerConnection: Instance đã được reset — sẵn sàng kết nối lại.");
+      // CHANGED: "ServerConnection: Instance đã được reset — sẵn sàng kết nối lại." -> "ServerConnection: Instance reset successfully — ready for reconnection."
+      LOGGER.info("ServerConnection: Instance reset successfully — ready for reconnection.");
     }
   }
 
@@ -76,7 +77,8 @@ public class ServerConnection {
    */
   public synchronized void connect(String host, int port) throws IOException {
     if (connected) {
-      LOGGER.warning("ServerConnection: Đã kết nối — bỏ qua yêu cầu connect().");
+      // CHANGED: "ServerConnection: Đã kết nối — bỏ qua yêu cầu connect()." -> "ServerConnection: Already connected — ignoring connect() request."
+      LOGGER.warning("ServerConnection: Already connected — ignoring connect() request.");
       return;
     }
 
@@ -85,7 +87,8 @@ public class ServerConnection {
     in     = new BufferedReader(new InputStreamReader(socket.getInputStream()));
     connected = true;
 
-    LOGGER.info("ServerConnection: Kết nối thành công đến máy chủ tại " + host + ":" + port);
+    // CHANGED: "ServerConnection: Kết nối thành công đến máy chủ tại " -> "ServerConnection: Successfully connected to server at "
+    LOGGER.info("ServerConnection: Successfully connected to server at " + host + ":" + port);
 
     // Tạo luồng Daemon chạy ngầm không gây treo ứng dụng khi tắt Client
     listenerThread = Executors.newSingleThreadExecutor(r -> {
@@ -107,7 +110,8 @@ public class ServerConnection {
         socket.close();
       }
     } catch (IOException e) {
-      LOGGER.warning("ServerConnection: Lỗi xảy ra khi ngắt kết nối — " + e.getMessage());
+      // CHANGED: "ServerConnection: Lỗi xảy ra khi ngắt kết nối — " -> "ServerConnection: Error occurred while disconnecting — "
+      LOGGER.warning("ServerConnection: Error occurred while disconnecting — " + e.getMessage());
     }
     if (listenerThread != null) {
       listenerThread.shutdownNow();
@@ -115,7 +119,8 @@ public class ServerConnection {
     // Hủy bỏ toàn bộ các yêu cầu đồng bộ đang chờ phản hồi để tránh rò rỉ bộ nhớ
     pendingRequests.forEach((id, future) -> future.cancel(true));
     pendingRequests.clear();
-    LOGGER.info("ServerConnection: Đã ngắt kết nối và giải phóng các yêu cầu đang chờ.");
+    // CHANGED: "ServerConnection: Đã ngắt kết nối và giải phóng các yêu cầu đang chờ." -> "ServerConnection: Disconnected and cleared pending requests."
+    LOGGER.info("ServerConnection: Disconnected and cleared pending requests.");
   }
 
   /**
@@ -131,7 +136,8 @@ public class ServerConnection {
    */
   public String sendRequest(Map<String, Object> requestMessage) throws IOException {
     if (!connected || out == null) {
-      throw new IOException("ServerConnection: Không thể gửi yêu cầu — Mạng bị ngắt kết nối.");
+      // CHANGED: "ServerConnection: Không thể gửi yêu cầu — Mạng bị ngắt kết nối." -> "ServerConnection: Cannot send request — Network disconnected."
+      throw new IOException("ServerConnection: Cannot send request — Network disconnected.");
     }
 
     String requestId = (String) requestMessage.get("requestId");
@@ -157,10 +163,12 @@ public class ServerConnection {
       return responseFuture.get(10, TimeUnit.SECONDS);
     } catch (TimeoutException e) {
       pendingRequests.remove(requestId);
-      throw new IOException("ServerConnection: Hết thời gian chờ phản hồi từ Server cho mã ID: " + requestId);
+      // CHANGED: "ServerConnection: Hết thời gian chờ phản hồi từ Server cho mã ID: " -> "ServerConnection: Request timeout waiting for server response for ID: "
+      throw new IOException("ServerConnection: Request timeout waiting for server response for ID: " + requestId);
     } catch (InterruptedException | ExecutionException e) {
       pendingRequests.remove(requestId);
-      throw new IOException("ServerConnection: Yêu cầu bị gián đoạn hoặc quá trình xử lý thất bại: " + e.getMessage());
+      // CHANGED: "ServerConnection: Yêu cầu bị gián đoạn hoặc quá trình xử lý thất bại: " -> "ServerConnection: Request interrupted or processing failed: "
+      throw new IOException("ServerConnection: Request interrupted or processing failed: " + e.getMessage());
     }
   }
 
@@ -170,7 +178,8 @@ public class ServerConnection {
    */
   public String sendRequest(String command) throws IOException {
     if (!connected || out == null) {
-      throw new IOException("ServerConnection: Không thể gửi yêu cầu — Mạng bị ngắt kết nối.");
+      // CHANGED: "ServerConnection: Không thể gửi yêu cầu — Mạng bị ngắt kết nối." -> "ServerConnection: Cannot send request — Network disconnected."
+      throw new IOException("ServerConnection: Cannot send request — Network disconnected.");
     }
 
     String requestId = java.util.UUID.randomUUID().toString();
@@ -187,10 +196,12 @@ public class ServerConnection {
       return responseFuture.get(10, TimeUnit.SECONDS);
     } catch (TimeoutException e) {
       pendingRequests.remove(requestId);
-      throw new IOException("ServerConnection: Hết thời gian chờ phản hồi từ Server");
+      // CHANGED: "ServerConnection: Hết thời gian chờ phản hồi từ Server" -> "ServerConnection: Response timeout from server"
+      throw new IOException("ServerConnection: Response timeout from server");
     } catch (InterruptedException | ExecutionException e) {
       pendingRequests.remove(requestId);
-      throw new IOException("ServerConnection: Yêu cầu bị gián đoạn: " + e.getMessage());
+      // CHANGED: "ServerConnection: Yêu cầu bị gián đoạn: " -> "ServerConnection: Request interrupted: "
+      throw new IOException("ServerConnection: Request interrupted: " + e.getMessage());
     }
   }
 
@@ -198,7 +209,8 @@ public class ServerConnection {
    * Vòng lặp chạy ngầm liên tục đọc dữ liệu theo dòng từ luồng nhận của Socket.
    */
   private void listenLoop() {
-    LOGGER.info("ServerConnection: Luồng lắng nghe (Listener thread) đã khởi động.");
+    // CHANGED: "ServerConnection: Luồng lắng nghe (Listener thread) đã khởi động." -> "ServerConnection: Listener thread started."
+    LOGGER.info("ServerConnection: Listener thread started.");
     try {
       String line;
       while (connected && (line = in.readLine()) != null) {
@@ -206,13 +218,15 @@ public class ServerConnection {
       }
     } catch (IOException e) {
       if (connected) {
-        LOGGER.warning("ServerConnection: Kết nối bị ngắt đột ngột — " + e.getMessage());
+        // CHANGED: "ServerConnection: Kết nối bị ngắt đột ngột — " -> "ServerConnection: Connection lost abruptly — "
+        LOGGER.warning("ServerConnection: Connection lost abruptly — " + e.getMessage());
         connected = false;
         // Phát đi thông điệp hệ thống thông báo mất mạng
         realtimeListener.dispatch("CONNECTION_LOST", e.getMessage());
       }
     }
-    LOGGER.info("ServerConnection: Luồng lắng nghe đã kết thúc.");
+    // CHANGED: "ServerConnection: Luồng lắng nghe đã kết thúc." -> "ServerConnection: Listener thread stopped."
+    LOGGER.info("ServerConnection: Listener thread stopped.");
   }
 
   /**
@@ -231,13 +245,15 @@ public class ServerConnection {
         String firstKey = pendingRequests.keySet().iterator().next();
         CompletableFuture<String> future = pendingRequests.remove(firstKey);
         if (future != null) {
+          // CHANGED: "ServerConnection: Completing pending request with raw text response: " (Đã sẵn là tiếng Anh)
           LOGGER.info("ServerConnection: Completing pending request with raw text response: " + rawJson);
           future.complete(rawJson);
           return;
         }
       }
       // Không có pending request → log nội dung nhận được để debug
-      LOGGER.info("ServerConnection: Nhận text thuần (không phải JSON): " + rawJson);
+      // CHANGED: "ServerConnection: Nhận text thuần (không phải JSON): " -> "ServerConnection: Received plain text (non-JSON): "
+      LOGGER.info("ServerConnection: Received plain text (non-JSON): " + rawJson);
       realtimeListener.dispatch("INBOUND_TEXT", rawJson);
       return;
     }
@@ -283,7 +299,8 @@ public class ServerConnection {
           break;
       }
     } catch (Exception e) {
-      LOGGER.warning("ServerConnection: Xử lý thông điệp đến thất bại — " + e.getMessage());
+      // CHANGED: "ServerConnection: Xử lý thông điệp đến thất bại — " -> "ServerConnection: Failed to process inbound message — "
+      LOGGER.warning("ServerConnection: Failed to process inbound message — " + e.getMessage());
       realtimeListener.dispatch("INBOUND_PARSE_ERROR", e.getMessage());
     }
   }

@@ -16,15 +16,17 @@ public class MockDataProvider {
         for (int i = 1; i <= 6; i++) {
             AuctionDTO dto = new AuctionDTO();
             dto.setId("mock_auc_" + i);
-            dto.setItemName("Sản phẩm demo " + i);
+            dto.setItemName("Demo Product " + i);
             dto.setCurrentPrice(1_000_000 * i);
             dto.setStartingPrice(500_000 * i);
             dto.setStatus(i % 2 == 0 ? AuctionStatus.RUNNING : AuctionStatus.DRAFT);
             dto.setEndTime(LocalDateTime.now().plusDays(i));
             dto.setTotalBids(i * 2);
-            dto.setItemDescription("Mô tả sản phẩm số " + i);
-            dto.setSellerName("Người bán demo");
-            dto.setCategoryName(i % 3 == 0 ? "Điện tử" : (i % 2 == 0 ? "Xe cộ" : "Nghệ thuật"));
+            // CHANGED: "Mô tả sản phẩm số " -> "Description for product No. "
+            dto.setItemDescription("Description for product No. " + i);
+            dto.setSellerName("Demo Seller");
+            // CHANGED: "Điện tử" / "Xe cộ" / "Nghệ thuật" -> "Electronics" / "Vehicles" / "Art"
+            dto.setCategoryName(i % 3 == 0 ? "Electronics" : (i % 2 == 0 ? "Vehicles" : "Art"));
             list.add(dto);
         }
         return list;
@@ -33,19 +35,20 @@ public class MockDataProvider {
     public static AuctionDTO getAuctionDetail(String auctionId) {
         AuctionDTO dto = new AuctionDTO();
         dto.setId(auctionId);
-        dto.setItemName("Chi tiết sản phẩm demo");
+        dto.setItemName("Demo Product Details");
         dto.setCurrentPrice(2_500_000);
         dto.setStartingPrice(1_000_000);
         dto.setStatus(AuctionStatus.RUNNING);
         dto.setEndTime(LocalDateTime.now().plusHours(23));
         dto.setTotalBids(12);
         dto.setCurrentWinnerId("bidder_demo");
-        dto.setCurrentWinnerName("Người đặt giá demo");
+        dto.setCurrentWinnerName("Demo Bidder");
         dto.setMinIncrement(100_000);
         dto.setAntiSnipingEnabled(true);
         dto.setAntiSnipingExtensionSeconds(30);
-        dto.setItemDescription("Mô tả chi tiết sản phẩm dùng để test giao diện.");
-        dto.setSellerName("Người bán demo");
+        // CHANGED: Chuỗi mô tả chi tiết sản phẩm chuyển sang Tiếng Anh
+        dto.setItemDescription("Detailed product description used for UI testing layout purposes.");
+        dto.setSellerName("Demo Seller");
         return dto;
     }
 
@@ -66,7 +69,7 @@ public class MockDataProvider {
     }
 
     public static LoginResponse getLoginResponse() {
-        return new LoginResponse(true, "Đăng nhập thành công (chế độ demo)",
+        return new LoginResponse(true, "Login successful (Demo mode)",
                 "user_demo", "demo_user", "BIDDER",
                 "mock_session_123", 50_000_000);
     }
@@ -75,7 +78,7 @@ public class MockDataProvider {
         UserDTO dto = new UserDTO();
         dto.setId("user_demo");
         dto.setUsername("demo_user");
-        dto.setFullName("Người dùng Demo");
+        dto.setFullName("Demo User");
         dto.setEmail("demo@auction.com");
         dto.setRole("BIDDER");
         dto.setBalance(50_000_000);
@@ -88,7 +91,7 @@ public class MockDataProvider {
         for (int i = 1; i <= 3; i++) {
             AuctionDTO dto = new AuctionDTO();
             dto.setId("my_auc_" + i);
-            dto.setItemName("Sản phẩm của tôi " + i);
+            dto.setItemName("My Product " + i);
             dto.setCurrentPrice(2_000_000 * i);
             dto.setStatus(AuctionStatus.DRAFT);
             dto.setEndTime(LocalDateTime.now().plusDays(7));

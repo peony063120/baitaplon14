@@ -52,7 +52,8 @@ public class MessageProtocol {
     try {
       return objectMapper.writeValueAsString(request);
     } catch (Exception e) {
-      throw new RuntimeException("MessageProtocol: Mã hóa đối tượng thất bại -> " + e.getMessage(), e);
+      // CHANGED: "Mã hóa đối tượng thất bại -> " -> "Object encoding failed -> "
+      throw new RuntimeException("MessageProtocol: Object encoding failed -> " + e.getMessage(), e);
     }
   }
 
@@ -66,7 +67,8 @@ public class MessageProtocol {
     try {
       return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
     } catch (Exception e) {
-      throw new RuntimeException("MessageProtocol: Giải mã chuỗi JSON thành Map thất bại -> " + e.getMessage(), e);
+      // CHANGED: "Giải mã chuỗi JSON thành Map thất bại -> " -> "Decoding JSON string to Map failed -> "
+      throw new RuntimeException("MessageProtocol: Decoding JSON string to Map failed -> " + e.getMessage(), e);
     }
   }
 
@@ -81,8 +83,9 @@ public class MessageProtocol {
     try {
       return objectMapper.readValue(json, valueType);
     } catch (Exception e) {
+      // CHANGED: "Giải mã JSON sang lớp " ... " thất bại -> " -> "Decoding JSON to class " ... " failed -> "
       throw new RuntimeException(
-          "MessageProtocol: Giải mã JSON sang lớp " + valueType.getSimpleName() + " thất bại -> " + e.getMessage(), e);
+              "MessageProtocol: Decoding JSON to class " + valueType.getSimpleName() + " failed -> " + e.getMessage(), e);
     }
   }
 
@@ -98,8 +101,9 @@ public class MessageProtocol {
     try {
       return objectMapper.convertValue(from, toType);
     } catch (Exception e) {
+      // CHANGED: "Chuyển đổi đối tượng sang " ... " thất bại -> " -> "Converting value to " ... " failed -> "
       throw new RuntimeException(
-          "MessageProtocol: Chuyển đổi đối tượng sang " + toType.getSimpleName() + " thất bại -> " + e.getMessage(), e);
+              "MessageProtocol: Converting value to " + toType.getSimpleName() + " failed -> " + e.getMessage(), e);
     }
   }
 
@@ -114,7 +118,8 @@ public class MessageProtocol {
     try {
       return objectMapper.writeValueAsString(value);
     } catch (Exception e) {
-      throw new RuntimeException("MessageProtocol: writeValueAsString thất bại -> " + e.getMessage(), e);
+      // CHANGED: "writeValueAsString thất bại -> " -> "writeValueAsString failed -> "
+      throw new RuntimeException("MessageProtocol: writeValueAsString failed -> " + e.getMessage(), e);
     }
   }
 

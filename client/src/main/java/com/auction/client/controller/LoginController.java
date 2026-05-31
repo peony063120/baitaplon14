@@ -61,7 +61,8 @@ public class LoginController {
             try {
                 ClientApp.showMainScreen();
             } catch (Exception e) {
-                showError("Lỗi chuyển màn hình: " + e.getMessage());
+                // CHANGED: "Lỗi chuyển màn hình: " -> "Screen transition error: "
+                showError("Screen transition error: " + e.getMessage());
             }
         } else {
             showError(loginResp.getMessage());
@@ -69,7 +70,7 @@ public class LoginController {
     }
 
     private void onLoginError(String error) {
-        showError("Lỗi kết nối: " + error);
+        showError("Connection error: " + error);
     }
 
     @FXML
@@ -78,9 +79,11 @@ public class LoginController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/register.fxml"));
             Stage stage = (Stage) usernameField.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
-            stage.setTitle("Đăng ký");
+            // CHANGED: "Đăng ký" -> "Register"
+            stage.setTitle("Register");
         } catch (Exception e) {
-            showError("Không thể mở trang đăng ký: " + e.getMessage());
+            // CHANGED: "Không thể mở trang đăng ký: " -> "Cannot open registration page: "
+            showError("Cannot open registration page: " + e.getMessage());
         }
     }
 
@@ -89,11 +92,11 @@ public class LoginController {
         String password = passwordField.getText().trim();
 
         if (username.isEmpty()) {
-            showError("Vui lòng nhập tên đăng nhập");
+            showError("Please enter your username");
             return false;
         }
         if (password.isEmpty()) {
-            showError("Vui lòng nhập mật khẩu");
+            showError("Please enter your password");
             return false;
         }
         errorLabel.setVisible(false);

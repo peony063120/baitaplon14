@@ -38,13 +38,13 @@ public class TimerLabel extends Label {
 
     private void updateDisplay() {
         if (endTime == null) {
-            setText("Chua xac dinh");
+            setText("TBD"); // Dịch từ "Chua xac dinh" (To Be Determined - viết tắt phổ biến trên UI)
             return;
         }
 
         long seconds = java.time.Duration.between(LocalDateTime.now(), endTime).getSeconds();
         if (seconds <= 0) {
-            setText("Da ket thuc");
+            setText("Ended"); // Dịch từ "Da ket thuc"
             if (!getStyleClass().contains("ended")) {
                 getStyleClass().add("ended");
             }
@@ -60,14 +60,17 @@ public class TimerLabel extends Label {
         long minutes = (seconds % 3600) / 60;
         long secs = seconds % 60;
 
+        // Thay đổi định dạng chuỗi hiển thị thời gian sang Tiếng Anh
         if (days > 0) {
-            setText(String.format("%d ngay %02d gio", days, hours));
+            // "ngay" -> "d" (days), "gio" -> "h" (hours). Dùng ký tự viết tắt giúp UI card không bị vỡ/tràn text.
+            setText(String.format("%dd %02dh", days, hours));
         } else if (hours > 0) {
             setText(String.format("%02d:%02d:%02d", hours, minutes, secs));
         } else if (minutes > 0) {
             setText(String.format("%02d:%02d", minutes, secs));
         } else {
-            setText(String.format("%02d giay", secs));
+            // "%02d giay" -> "%02ds" (seconds)
+            setText(String.format("%02ds", secs));
         }
     }
 
