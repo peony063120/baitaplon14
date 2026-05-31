@@ -21,18 +21,18 @@
                   style="-fx-background-color: white; -fx-padding: 20 28 20 28;
                          -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 4, 0, 0, 2);">
                 <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Text text="Phiên đấu giá của tôi" styleClass="page-title"
+                    <Text text="My Auctions" styleClass="page-title"
                           style="-fx-font-size: 22px; -fx-font-weight: 800;"/>
                     <Label fx:id="statusLabel" styleClass="muted-text"
                            style="-fx-text-fill: #888; -fx-font-size: 13px;"/>
                 </VBox>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Button text="＋ Tạo phiên mới" styleClass="primary-btn"
+                <Button text="＋ Create New" styleClass="primary-btn"
                         onAction="#onCreateNew"
                         style="-fx-cursor: hand; -fx-background-color: #0e7490;
                                -fx-text-fill: white; -fx-font-weight: 700;
                                -fx-padding: 8 18; -fx-background-radius: 8;"/>
-                <Button text="↻ Tải lại" styleClass="secondary-btn"
+                <Button text="↻ Refresh" styleClass="secondary-btn"
                         onAction="#onRefresh"
                         style="-fx-cursor: hand; -fx-padding: 8 14; -fx-background-radius: 8;"/>
             </HBox>

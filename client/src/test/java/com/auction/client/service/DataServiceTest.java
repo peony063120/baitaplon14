@@ -82,7 +82,7 @@ public class DataServiceTest {
 
   @Test
   public void testLoadAuctions_WhenUseMockIsTrue_ShouldReturnMockDataDirectly() throws Exception {
-    if (AppConfig.USE_MOCK) {
+    if (AppConfig.isUseMock()) {
       CountDownLatch latch = new CountDownLatch(1);
       AtomicReference<List<AuctionDTO>> resultRef = new AtomicReference<>();
 
@@ -101,7 +101,7 @@ public class DataServiceTest {
       assertNotNull(resultRef.get());
       assertFalse(resultRef.get().isEmpty());
     } else {
-      System.out.println("Bỏ qua test vì AppConfig.USE_MOCK đang là false.");
+      System.out.println("Bỏ qua test vì AppConfig.isUseMock() đang là false.");
     }
   }
 
@@ -120,7 +120,7 @@ public class DataServiceTest {
         },
         error -> {
           latch.countDown();
-          if (AppConfig.AUTO_FALLBACK) {
+          if (AppConfig.isAutoFallback()) {
             fail("Hệ thống phải tự động fallback về dữ liệu mock chứ không được đẩy lỗi ra UI");
           }
         }
@@ -128,7 +128,7 @@ public class DataServiceTest {
 
     latch.await(2, TimeUnit.SECONDS);
 
-    if (AppConfig.AUTO_FALLBACK) {
+    if (AppConfig.isAutoFallback()) {
       assertNotNull(resultRef.get());
       assertEquals(6, resultRef.get().size());
     }
@@ -145,7 +145,7 @@ public class DataServiceTest {
     DataService.getInstance().loadAuctions(
         auctions -> {
           latch.countDown();
-          if (!AppConfig.AUTO_FALLBACK) {
+          if (!AppConfig.isAutoFallback()) {
             fail("Mạng lỗi và không có fallback thì không thể kích hoạt luồng thành công");
           }
         },
@@ -157,7 +157,7 @@ public class DataServiceTest {
 
     latch.await(2, TimeUnit.SECONDS);
 
-    if (!AppConfig.AUTO_FALLBACK) {
+    if (!AppConfig.isAutoFallback()) {
       assertNotNull(errorRef.get());
     }
   }

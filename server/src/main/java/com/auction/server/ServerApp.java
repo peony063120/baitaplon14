@@ -16,13 +16,11 @@ import com.auction.server.listener.BidEventListenerImpl;
 import com.auction.server.scheduler.AuctionScheduler;
 import com.auction.server.scheduler.AutoBidProcessor;
 import com.auction.server.service.*;
-import com.auction.common.entity.Bidder;
-import com.auction.server.dao.UserDAO;
+import com.auction.server.dao.SqlDataLoader;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.sql.SQLException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -36,17 +34,23 @@ public class ServerApp {
         System.out.println("Starting Online Auction Server...");
         try {
             DatabaseConnection.getInstance(); // Khởi tạo storage
-            org.h2.tools.Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8089").start();
+            try {
+                org.h2.tools.Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8089").start();
+                System.out.println("H2 Console: http://localhost:8089");
+            } catch (Exception e) {
+                System.out.println("H2 Console unavailable (port 8089 may be in use): " + e.getMessage());
+            }
             System.out.println("Database connection established.");
 
-            UserDAO userDAO = UserDAO.getInstance();
+            UserDAO.getInstance();
             AuctionDAO.getInstance();
 
-            // Seed default users for demo/testing if store is empty
-            if (userDAO.findUserByUsername("demo") == null) {
-                System.out.println("Seeding demo users: demo/demo, alice/alice");
-                userDAO.saveUser(new Bidder("demo", "demo", "demo@example.com", "Demo User", 1000.0));
-                userDAO.saveUser(new Bidder("alice", "alice", "alice@example.com", "Alice", 500.0));
+            // Load seed data từ file .sql nếu được cấu hình
+            // Bật:  -Dserver.seed=true  (mặc định)
+            // Tắt: -Dserver.seed=false (không load seed, server rỗng)
+            boolean doSeed = Boolean.parseBoolean(System.getProperty("server.seed", "true"));
+            if (doSeed) {
+                SqlDataLoader.loadSeedData();
             }
 
             // Services
@@ -87,7 +91,7 @@ public class ServerApp {
                         auctionController, userController, bidController, auctionSubject);
                 clientThreadPool.submit(handler);
             }
-        } catch (IOException | SQLException e) {
+        } catch (IOException e) {
             System.err.println("Server error: " + e.getMessage());
             e.printStackTrace();
         } finally {

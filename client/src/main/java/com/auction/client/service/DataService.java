@@ -23,7 +23,7 @@ public class DataService {
 
     // ==================== LOAD AUCTIONS ====================
     public void loadAuctions(Consumer<List<AuctionDTO>> onSuccess, Consumer<String> onError) {
-        if (AppConfig.USE_MOCK) {
+        if (AppConfig.isUseMock()) {
             if (onSuccess != null) onSuccess.accept(MockDataProvider.getAuctions());
             return;
         }
@@ -33,7 +33,7 @@ public class DataService {
                 List<AuctionDTO> auctions = ResponseHandler.parseAuctionListFromText(response);
                 if (onSuccess != null) Platform.runLater(() -> onSuccess.accept(auctions));
             } catch (IOException e) {
-                if (AppConfig.AUTO_FALLBACK) {
+                if (AppConfig.isAutoFallback()) {
                     System.err.println("API fail, fallback to mock: " + e.getMessage());
                     if (onSuccess != null) Platform.runLater(() -> onSuccess.accept(MockDataProvider.getAuctions()));
                 } else if (onError != null) {
@@ -45,7 +45,7 @@ public class DataService {
 
     // ==================== LOAD AUCTION DETAIL ====================
     public void loadAuctionDetail(String auctionId, Consumer<AuctionDTO> onSuccess, Consumer<String> onError) {
-        if (AppConfig.USE_MOCK) {
+        if (AppConfig.isUseMock()) {
             if (onSuccess != null) onSuccess.accept(MockDataProvider.getAuctionDetail(auctionId));
             return;
         }
@@ -55,7 +55,7 @@ public class DataService {
                 AuctionDTO auction = ResponseHandler.parseAuctionDetailFromText(response);
                 if (onSuccess != null) Platform.runLater(() -> onSuccess.accept(auction));
             } catch (IOException e) {
-                if (AppConfig.AUTO_FALLBACK) {
+                if (AppConfig.isAutoFallback()) {
                     if (onSuccess != null) Platform.runLater(() -> onSuccess.accept(MockDataProvider.getAuctionDetail(auctionId)));
                 } else if (onError != null) {
                     Platform.runLater(() -> onError.accept(e.getMessage()));
@@ -66,7 +66,7 @@ public class DataService {
 
     // ==================== LOAD BID HISTORY ====================
     public void loadBidHistory(String auctionId, Consumer<List<BidTransaction>> onSuccess, Consumer<String> onError) {
-        if (AppConfig.USE_MOCK) {
+        if (AppConfig.isUseMock()) {
             if (onSuccess != null) onSuccess.accept(MockDataProvider.getBidHistory(auctionId));
             return;
         }
@@ -76,7 +76,7 @@ public class DataService {
                 List<BidTransaction> history = ResponseHandler.parseBidHistoryFromText(response);
                 if (onSuccess != null) Platform.runLater(() -> onSuccess.accept(history));
             } catch (IOException e) {
-                if (AppConfig.AUTO_FALLBACK) {
+                if (AppConfig.isAutoFallback()) {
                     if (onSuccess != null) Platform.runLater(() -> onSuccess.accept(MockDataProvider.getBidHistory(auctionId)));
                 } else if (onError != null) {
                     Platform.runLater(() -> onError.accept(e.getMessage()));
@@ -88,7 +88,7 @@ public class DataService {
     // ==================== LOGIN ====================
     public void login(String username, String password, String role,
                       Consumer<LoginResponse> onSuccess, Consumer<String> onError) {
-        if (AppConfig.USE_MOCK) {
+        if (AppConfig.isUseMock()) {
             if (onSuccess != null) onSuccess.accept(MockDataProvider.getLoginResponse());
             return;
         }
@@ -99,7 +99,7 @@ public class DataService {
                 LoginResponse result = ResponseHandler.parseLoginResponse(response);
                 if (onSuccess != null) Platform.runLater(() -> onSuccess.accept(result));
             } catch (IOException e) {
-                if (AppConfig.AUTO_FALLBACK) {
+                if (AppConfig.isAutoFallback()) {
                     if (onSuccess != null) Platform.runLater(() -> onSuccess.accept(MockDataProvider.getLoginResponse()));
                 } else if (onError != null) {
                     Platform.runLater(() -> onError.accept(e.getMessage()));
@@ -110,7 +110,7 @@ public class DataService {
 
     // ==================== LOAD MY AUCTIONS ====================
     public void loadMyAuctions(String sellerId, Consumer<List<AuctionDTO>> onSuccess, Consumer<String> onError) {
-        if (AppConfig.USE_MOCK) {
+        if (AppConfig.isUseMock()) {
             if (onSuccess != null) onSuccess.accept(MockDataProvider.getMyAuctions(sellerId));
             return;
         }
@@ -120,7 +120,7 @@ public class DataService {
                 List<AuctionDTO> auctions = ResponseHandler.parseAuctionListFromText(response);
                 if (onSuccess != null) Platform.runLater(() -> onSuccess.accept(auctions));
             } catch (IOException e) {
-                if (AppConfig.AUTO_FALLBACK) {
+                if (AppConfig.isAutoFallback()) {
                     if (onSuccess != null) Platform.runLater(() -> onSuccess.accept(MockDataProvider.getMyAuctions(sellerId)));
                 } else if (onError != null) {
                     Platform.runLater(() -> onError.accept(e.getMessage()));

@@ -22,6 +22,10 @@ public class Auction {
     private double antiSnipingExtensionSeconds;
     private double minIncrement;
     private List<AutoBidConfig> autoBidConfigs = new ArrayList<>();
+    private String category;
+    private String itemName;
+    private String itemDescription;
+    private String imagePath;
 
     public Auction(String itemId, LocalDateTime startTime, LocalDateTime endTime, double startingPrice) {
         this.id = UUID.randomUUID().toString();
@@ -139,4 +143,16 @@ public class Auction {
     public void addAutoBidConfig(AutoBidConfig config) {
         this.autoBidConfigs.add(config);
     }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
+    public String getItemName() { return itemName; }
+    public void setItemName(String itemName) { this.itemName = itemName; }
+
+    public String getItemDescription() { return itemDescription; }
+    public void setItemDescription(String itemDescription) { this.itemDescription = itemDescription; }
+
+    public String getImagePath() { return imagePath; }
+    public void setImagePath(String imagePath) { this.imagePath = imagePath; }
 }

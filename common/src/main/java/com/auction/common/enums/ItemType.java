@@ -1,9 +1,9 @@
 package com.auction.common.enums;
 
 public enum ItemType {
-    ELECTRONICS("Đồ điện tử"),
-    ART("Nghệ thuật"),
-    VEHICLE("Phương tiện");
+    ELECTRONICS("Electronics"),
+    ART("Art"),
+    VEHICLE("Vehicle");
 
     private final String label;
     ItemType(String label){

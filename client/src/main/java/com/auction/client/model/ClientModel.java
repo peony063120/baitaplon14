@@ -2,6 +2,9 @@ package com.auction.client.model;
 
 import com.auction.common.dto.UserDTO;
 import com.auction.common.entity.User;
+import com.auction.client.network.ServerConnection;
+
+import java.io.IOException;
 
 public class ClientModel {
 
@@ -50,12 +53,18 @@ public class ClientModel {
     /**
      * Đăng ký tài khoản mới
      */
-    public boolean register(UserDTO userDTO) {
+    public boolean register(UserDTO userDTO) throws IOException {
         if (userDTO == null) {
             return false;
         }
-        // TODO: gọi ServerConnection để đăng ký
-        return true;
+        // Format: REGISTER:username:password:email:fullName:role
+        String request = "REGISTER:" + userDTO.getUsername()
+                + ":" + userDTO.getPassword()
+                + ":" + userDTO.getEmail()
+                + ":" + userDTO.getFullName()
+                + ":" + userDTO.getRole();
+        String response = ServerConnection.getInstance().sendRequest(request);
+        return "REGISTER_OK".equals(response);
     }
 
     /**
@@ -98,12 +107,21 @@ public class ClientModel {
     public void setSession(String sessionToken, String userId, String username, String role, double balance) {
         this.session = new Session(sessionToken, userId);
 
-        // Tạo đối tượng User tạm thời (Bidder) để lưu thông tin
-        com.auction.common.entity.Bidder user = new com.auction.common.entity.Bidder(
-                username, "", "", username
-        );
-        user.setId(userId);
-        user.addBalance(balance);
+        User user;
+        if ("SELLER".equalsIgnoreCase(role)) {
+            user = new com.auction.common.entity.Seller(username, "", "", username);
+            user.setId(userId);
+        } else if ("ADMIN".equalsIgnoreCase(role)) {
+            user = new com.auction.common.entity.Admin(username, "", "", username, "SUPER");
+            user.setId(userId);
+        } else {
+            com.auction.common.entity.Bidder bidder = new com.auction.common.entity.Bidder(
+                    username, "", "", username
+            );
+            bidder.setId(userId);
+            bidder.addBalance(balance);
+            user = bidder;
+        }
         this.currentUser = user;
     }
 

@@ -7,6 +7,7 @@ package com.auction.client.controller;
  */
 
 import com.auction.client.ClientApp;
+import com.auction.client.config.AppConfig;
 import com.auction.client.model.ClientModel;
 import com.auction.client.service.DataService;
 import com.auction.common.dto.LoginResponse;
@@ -20,16 +21,24 @@ public class LoginController {
 
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
-    @FXML private ComboBox<String> roleCombo;   // ← THÊM roleCombo
+    @FXML private ComboBox<String> roleCombo;
     @FXML private Label errorLabel;
+    @FXML private ToggleButton mockToggle;
 
     private final ClientModel clientModel = ClientModel.getInstance();
 
     @FXML
     public void initialize() {
-        // Khởi tạo roleCombo
-        roleCombo.getItems().addAll("BIDDER", "SELLER", "ADMIN");
-        roleCombo.setValue("BIDDER");
+        boolean mock = AppConfig.isUseMock();
+        mockToggle.setSelected(mock);
+        mockToggle.setText(mock ? "MOCK MODE" : "LIVE");
+    }
+
+    @FXML
+    public void toggleMock() {
+        boolean nowMock = mockToggle.isSelected();
+        AppConfig.setUseMock(nowMock);
+        mockToggle.setText(nowMock ? "MOCK MODE" : "LIVE");
     }
 
     @FXML
@@ -49,7 +58,6 @@ public class LoginController {
 
     private void onLoginSuccess(LoginResponse loginResp) {
         if (loginResp.isSuccess()) {
-            // Lưu session vào ClientModel
             clientModel.setSession(
                     loginResp.getSessionToken(),
                     loginResp.getUserId(),
@@ -57,12 +65,17 @@ public class LoginController {
                     loginResp.getRole(),
                     loginResp.getBalance()
             );
-            // Chuyển sang màn hình chính
             try {
-                ClientApp.showMainScreen();
+                String role = loginResp.getRole();
+                if ("ADMIN".equalsIgnoreCase(role)) {
+                    ClientApp.showAdminDashboard();
+                } else if ("SELLER".equalsIgnoreCase(role)) {
+                    ClientApp.showSellerScreen();
+                } else {
+                    ClientApp.showMainScreen();
+                }
             } catch (Exception e) {
-                // CHANGED: "Lỗi chuyển màn hình: " -> "Screen transition error: "
-                showError("Screen transition error: " + e.getMessage());
+                showError("Navigation error: " + e.getMessage());
             }
         } else {
             showError(loginResp.getMessage());
@@ -79,11 +92,9 @@ public class LoginController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/client/view/register.fxml"));
             Stage stage = (Stage) usernameField.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
-            // CHANGED: "Đăng ký" -> "Register"
             stage.setTitle("Register");
         } catch (Exception e) {
-            // CHANGED: "Không thể mở trang đăng ký: " -> "Cannot open registration page: "
-            showError("Cannot open registration page: " + e.getMessage());
+            showError("Cannot open registration: " + e.getMessage());
         }
     }
 
@@ -92,11 +103,11 @@ public class LoginController {
         String password = passwordField.getText().trim();
 
         if (username.isEmpty()) {
-            showError("Please enter your username");
+            showError("Please enter username");
             return false;
         }
         if (password.isEmpty()) {
-            showError("Please enter your password");
+            showError("Please enter password");
             return false;
         }
         errorLabel.setVisible(false);

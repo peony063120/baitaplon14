@@ -71,45 +71,43 @@ public class ResponseHandlerTest {
     }
   }
 
-  // ==================== PARSE TEXT THUẦN ====================
+  // ==================== PARSE TEXT ====================
 
   @Test
   public void testParseLoginResponse_TextFormat_WithSuccessString() {
-    String rawTextResponse = "LOGIN_OK:session_token_xyz_789:user_id_10:BIDDER:750000.0";
+    // Format: LOGIN_OK:sessionToken:userId:username:role:balance
+    String rawTextResponse = "LOGIN_OK:session_token_xyz_789:user_id_10:testuser:BIDDER:750000.0";
     LoginResponse response = ResponseHandler.parseLoginResponse(rawTextResponse);
 
     assertTrue(response.isSuccess());
-    assertEquals("Đăng nhập thành công", response.getMessage());
+    assertEquals("Login successful", response.getMessage());
     assertEquals("session_token_xyz_789", response.getSessionToken());
     assertEquals(750000.0, response.getBalance(), 0.001);
   }
 
   @Test
   public void testParseLoginResponse_TextFormat_WithFailString() {
-    String rawTextResponse = "LOGIN_FAIL:Tài khoản người dùng đã bị đình chỉ";
+    String rawTextResponse = "LOGIN_FAIL:User account has been suspended";
     LoginResponse response = ResponseHandler.parseLoginResponse(rawTextResponse);
 
     assertFalse(response.isSuccess());
-    assertEquals("Tài khoản người dùng đã bị đình chỉ", response.getMessage());
+    assertEquals("User account has been suspended", response.getMessage());
   }
 
   @Test
   public void testParseAuctionListFromText_WithMultipleLines() {
-    // Sử dụng Text Block (Java 15+) giúp tránh hoàn toàn lỗi cú pháp nối chuỗi và ký tự xuống dòng
-    String multipleLinesText = """
-                AUCTIONS_COUNT:2
-                AUCTION:A01:Máy tính Dell XPS:2200.0:DRAFT:540000
-                AUCTION:A02:Bàn phím cơ Custom:350.0:FINISHED:0
-                """;
+    String multipleLinesText = "AUCTIONS_COUNT:2" +
+                "||AUCTION:A01:MacBook Dell XPS:2200.0:DRAFT:Electronics:540000" +
+                "||AUCTION:A02:Custom Mechanical Keyboard:350.0:FINISHED:Art:0";
 
-    List<AuctionDTO> list = ResponseHandler.parseAuctionListFromText(multipleLinesText.trim());
+    List<AuctionDTO> list = ResponseHandler.parseAuctionListFromText(multipleLinesText);
 
     assertNotNull(list);
     assertEquals(2, list.size());
 
     AuctionDTO firstItem = list.get(0);
     assertEquals("A01", firstItem.getId());
-    assertEquals("Máy tính Dell XPS", firstItem.getItemName());
+    assertEquals("MacBook Dell XPS", firstItem.getItemName());
     assertEquals(2200.0, firstItem.getCurrentPrice(), 0.001);
 
     if (firstItem.getStatus() != null) {
@@ -123,13 +121,13 @@ public class ResponseHandlerTest {
 
   @Test
   public void testParseAuctionDetailFromText_ValidFormat() {
-    String detailText = "AUCTION:A99:Tivi Sony 4K:1500.0:DRAFT:winner_user_3:8:120000";
+    String detailText = "AUCTION:A99:Sony TV 4K:1500.0:DRAFT:winner_user_3:8:120000";
 
     AuctionDTO dto = ResponseHandler.parseAuctionDetailFromText(detailText.trim());
 
     assertNotNull(dto);
     assertEquals("A99", dto.getId());
-    assertEquals("Tivi Sony 4K", dto.getItemName());
+    assertEquals("Sony TV 4K", dto.getItemName());
 
     if (dto.getStatus() != null) {
       assertEquals(AuctionStatus.DRAFT.name(), dto.getStatus().toString());

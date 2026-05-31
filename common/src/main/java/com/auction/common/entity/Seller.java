@@ -3,7 +3,7 @@ package com.auction.common.entity;
 import java.util.ArrayList;
 import java.util.List;
 
-class Seller extends User {
+public class Seller extends User {
     private List<String> auctionIds;
     public Seller(String username, String password, String email, String fullName) {
         super(username, password, email, fullName);

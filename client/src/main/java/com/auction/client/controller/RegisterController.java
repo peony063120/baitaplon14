@@ -42,8 +42,7 @@ public class RegisterController {
 
         // Hiển thị trạng thái đang xử lý
         errorLabel.setStyle("-fx-text-fill: #2563EB;");
-        // CHANGED: "🔄 Đang xử lý đăng ký..." -> "🔄 Processing registration..."
-        showError("🔄 Processing registration...");
+        showError("🔄 Đang xử lý đăng ký...");
 
         String username = usernameField.getText().trim();
         String password = passwordField.getText().trim();
@@ -58,7 +57,7 @@ public class RegisterController {
                 boolean exists = checkUsernameExists(username);
                 if (exists) {
                     Platform.runLater(() -> {
-                        showError("❌ Username already exists");
+                        showError("❌ Tên đăng nhập đã tồn tại");
                         errorLabel.setStyle("-fx-text-fill: #DC2626;");
                     });
                     return;
@@ -68,7 +67,7 @@ public class RegisterController {
                 UserDTO dto = new UserDTO(
                         null,
                         username,
-                        encryptPassword(password),
+                        password,
                         email,
                         fullName,
                         role,
@@ -79,8 +78,7 @@ public class RegisterController {
 
                 Platform.runLater(() -> {
                     if (success) {
-                        // CHANGED: "✅ Đăng ký thành công! Chuyển đến trang đăng nhập..." -> "✅ Registration successful! Redirecting to login..."
-                        showError("✅ Registration successful! Redirecting to login...");
+                        showError("✅ Đăng ký thành công! Chuyển đến trang đăng nhập...");
                         errorLabel.setStyle("-fx-text-fill: #16A34A;");
                         // Chuyển về màn hình login sau 1.5 giây
                         new Thread(() -> {
@@ -88,14 +86,13 @@ public class RegisterController {
                             Platform.runLater(this::goToLogin);
                         }).start();
                     } else {
-                        // CHANGED: "❌ Đăng ký thất bại. Vui lòng thử lại." -> "❌ Registration failed. Please try again."
-                        showError("❌ Registration failed. Please try again.");
+                        showError("❌ Đăng ký thất bại. Vui lòng thử lại.");
                         errorLabel.setStyle("-fx-text-fill: #DC2626;");
                     }
                 });
             } catch (IOException e) {
                 Platform.runLater(() -> {
-                    showError("❌ Server connection error: " + e.getMessage());
+                    showError("❌ Lỗi kết nối server: " + e.getMessage());
                     errorLabel.setStyle("-fx-text-fill: #DC2626;");
                 });
             }
@@ -125,35 +122,35 @@ public class RegisterController {
         String fullName = fullNameField.getText().trim();
 
         if (username.isEmpty()) {
-            showError("⚠️ Please enter a username");
+            showError("⚠️ Vui lòng nhập tên đăng nhập");
             return false;
         }
         if (username.length() < 3) {
-            showError("⚠️ Username must be at least 3 characters long");
+            showError("⚠️ Tên đăng nhập phải có ít nhất 3 ký tự");
             return false;
         }
         if (password.isEmpty()) {
-            showError("⚠️ Please enter a password");
+            showError("⚠️ Vui lòng nhập mật khẩu");
             return false;
         }
         if (password.length() < 6) {
-            showError("⚠️ Password must be at least 6 characters long");
+            showError("⚠️ Mật khẩu phải có ít nhất 6 ký tự");
             return false;
         }
         if (!password.equals(confirm)) {
-            showError("⚠️ Passwords do not match");
+            showError("⚠️ Mật khẩu xác nhận không khớp");
             return false;
         }
         if (email.isEmpty()) {
-            showError("⚠️ Please enter an email address");
+            showError("⚠️ Vui lòng nhập email");
             return false;
         }
         if (!email.contains("@") || !email.contains(".")) {
-            showError("⚠️ Invalid email address");
+            showError("⚠️ Email không hợp lệ");
             return false;
         }
         if (fullName.isEmpty()) {
-            showError("⚠️ Please enter your full name");
+            showError("⚠️ Vui lòng nhập họ và tên");
             return false;
         }
 
@@ -169,19 +166,8 @@ public class RegisterController {
             stage.setScene(new Scene(loader.load()));
             stage.setTitle("Login");
         } catch (Exception e) {
-            // CHANGED: "❌ Lỗi điều hướng: " -> "❌ Navigation error: "
-            showError("❌ Navigation error: " + e.getMessage());
+            showError("❌ Lỗi điều hướng: " + e.getMessage());
         }
-    }
-
-    /**
-     * Mã hóa mật khẩu đơn giản.
-     * @param password Mật khẩu plain text
-     * @return Mật khẩu đã mã hóa
-     */
-    private String encryptPassword(String password) {
-        // TODO: Sử dụng mã hóa mạnh hơn (BCrypt) trong production
-        return Integer.toHexString(password.hashCode());
     }
 
     private void showError(String message) {

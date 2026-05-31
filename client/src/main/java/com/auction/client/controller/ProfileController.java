@@ -52,7 +52,7 @@ public class ProfileController {
             emailField.setText(user.getEmail());
 
             if (user instanceof Bidder bidder) {
-                balanceLabel.setText(String.format("VND %,.0f", bidder.getBalance()));
+                balanceLabel.setText(String.format("%,.0f VNĐ", bidder.getBalance()));
             } else {
                 balanceLabel.setText("N/A");
             }
@@ -64,12 +64,11 @@ public class ProfileController {
      * @param userDTO DTO chứa thông tin mới
      */
     public void updateProfile(UserDTO userDTO) {
-        String userId = clientModel.getCurrentUser().getId();
+        String username = clientModel.getCurrentUser().getUsername();
 
-        // Chạy trong background thread
         new Thread(() -> {
             try {
-                String response = ServerConnection.getInstance().sendRequest("UPDATE_PROFILE:" + userId +
+                String response = ServerConnection.getInstance().sendRequest("UPDATE_PROFILE:" + username +
                         ":" + userDTO.getFullName() + ":" + userDTO.getEmail());
 
                 Platform.runLater(() -> {
@@ -80,17 +79,17 @@ public class ProfileController {
                             currentUser.setFullName(userDTO.getFullName());
                             currentUser.setEmail(userDTO.getEmail());
                         }
-                        statusLabel.setText("✅ Profile updated successfully!");
+                        statusLabel.setText("✅ Cập nhật thành công!");
                         statusLabel.setStyle("-fx-text-fill: #16A34A;");
                     } else {
-                        statusLabel.setText("❌ Update failed: " + response);
+                        statusLabel.setText("❌ Cập nhật thất bại: " + response);
                         statusLabel.setStyle("-fx-text-fill: #DC2626;");
                     }
                     clearStatusAfterDelay();
                 });
             } catch (IOException e) {
                 Platform.runLater(() -> {
-                    statusLabel.setText("❌ Connection error: " + e.getMessage());
+                    statusLabel.setText("❌ Lỗi kết nối: " + e.getMessage());
                     statusLabel.setStyle("-fx-text-fill: #DC2626;");
                     clearStatusAfterDelay();
                 });
@@ -104,11 +103,11 @@ public class ProfileController {
         String email = emailField.getText().trim();
 
         if (fullName.isEmpty()) {
-            statusLabel.setText("⚠️ Please enter your full name");
+            statusLabel.setText("⚠️ Vui lòng nhập họ tên");
             return;
         }
         if (email.isEmpty()) {
-            statusLabel.setText("⚠️ Please enter your email");
+            statusLabel.setText("⚠️ Vui lòng nhập email");
             return;
         }
 
@@ -125,16 +124,15 @@ public class ProfileController {
     @FXML
     public void addBalance(double amount) {
         if (amount <= 0) {
-            // CHANGED: "⚠️ Số tiền phải > 0" -> "⚠️ Amount must be greater than 0"
-            statusLabel.setText("⚠️ Amount must be greater than 0");
+            statusLabel.setText("⚠️ Số tiền phải > 0");
             return;
         }
 
-        String userId = clientModel.getCurrentUser().getId();
+        String username = clientModel.getCurrentUser().getUsername();
 
         new Thread(() -> {
             try {
-                String response = ServerConnection.getInstance().sendRequest("ADD_BALANCE:" + userId + ":" + amount);
+                String response = ServerConnection.getInstance().sendRequest("ADD_BALANCE:" + username + ":" + amount);
 
                 Platform.runLater(() -> {
                     if (response != null && response.startsWith("BALANCE_OK")) {
@@ -142,22 +140,20 @@ public class ProfileController {
                         User user = clientModel.getCurrentUser();
                         if (user instanceof Bidder bidder) {
                             bidder.addBalance(amount);
-                            balanceLabel.setText(String.format("VND %,.0f", bidder.getBalance()));
+                            balanceLabel.setText(String.format("%,.0f VNĐ", bidder.getBalance()));
                         }
-                        // CHANGED: "✅ Nạp tiền thành công!" -> "✅ Deposit successful!"
-                        statusLabel.setText("✅ Deposit successful!");
+                        statusLabel.setText("✅ Nạp tiền thành công!");
                         statusLabel.setStyle("-fx-text-fill: #16A34A;");
                         addBalanceField.clear();
                     } else {
-                        // CHANGED: "❌ Nạp tiền thất bại: " -> "❌ Deposit failed: "
-                        statusLabel.setText("❌ Deposit failed: " + response);
+                        statusLabel.setText("❌ Nạp tiền thất bại: " + response);
                         statusLabel.setStyle("-fx-text-fill: #DC2626;");
                     }
                     clearStatusAfterDelay();
                 });
             } catch (IOException e) {
                 Platform.runLater(() -> {
-                    statusLabel.setText("❌ Connection error: " + e.getMessage());
+                    statusLabel.setText("❌ Lỗi kết nối: " + e.getMessage());
                     statusLabel.setStyle("-fx-text-fill: #DC2626;");
                     clearStatusAfterDelay();
                 });
@@ -171,8 +167,7 @@ public class ProfileController {
             double amount = Double.parseDouble(addBalanceField.getText().trim());
             addBalance(amount);
         } catch (NumberFormatException e) {
-            // CHANGED: "⚠️ Số tiền không hợp lệ" -> "⚠️ Invalid amount"
-            statusLabel.setText("⚠️ Invalid amount");
+            statusLabel.setText("⚠️ Số tiền không hợp lệ");
         }
     }
 
@@ -184,35 +179,35 @@ public class ProfileController {
     @FXML
     public void changePassword(String oldPassword, String newPassword) {
         if (oldPassword == null || oldPassword.isEmpty()) {
-            statusLabel.setText("⚠️ Please enter your old password");
+            statusLabel.setText("⚠️ Vui lòng nhập mật khẩu cũ");
             return;
         }
         if (newPassword == null || newPassword.length() < 6) {
-            statusLabel.setText("⚠️ New password must be at least 6 characters long");
+            statusLabel.setText("⚠️ Mật khẩu mới phải có ít nhất 6 ký tự");
             return;
         }
 
-        String userId = clientModel.getCurrentUser().getId();
+        String username = clientModel.getCurrentUser().getUsername();
 
         new Thread(() -> {
             try {
-                String response = ServerConnection.getInstance().sendRequest("CHANGE_PASSWORD:" + userId + ":" + oldPassword + ":" + newPassword);
+                String response = ServerConnection.getInstance().sendRequest("CHANGE_PASSWORD:" + username + ":" + oldPassword + ":" + newPassword);
 
                 Platform.runLater(() -> {
                     if (response != null && response.startsWith("CHANGE_OK")) {
-                        statusLabel.setText("✅ Password changed successfully!");
+                        statusLabel.setText("✅ Đổi mật khẩu thành công!");
                         statusLabel.setStyle("-fx-text-fill: #16A34A;");
                         oldPasswordField.clear();
                         newPasswordField.clear();
                     } else {
-                        statusLabel.setText("❌ Incorrect old password");
+                        statusLabel.setText("❌ Mật khẩu cũ không đúng");
                         statusLabel.setStyle("-fx-text-fill: #DC2626;");
                     }
                     clearStatusAfterDelay();
                 });
             } catch (IOException e) {
                 Platform.runLater(() -> {
-                    statusLabel.setText("❌ Connection error: " + e.getMessage());
+                    statusLabel.setText("❌ Lỗi kết nối: " + e.getMessage());
                     statusLabel.setStyle("-fx-text-fill: #DC2626;");
                     clearStatusAfterDelay();
                 });
@@ -234,14 +229,13 @@ public class ProfileController {
 
             BidHistoryController controller = loader.getController();
             // Load lịch sử bid của user hiện tại
-            String userId = clientModel.getCurrentUser().getId();
-            controller.loadBidHistoryByUser(userId);
+        String username = clientModel.getCurrentUser().getUsername();
+            controller.loadBidHistoryByUser(username);
 
-            // CHANGED: "Lịch sử đặt giá của tôi" -> "My Bid History"
-            stage.setTitle("My Bid History");
+            stage.setTitle("Lịch sử đặt giá của tôi");
             stage.show();
         } catch (Exception e) {
-            statusLabel.setText("❌ Error: " + e.getMessage());
+            statusLabel.setText("❌ Lỗi: " + e.getMessage());
         }
     }
 

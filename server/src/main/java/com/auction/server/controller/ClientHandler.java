@@ -8,11 +8,13 @@ import com.auction.server.controller.AuctionController;
 import com.auction.server.controller.BidController;
 import com.auction.server.controller.UserController;
 import com.auction.common.exception.AuctionNotFoundException;
+import com.auction.common.enums.AuctionStatus;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -67,11 +69,17 @@ public class ClientHandler implements Runnable {
                 case "REGISTER" -> handleRegister(payload);
                 case "GET_AUCTIONS" -> handleGetAllAuctions();
                 case "GET_AUCTION" -> handleGetAuction(payload);
+                case "GET_MY_AUCTIONS" -> handleGetMyAuctions(payload);
                 case "CREATE_AUCTION" -> handleCreateAuction(payload);
                 case "PLACE_BID" -> handlePlaceBid(payload);
                 case "GET_BID_HISTORY" -> handleGetBidHistory(payload);
                 case "CONFIGURE_AUTO_BID" -> handleConfigureAutoBid(payload);
                 case "CANCEL_AUTO_BID" -> handleCancelAutoBid(payload);
+                case "ADD_BALANCE" -> handleAddBalance(payload);
+                case "GET_PENDING_AUCTIONS" -> handleGetPendingAuctions();
+                case "APPROVE_AUCTION" -> handleApproveAuction(payload);
+                case "REJECT_AUCTION" -> handleRejectAuction(payload);
+                case "GET_USER_COUNT" -> handleGetUserCount();
                 case "SUBSCRIBE" -> handleSubscribe();
                 case "UNSUBSCRIBE" -> handleUnsubscribe();
                 default -> out.println("ERROR:Unknown command");
@@ -103,6 +111,55 @@ public class ClientHandler implements Runnable {
         out.println("REGISTER_OK");
     }
 
+    private void handleAddBalance(String payload) {
+        String[] p = payload.split(":");
+        // p[0]=userId, p[1]=amount
+        String userId = p[0];
+        double amount = Double.parseDouble(p[1]);
+        userController.addBalance(userId, amount);
+        out.println("BALANCE_OK");
+    }
+
+        private void handleGetUserCount() {
+        int count = com.auction.server.dao.UserDAO.getInstance().getAllUsers().size();
+        out.println("USER_COUNT:" + count);
+    }
+
+    private void handleGetPendingAuctions() {
+        java.util.List<com.auction.common.dto.AuctionDTO> all = auctionController.getAllAuctions();
+        java.util.List<com.auction.common.dto.AuctionDTO> pending = new java.util.ArrayList<>();
+        for (com.auction.common.dto.AuctionDTO a : all) {
+            if (a.getStatus() == AuctionStatus.PENDING) {
+                pending.add(a);
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("PENDING_COUNT:").append(pending.size());
+        for (com.auction.common.dto.AuctionDTO a : pending) {
+            sb.append("||PENDING:").append(a.getId()).append(":")
+                    .append(a.getItemName() != null ? a.getItemName() : "").append(":")
+                    .append(a.getCurrentPrice()).append(":")
+                    .append(a.getSellerId() != null ? a.getSellerId() : "").append(":")
+                    .append(a.getStartTime() != null ? a.getStartTime().toString() : "").append(":")
+                    .append(a.getEndTime() != null ? a.getEndTime().toString() : "");
+        }
+        out.println(sb.toString());
+    }
+
+    private void handleApproveAuction(String payload) {
+        String[] p = payload.split(":");
+        String auctionId = p[0];
+        auctionController.updateAuctionStatus(auctionId, AuctionStatus.RUNNING);
+        out.println("APPROVE_OK");
+    }
+
+    private void handleRejectAuction(String payload) {
+        String[] p = payload.split(":");
+        String auctionId = p[0];
+        auctionController.updateAuctionStatus(auctionId, AuctionStatus.CANCELLED);
+        out.println("REJECT_OK");
+    }
+
     private void handleGetAllAuctions() {
         // Đã đổi var thành List<AuctionDTO> chuẩn Java 8
         java.util.List<com.auction.common.dto.AuctionDTO> auctions = auctionController.getAllAuctions();
@@ -112,6 +169,7 @@ public class ClientHandler implements Runnable {
         for (com.auction.common.dto.AuctionDTO a : auctions) {
             sb.append("||AUCTION:").append(a.getId()).append(":").append(a.getItemName())
                     .append(":").append(a.getCurrentPrice()).append(":").append(a.getStatus().name())
+                    .append(":").append(a.getCategory())
                     .append(":").append(a.getRemainingTimeMillis());
         }
         out.println(sb.toString());
@@ -133,14 +191,53 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    private void handleGetMyAuctions(String sellerId) {
+        java.util.List<AuctionDTO> auctions = auctionController.getAuctionsBySeller(sellerId);
+        StringBuilder sb = new StringBuilder();
+        sb.append("AUCTIONS_COUNT:").append(auctions.size());
+        for (AuctionDTO a : auctions) {
+            sb.append("||AUCTION:").append(a.getId()).append(":")
+                    .append(a.getItemName() != null ? a.getItemName() : "").append(":")
+                    .append(a.getCurrentPrice()).append(":")
+                    .append(a.getStatus()).append(":")
+                    .append(a.getCategory() != null ? a.getCategory() : "").append(":")
+                    .append(a.getEndTime() != null ? a.getEndTime().toString() : "");
+        }
+        out.println(sb.toString());
+    }
+
     private void handleCreateAuction(String payload) {
-        String[] p = payload.split(":");
-        AuctionDTO dto = new AuctionDTO();
-        dto.setItemId(p[0]);
-        dto.setSellerId(p[1]);
-        dto.setCurrentPrice(Double.parseDouble(p[2]));
-        auctionController.createAuction(dto);
-        out.println("CREATE_AUCTION_OK");
+        try {
+            // Format: itemName|itemDescription|startingPrice|sellerUsername|startTime|endTime|minIncrement|category
+            String[] p = payload.split("\\|", -1);
+            AuctionDTO dto = new AuctionDTO();
+            String itemName = p.length > 0 ? p[0].replace("\\n", "\n") : "";
+            String itemDescription = p.length > 1 ? p[1].replace("\\n", "\n") : "";
+            double startingPrice = p.length > 2 ? Double.parseDouble(p[2]) : 0;
+            String sellerUsername = p.length > 3 ? p[3] : "";
+            LocalDateTime startTime = p.length > 4 && !p[4].isEmpty() ? LocalDateTime.parse(p[4]) : LocalDateTime.now();
+            LocalDateTime endTime = p.length > 5 && !p[5].isEmpty() ? LocalDateTime.parse(p[5]) : startTime.plusDays(7);
+            double minIncrement = p.length > 6 ? Double.parseDouble(p[6]) : 1.0;
+            String category = p.length > 7 ? p[7] : "";
+            String imagePath = p.length > 8 ? p[8] : "";
+
+            dto.setItemName(itemName);
+            dto.setItemDescription(itemDescription);
+            dto.setStartingPrice(startingPrice);
+            dto.setCurrentPrice(startingPrice);
+            dto.setSellerId(sellerUsername);
+            dto.setStartTime(startTime);
+            dto.setEndTime(endTime);
+            dto.setMinIncrement(minIncrement);
+            dto.setCategory(category);
+            dto.setImagePath(imagePath);
+            dto.setStatus(AuctionStatus.PENDING);
+
+            auctionController.createAuction(dto);
+            out.println("CREATE_AUCTION_OK");
+        } catch (Exception e) {
+            out.println("ERROR:Create auction failed: " + e.getMessage());
+        }
     }
 
     private void handlePlaceBid(String payload) throws InvalidBidException {

@@ -48,9 +48,9 @@ public class MainController {
 
         User currentUser = clientModel.getCurrentUser();
         if (currentUser instanceof Bidder bidder) {
-            balanceLabel.setText(String.format("VND %,.0f", bidder.getBalance()));
+            balanceLabel.setText(String.format("$%,.0f", bidder.getBalance()));
         } else {
-            balanceLabel.setText("VND 0");
+            balanceLabel.setText("$0");
         }
 
         boolean seller = currentUser != null && "SELLER".equalsIgnoreCase(currentUser.getRole());

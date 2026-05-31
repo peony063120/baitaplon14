@@ -42,6 +42,10 @@ public class UserDAO {
     return store.get(username);
   }
 
+  public java.util.List<User> getAllUsers() {
+    return new java.util.ArrayList<>(store.values());
+  }
+
   public User findUserById(String id) {
     if (id == null) return null;
     return store.values().stream()

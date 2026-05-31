@@ -68,7 +68,7 @@ class UserServiceTest {
         when(userDAO.findUserByUsername("john")).thenReturn(bidder);
         LoginResponse response = userService.authenticate("john", "wrong");
         assertFalse(response.isSuccess());
-        assertEquals("Sai tên đăng nhập hoặc mật khẩu", response.getMessage());
+        assertEquals("Invalid username or password", response.getMessage());
     }
 
     @Test

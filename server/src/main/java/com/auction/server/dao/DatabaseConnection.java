@@ -36,7 +36,7 @@ public class DatabaseConnection {
         System.out.println("[DB] Connected: " + url);
       }
     } catch (ClassNotFoundException | SQLException e) {
-      throw new RuntimeException("Không thể kết nối database: " + e.getMessage(), e);
+      throw new RuntimeException("Cannot connect to database: " + e.getMessage(), e);
     }
     return connection;
   }

@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS auto_bid_configs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE,
     FOREIGN KEY (bidder_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_auction_bidder (auction_id, bidder_id)
+    UNIQUE (auction_id, bidder_id)
     );
 
 -- Indexes để tối ưu truy vấn

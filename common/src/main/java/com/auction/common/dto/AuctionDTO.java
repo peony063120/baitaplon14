@@ -27,6 +27,7 @@ public class AuctionDTO implements Serializable {
     private int antiSnipingExtensionSeconds;
     private String category;          // ← THÊM category
     private String categoryName;      // ← THÊM categoryName
+    private String imagePath;
     private long remainingTimeMillis;
 
     // Constructors
@@ -110,6 +111,9 @@ public class AuctionDTO implements Serializable {
 
     public String getCategoryName() { return categoryName; }
     public void setCategoryName(String categoryName) { this.categoryName = categoryName; }
+
+    public String getImagePath() { return imagePath; }
+    public void setImagePath(String imagePath) { this.imagePath = imagePath; }
 
     // ========== PHƯƠNG THỨC TIỆN ÍCH ==========
     // Alias cho startingPrice (để tương thích với AuctionCard)

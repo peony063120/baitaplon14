@@ -34,6 +34,13 @@ public class AuctionService {
                 .collect(Collectors.toList());
     }
 
+    public List<AuctionDTO> getAuctionsBySeller(String sellerId) {
+        return auctionDAO.getAuctionsBySeller(sellerId)
+                .stream()
+                .map(mapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
     public AuctionDTO getAuction(String id) throws AuctionNotFoundException {
         Auction auction = auctionDAO.getAuction(id);
         if (auction == null) {
@@ -48,7 +55,7 @@ public class AuctionService {
             auction.setId(UUID.randomUUID().toString());
         }
         if (auction.getStatus() == null) {
-            auction.setStatus(AuctionStatus.DRAFT);
+            auction.setStatus(AuctionStatus.PENDING);
         }
         if (auction.getStartTime() == null) {
             auction.setStartTime(LocalDateTime.now());
@@ -70,6 +77,15 @@ public class AuctionService {
         if (dto.getStatus() != null) {
             existing.setStatus(dto.getStatus());
         }
+        auctionDAO.saveAuction(existing);
+    }
+
+    public void updateAuctionStatus(String id, AuctionStatus status) throws AuctionNotFoundException {
+        Auction existing = auctionDAO.getAuction(id);
+        if (existing == null) {
+            throw new AuctionNotFoundException("Auction not found: " + id);
+        }
+        existing.setStatus(status);
         auctionDAO.saveAuction(existing);
     }
 

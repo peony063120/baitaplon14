@@ -1,6 +1,7 @@
 package com.auction.common.enums;
 
 public enum AuctionStatus {
+    PENDING("Chờ duyệt"),
     DRAFT("Bản nháp"),
     OPEN("Đang mở"),
     RUNNING("Đang diễn ra"),

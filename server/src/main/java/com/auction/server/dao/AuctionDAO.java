@@ -63,4 +63,11 @@ public class AuctionDAO {
         .filter(auction -> status.equals(auction.getStatus()))
         .collect(Collectors.toList());
   }
+
+  public List<Auction> getAuctionsBySeller(String sellerId) {
+    if (sellerId == null) return new ArrayList<>();
+    return auctionCache.values().stream()
+        .filter(auction -> sellerId.equals(auction.getSellerId()))
+        .collect(Collectors.toList());
+  }
 }

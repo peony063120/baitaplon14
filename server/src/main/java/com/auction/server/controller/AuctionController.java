@@ -30,6 +30,10 @@ public class AuctionController {
         return auctionService.getAllAuctions();
     }
 
+    public List<AuctionDTO> getAuctionsBySeller(String sellerId) {
+        return auctionService.getAuctionsBySeller(sellerId);
+    }
+
     public AuctionDTO getAuction(String id) throws AuctionNotFoundException {
         return auctionService.getAuction(id);
     }
@@ -44,5 +48,13 @@ public class AuctionController {
 
     public void deleteAuction(String id) throws AuctionNotFoundException {
         auctionService.deleteAuction(id);
+    }
+
+    public void updateAuctionStatus(String id, com.auction.common.enums.AuctionStatus status) {
+        try {
+            auctionService.updateAuctionStatus(id, status);
+        } catch (AuctionNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }

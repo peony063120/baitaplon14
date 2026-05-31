@@ -12,30 +12,39 @@ import java.util.List;
 public class MockDataProvider {
 
     public static List<AuctionDTO> getAuctions() {
-        List<AuctionDTO> list = new ArrayList<>();
-        for (int i = 1; i <= 6; i++) {
-            AuctionDTO dto = new AuctionDTO();
-            dto.setId("mock_auc_" + i);
-            dto.setItemName("Demo Product " + i);
-            dto.setCurrentPrice(1_000_000 * i);
-            dto.setStartingPrice(500_000 * i);
-            dto.setStatus(i % 2 == 0 ? AuctionStatus.RUNNING : AuctionStatus.DRAFT);
-            dto.setEndTime(LocalDateTime.now().plusDays(i));
-            dto.setTotalBids(i * 2);
-            // CHANGED: "Mô tả sản phẩm số " -> "Description for product No. "
-            dto.setItemDescription("Description for product No. " + i);
-            dto.setSellerName("Demo Seller");
-            // CHANGED: "Điện tử" / "Xe cộ" / "Nghệ thuật" -> "Electronics" / "Vehicles" / "Art"
-            dto.setCategoryName(i % 3 == 0 ? "Electronics" : (i % 2 == 0 ? "Vehicles" : "Art"));
-            list.add(dto);
-        }
-        return list;
+        MockAuctionStore store = MockAuctionStore.getInstance();
+        store.init();
+        MockBidSimulator.getInstance().start();
+        return store.getAuctions();
     }
 
     public static AuctionDTO getAuctionDetail(String auctionId) {
+        MockAuctionStore store = MockAuctionStore.getInstance();
+        store.init();
+        AuctionDTO fromStore = store.findById(auctionId);
+        if (fromStore != null) {
+            AuctionDTO dto = new AuctionDTO();
+            dto.setId(fromStore.getId());
+            dto.setItemName(fromStore.getItemName());
+            dto.setCurrentPrice(fromStore.getCurrentPrice());
+            dto.setStartingPrice(fromStore.getStartingPrice());
+            dto.setStatus(fromStore.getStatus());
+            dto.setEndTime(fromStore.getEndTime());
+            dto.setTotalBids(fromStore.getTotalBids());
+            dto.setItemDescription(fromStore.getItemDescription());
+            dto.setSellerName(fromStore.getSellerName());
+            dto.setCategory(fromStore.getCategory());
+            dto.setCategoryName(fromStore.getCategoryName());
+            dto.setCurrentWinnerId(fromStore.getCurrentWinnerId());
+            dto.setCurrentWinnerName(fromStore.getCurrentWinnerName());
+            dto.setMinIncrement(Math.max(10000, fromStore.getCurrentPrice() * 0.02));
+            dto.setAntiSnipingEnabled(true);
+            dto.setAntiSnipingExtensionSeconds(30);
+            return dto;
+        }
         AuctionDTO dto = new AuctionDTO();
         dto.setId(auctionId);
-        dto.setItemName("Demo Product Details");
+        dto.setItemName("Auction Detail");
         dto.setCurrentPrice(2_500_000);
         dto.setStartingPrice(1_000_000);
         dto.setStatus(AuctionStatus.RUNNING);
@@ -46,8 +55,7 @@ public class MockDataProvider {
         dto.setMinIncrement(100_000);
         dto.setAntiSnipingEnabled(true);
         dto.setAntiSnipingExtensionSeconds(30);
-        // CHANGED: Chuỗi mô tả chi tiết sản phẩm chuyển sang Tiếng Anh
-        dto.setItemDescription("Detailed product description used for UI testing layout purposes.");
+        dto.setItemDescription("Detailed product description for UI testing.");
         dto.setSellerName("Demo Seller");
         return dto;
     }
@@ -69,7 +77,7 @@ public class MockDataProvider {
     }
 
     public static LoginResponse getLoginResponse() {
-        return new LoginResponse(true, "Login successful (Demo mode)",
+        return new LoginResponse(true, "Login successful (demo mode)",
                 "user_demo", "demo_user", "BIDDER",
                 "mock_session_123", 50_000_000);
     }

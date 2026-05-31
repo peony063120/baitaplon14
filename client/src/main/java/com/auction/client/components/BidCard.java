@@ -59,6 +59,6 @@ public class BidCard extends HBox {
     }
 
     private String formatPrice(double price) {
-        return String.format("VND %,.0f", price);
+        return String.format("$%,.0f", price);
     }
 }

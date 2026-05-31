@@ -8,10 +8,12 @@ import com.auction.client.network.ServerConnection;
 import com.auction.client.service.DataService;
 import com.auction.common.dto.AuctionDTO;
 import com.auction.common.entity.BidTransaction;
+import com.auction.common.enums.AuctionStatus;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.VBox;
 
 public class AuctionDetailController {
@@ -31,6 +33,32 @@ public class AuctionDetailController {
     private AuctionDTO currentAuction;
     private final ClientModel clientModel = ClientModel.getInstance();
     private final RealtimeListener realtimeListener = RealtimeListener.getInstance();
+
+    @FXML
+    public void initialize() {
+        // Chỉ cho phép nhập số khi gõ
+        bidAmountField.setTextFormatter(new TextFormatter<>(change -> {
+            if (change.isContentChange()) {
+                if (!change.getControlNewText().matches("\\d*")) {
+                    return null;
+                }
+            }
+            return change;
+        }));
+        // Format với space khi mất focus
+        bidAmountField.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) {
+                String raw = bidAmountField.getText().replaceAll("\\D", "");
+                if (!raw.isEmpty()) {
+                    StringBuilder sb = new StringBuilder(raw);
+                    for (int i = sb.length() - 3; i > 0; i -= 3) {
+                        sb.insert(i, ' ');
+                    }
+                    bidAmountField.setText(sb.toString());
+                }
+            }
+        });
+    }
 
     public void loadAuctionDetails(String auctionId) {
         DataService.getInstance().loadAuctionDetail(
@@ -75,7 +103,8 @@ public class AuctionDetailController {
     @FXML
     public void handlePlaceBid() {
         try {
-            placeBid(Double.parseDouble(bidAmountField.getText().trim()));
+            String raw = bidAmountField.getText().trim().replaceAll("\\s+", "");
+            placeBid(Double.parseDouble(raw));
         } catch (NumberFormatException e) {
             showError("Enter a valid bid amount.");
         }
@@ -83,6 +112,10 @@ public class AuctionDetailController {
 
     public void placeBid(double amount) {
         if (currentAuction == null) {
+            return;
+        }
+        if (currentAuction.getStatus() != AuctionStatus.RUNNING) {
+            showError("Auction is not currently running");
             return;
         }
         if (amount <= currentAuction.getCurrentPrice()) {
@@ -209,6 +242,6 @@ public class AuctionDetailController {
     }
 
     private String formatCurrency(double amount) {
-        return String.format("VND %,.0f", amount);
+        return String.format("$%,.0f", amount);
     }
 }

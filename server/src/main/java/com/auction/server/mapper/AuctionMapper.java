@@ -22,6 +22,11 @@ public class AuctionMapper {
         dto.setAntiSnipingEnabled(entity.isAntiSnipingEnabled());
         dto.setAntiSnipingExtensionSeconds((int) entity.getAntiSnipingExtensionSeconds());
         dto.setCurrentWinnerId(entity.getCurrentWinnerId());
+        dto.setCategory(entity.getCategory());
+        dto.setCategoryName(entity.getCategory());
+        dto.setItemName(entity.getItemName());
+        dto.setItemDescription(entity.getItemDescription());
+        dto.setImagePath(entity.getImagePath());
         return dto;
     }
 
@@ -54,6 +59,25 @@ public class AuctionMapper {
         }
         auction.setAntiSnipingEnabled(dto.isAntiSnipingEnabled());
         auction.setAntiSnipingExtensionSeconds(dto.getAntiSnipingExtensionSeconds());
+
+        if (dto.getItemName() != null) {
+            auction.setItemName(dto.getItemName());
+        }
+        if (dto.getItemDescription() != null) {
+            auction.setItemDescription(dto.getItemDescription());
+        }
+        if (dto.getCategory() != null) {
+            auction.setCategory(dto.getCategory());
+        }
+        if (dto.getImagePath() != null) {
+            auction.setImagePath(dto.getImagePath());
+        }
+        if (dto.getSellerId() != null) {
+            auction.setSellerId(dto.getSellerId());
+        }
+        if (dto.getStartingPrice() > 0) {
+            auction.setCurrentPrice(dto.getStartingPrice());
+        }
 
         return auction;
     }

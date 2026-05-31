@@ -66,12 +66,13 @@
             <VBox spacing="4">
                 <Text styleClass="nav-title" text="CATEGORIES" />
                 <ToggleButton fx:id="catAll" onAction="#filterByCategory" styleClass="cat-item" text="All" userData="all" />
-                <ToggleButton fx:id="catXe" onAction="#filterByCategory" styleClass="cat-item" text="Vehicles" userData="xe" />
-                <ToggleButton fx:id="catDienTu" onAction="#filterByCategory" styleClass="cat-item" text="Electronics" userData="dien-tu" />
-                <ToggleButton fx:id="catNgheThuat" onAction="#filterByCategory" styleClass="cat-item" text="Art" userData="nghe-thuat" />
-                <ToggleButton fx:id="catTrangSuc" onAction="#filterByCategory" styleClass="cat-item" text="Jewelry" userData="trang-suc" />
-                <ToggleButton fx:id="catBatDongSan" onAction="#filterByCategory" styleClass="cat-item" text="Real Estate" userData="bat-dong-san" />
-                <ToggleButton fx:id="catDongHo" onAction="#filterByCategory" styleClass="cat-item" text="Watches" userData="dong-ho" />
+                <ToggleButton fx:id="catXe" onAction="#filterByCategory" styleClass="cat-item" text="Vehicles" userData="Vehicles" />
+                <ToggleButton fx:id="catDienTu" onAction="#filterByCategory" styleClass="cat-item" text="Electronics" userData="Electronics" />
+                <ToggleButton fx:id="catNgheThuat" onAction="#filterByCategory" styleClass="cat-item" text="Art" userData="Art" />
+                <ToggleButton fx:id="catTrangSuc" onAction="#filterByCategory" styleClass="cat-item" text="Jewelry" userData="Jewelry" />
+                <ToggleButton fx:id="catBatDongSan" onAction="#filterByCategory" styleClass="cat-item" text="Real Estate" userData="Real Estate" />
+                <ToggleButton fx:id="catDongHo" onAction="#filterByCategory" styleClass="cat-item" text="Watches" userData="Watches" />
+                <ToggleButton fx:id="catCoVat" onAction="#filterByCategory" styleClass="cat-item" text="Antiques" userData="Antiques" />
             </VBox>
         </VBox>
     </left>

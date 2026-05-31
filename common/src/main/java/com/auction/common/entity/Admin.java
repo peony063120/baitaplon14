@@ -1,6 +1,6 @@
 package com.auction.common.entity;
 
-class Admin extends User {
+public class Admin extends User {
     private String permissionLevel;
     public Admin(String username, String password, String email, String fullName, String permissionLevel) {
         super(username, password, email, fullName);

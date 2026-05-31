@@ -36,11 +36,11 @@ public class UserService {
         if (user != null && user.authenticate(password)) {
             String sessionToken = java.util.UUID.randomUUID().toString();
             double balance = (user instanceof Bidder) ? ((Bidder) user).getBalance() : 0.0;
-            return new LoginResponse(true, "Đăng nhập thành công",
-                    user.getUsername(), user.getUsername(), user.getRole(),
+            return new LoginResponse(true, "Login successful",
+                    user.getId(), user.getUsername(), user.getRole(),
                     sessionToken, balance);
         }
-        return new LoginResponse(false, "Sai tên đăng nhập hoặc mật khẩu");
+        return new LoginResponse(false, "Invalid username or password");
     }
     // Lấy thông tin user (đã fix)
     public UserDTO getUserById(String userId) {

@@ -262,6 +262,22 @@
     -fx-font-size: 13px;
 }
 
+.mock-toggle-login {
+    -fx-background-color: #059669;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+    -fx-padding: 6px 16px;
+    -fx-background-radius: 999px;
+    -fx-cursor: hand;
+    -fx-pref-width: 300px;
+}
+
+.mock-toggle-login:selected {
+    -fx-background-color: #EAB308;
+    -fx-text-fill: #111111;
+}
+
 .icon-btn,
 .avatar-btn {
     -fx-background-color: #F1F1EF;

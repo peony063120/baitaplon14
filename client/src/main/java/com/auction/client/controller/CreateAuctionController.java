@@ -42,6 +42,8 @@ public class CreateAuctionController {
 
         SpinnerValueFactory<Integer> factory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 168, 24);
         durationSpinner.setValueFactory(factory);
+
+        imagePathLabel.setText("No image selected");
     }
 
     /**
@@ -49,24 +51,39 @@ public class CreateAuctionController {
      * @param auctionDTO Dữ liệu phiên đấu giá cần tạo
      */
     public void createAuction(AuctionDTO auctionDTO) {
-        String sellerId = clientModel.getCurrentUser().getId();
-
         try {
-            String response = ServerConnection.getInstance().sendRequest("CREATE_AUCTION:" +
-                    auctionDTO.getItemId() + ":" + sellerId + ":" + auctionDTO.getCurrentPrice());
+            // Dùng | làm delimiter, sanitize để tránh xung đột
+            String itemName = sanitize(auctionDTO.getItemName());
+            String description = sanitize(auctionDTO.getItemDescription()).replace("\n", "\\n");
+            String startPrice = String.valueOf(auctionDTO.getStartingPrice() > 0
+                    ? auctionDTO.getStartingPrice() : auctionDTO.getCurrentPrice());
+            String seller = clientModel.getCurrentUser().getUsername();
+            String startTime = auctionDTO.getStartTime() != null ? auctionDTO.getStartTime().toString() : "";
+            String endTime = auctionDTO.getEndTime() != null ? auctionDTO.getEndTime().toString() : "";
+            String minInc = String.valueOf(auctionDTO.getMinIncrement());
+            String category = sanitize(auctionDTO.getCategory() != null ? auctionDTO.getCategory() : "");
+
+            String imagePath = sanitize(imagePathLabel.getText() != null ? imagePathLabel.getText() : "");
+
+            String request = "CREATE_AUCTION:" + itemName + "|" + description + "|" + startPrice
+                    + "|" + seller + "|" + startTime + "|" + endTime + "|" + minInc + "|" + category
+                    + "|" + imagePath;
+
+            String response = ServerConnection.getInstance().sendRequest(request);
 
             if (response != null && response.startsWith("CREATE_AUCTION_OK")) {
                 showSuccess();
             } else {
-                // CHANGED: "Không có phản hồi từ server" -> "No response from server"
-                // CHANGED: "Tạo phiên đấu giá thất bại: " -> "Failed to create auction: "
                 String errorMsg = response != null ? response : "No response from server";
                 showError("Failed to create auction: " + errorMsg);
             }
         } catch (IOException e) {
-            // CHANGED: "Lỗi kết nối server: " -> "Server connection error: "
             showError("Server connection error: " + e.getMessage());
         }
+    }
+
+    private String sanitize(String s) {
+        return s != null ? s.replace("|", " ").replace("\r", "") : "";
     }
 
     @FXML
@@ -76,12 +93,14 @@ public class CreateAuctionController {
         AuctionDTO dto = new AuctionDTO();
         dto.setItemName(itemNameField.getText().trim());
         dto.setItemDescription(itemDescriptionArea.getText().trim());
+        dto.setStartingPrice(Double.parseDouble(startingPriceField.getText().trim()));
         dto.setCurrentPrice(Double.parseDouble(startingPriceField.getText().trim()));
-        dto.setSellerId(clientModel.getCurrentUser().getId());
+        dto.setSellerId(clientModel.getCurrentUser().getUsername());
         dto.setStartTime(getStartTime());
         dto.setEndTime(getStartTime().plusHours(durationSpinner.getValue()));
-        dto.setStatus(AuctionStatus.DRAFT);
+        dto.setStatus(AuctionStatus.PENDING);
         dto.setMinIncrement(Double.parseDouble(minIncrementField.getText().isBlank() ? "1.0" : minIncrementField.getText().trim()));
+        dto.setCategory(itemTypeComboBox.getValue());
 
         // Gửi request trong background thread (không block UI)
         new Thread(() -> createAuction(dto)).start();
@@ -127,6 +146,11 @@ public class CreateAuctionController {
         if (itemDescriptionArea.getText().isBlank()) {
             // CHANGED: "Vui lòng nhập mô tả sản phẩm" -> "Please enter the product description"
             showError("Please enter the product description");
+            return false;
+        }
+        String imgPath = imagePathLabel.getText();
+        if (imgPath == null || imgPath.isBlank() || "No image selected".equals(imgPath)) {
+            showError("Please upload at least one product image");
             return false;
         }
         try {

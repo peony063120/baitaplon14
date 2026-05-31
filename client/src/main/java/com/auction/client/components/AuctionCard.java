@@ -58,7 +58,7 @@ public class AuctionCard extends VBox {
         priceBox.setAlignment(Pos.CENTER_LEFT);
 
         VBox currentPriceBox = new VBox(2);
-        Label currentPriceLabel = new Label("Current Bid"); // Dịch từ "Gia hien tai"
+        Label currentPriceLabel = new Label("Gia hien tai");
         currentPriceLabel.getStyleClass().add("muted-text");
         currentPriceLabel.setStyle("-fx-font-size: 11px;");
         Label currentPriceValue = new Label(formatPrice(auction.getCurrentPrice()));
@@ -66,7 +66,7 @@ public class AuctionCard extends VBox {
         currentPriceBox.getChildren().addAll(currentPriceLabel, currentPriceValue);
 
         VBox startPriceBox = new VBox(2);
-        Label startPriceLabel = new Label("Starting Price"); // Dịch từ "Khoi diem"
+        Label startPriceLabel = new Label("Khoi diem");
         startPriceLabel.getStyleClass().add("muted-text");
         startPriceLabel.setStyle("-fx-font-size: 11px;");
         Label startPriceValue = new Label(formatPrice(auction.getStartPrice()));
@@ -78,10 +78,7 @@ public class AuctionCard extends VBox {
 
         HBox metaBox = new HBox(12);
         metaBox.setAlignment(Pos.CENTER_LEFT);
-
-        // Dịch số lượt đặt ("luot dat" -> "bids") kèm xử lý số nhiều số ít cơ bản
-        String bidSuffix = auction.getTotalBids() <= 1 ? " bid" : " bids";
-        Label bidCountLabel = new Label(auction.getTotalBids() + bidSuffix);
+        Label bidCountLabel = new Label(auction.getTotalBids() + " luot dat");
         bidCountLabel.getStyleClass().add("muted-text");
         bidCountLabel.setStyle("-fx-font-size: 12px;");
 
@@ -89,7 +86,7 @@ public class AuctionCard extends VBox {
         HBox.setHgrow(timerLabel, Priority.ALWAYS);
         metaBox.getChildren().addAll(bidCountLabel, timerLabel);
 
-        Button bidButton = new Button("Bid Now"); // Dịch từ "Dat gia ngay"
+        Button bidButton = new Button("Dat gia ngay");
         bidButton.getStyleClass().add("bid-button");
         bidButton.setOnAction(e -> {
             if (onBidCallback != null) {
@@ -114,17 +111,17 @@ public class AuctionCard extends VBox {
 
         String category = auction.getCategory();
         if (category == null || category.isBlank()) {
-            return "Product"; // Dịch từ "San pham"
+            return "San pham";
         }
 
         return switch (category.toLowerCase()) {
-            case "xe", "xe co", "vehicle" -> "Vehicle"; // Dịch từ "Phuong tien"
-            case "dien-tu", "dien tu", "electronics" -> "Electronics"; // Dịch từ "Dien tu"
-            case "nghe-thuat", "nghe thuat", "art" -> "Art"; // Dịch từ "Nghe thuat"
-            case "trang-suc", "trang suc", "jewelry" -> "Jewelry"; // Dịch từ "Trang suc"
-            case "bat-dong-san", "bat dong san", "realestate" -> "Real Estate"; // Dịch từ "Bat dong san"
-            case "dong-ho", "dong ho", "watch" -> "Watch"; // Dịch từ "Dong ho"
-            case "co-vat", "co vat", "antique" -> "Antique"; // Dịch từ "Co vat"
+            case "xe", "xe co", "vehicle" -> "Phuong tien";
+            case "dien-tu", "dien tu", "electronics" -> "Dien tu";
+            case "nghe-thuat", "nghe thuat", "art" -> "Nghe thuat";
+            case "trang-suc", "trang suc", "jewelry" -> "Trang suc";
+            case "bat-dong-san", "bat dong san", "realestate" -> "Bat dong san";
+            case "dong-ho", "dong ho", "watch" -> "Dong ho";
+            case "co-vat", "co vat", "antique" -> "Co vat";
             default -> category;
         };
     }
@@ -132,23 +129,22 @@ public class AuctionCard extends VBox {
     private String getStatusText() {
         AuctionStatus status = auction.getStatus();
         if (status == null) {
-            return "UPCOMING"; // Dịch từ "SAP MO"
+            return "SAP MO";
         }
         return switch (status) {
-            case RUNNING -> "LIVE"; // Dịch từ "DANG DIEN RA" (Trong đấu giá dùng LIVE chuẩn hơn)
-            case FINISHED -> "ENDED"; // Dịch từ "KET THUC"
-            case PAID -> "PAID"; // Dịch từ "DA THANH TOAN"
-            case CANCELLED -> "CANCELLED"; // Dịch từ "DA HUY"
-            default -> "UPCOMING";
+            case RUNNING -> "DANG DIEN RA";
+            case FINISHED -> "KET THUC";
+            case PAID -> "DA THANH TOAN";
+            case CANCELLED -> "DA HUY";
+            default -> "SAP MO";
         };
     }
 
     private String formatPrice(double price) {
-        // Định dạng lại đơn vị tiền tệ từ VNĐ (Tỷ/Tr) sang định dạng tiếng Anh thương mại quốc tế (B: Billion, M: Million)
         if (price >= 1_000_000_000) {
-            return String.format("VND %.1f B", price / 1_000_000_000);
+            return String.format("VND %.1f Ty", price / 1_000_000_000);
         } else if (price >= 1_000_000) {
-            return String.format("VND %.0f M", price / 1_000_000);
+            return String.format("VND %.0f Tr", price / 1_000_000);
         }
         return String.format("VND %,.0f", price);
     }

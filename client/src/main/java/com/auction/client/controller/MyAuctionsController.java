@@ -39,21 +39,18 @@ public class MyAuctionsController {
     }
 
     public void loadMyAuctions() {
-        String sellerId = clientModel.getCurrentUser() != null
-                ? clientModel.getCurrentUser().getId() : "demo";
+        String sellerUsername = clientModel.getCurrentUser() != null
+                ? clientModel.getCurrentUser().getUsername() : "demo";
         statusLabel.setText("🔄 Loading...");
 
         DataService.getInstance().loadMyAuctions(
-                sellerId,
+                sellerUsername,
                 auctions -> {
                     myAuctions = auctions;
                     renderAuctionList();
-                    // CHANGED: "📋 Bạn chưa có phiên đấu giá nào" -> "📋 You have no auctions"
-                    // CHANGED: "📊 Tổng cộng: ... phiên" -> "📊 Total: ... auction(s)"
-                    String auctionSuffix = myAuctions.size() <= 1 ? " auction" : " auctions";
                     statusLabel.setText(myAuctions.isEmpty()
-                            ? "📋 You have no auctions"
-                            : "📊 Total: " + myAuctions.size() + auctionSuffix);
+                            ? "📋 You have no auctions yet"
+                            : "📊 Total: " + myAuctions.size() + " auctions");
                 },
                 error -> statusLabel.setText("❌ Connection error: " + error)
         );
@@ -75,30 +72,25 @@ public class MyAuctionsController {
         nameLabel.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(nameLabel, Priority.ALWAYS);
 
-        // CHANGED: "Chưa xác định" -> "Unknown"
         String statusText = dto.getStatus() != null ? dto.getStatus().getDisplayName() : "Unknown";
         String statusColor = getStatusColor(dto.getStatus());
         Label statusChip = new Label(statusText);
         statusChip.setStyle("-fx-background-color: " + statusColor + "22; -fx-text-fill: " + statusColor
                 + "; -fx-padding: 2 10 2 10; -fx-background-radius: 12; -fx-font-size: 12px; -fx-font-weight: 700;");
 
-        // CHANGED: Đổi định dạng tiền tệ từ "%,.0f VNĐ" sang vị trí chuẩn quốc tế "VND %,.0f"
-        Label priceLabel = new Label(String.format("VND %,.0f", dto.getCurrentPrice()));
+        Label priceLabel = new Label(String.format("$%,.0f", dto.getCurrentPrice()));
         priceLabel.setStyle("-fx-text-fill: #0e7490; -fx-font-weight: 800; -fx-font-size: 14px;");
 
         HBox topRow = new HBox(12, nameLabel, statusChip, priceLabel);
         topRow.setAlignment(Pos.CENTER_LEFT);
 
         // Sub info
-        // CHANGED: "Kết thúc: " -> "Ends: "
         String endTimeStr = dto.getEndTime() != null ? "Ends: " + dto.getEndTime().toString().substring(0, 16) : "";
-        // CHANGED: "Lượt đặt: " -> "Bids: "
         String bidsStr = "Bids: " + dto.getTotalBids();
         Label subInfo = new Label(bidsStr + (endTimeStr.isEmpty() ? "" : "   |   " + endTimeStr));
         subInfo.setStyle("-fx-text-fill: #666; -fx-font-size: 12px;");
 
         // Action buttons
-        // CHANGED: "🔍 Chi tiết" -> "🔍 Details"
         Button detailBtn = new Button("🔍 Details");
         detailBtn.getStyleClass().add("secondary-btn");
         detailBtn.setStyle("-fx-cursor: hand;");
@@ -176,7 +168,6 @@ public class MyAuctionsController {
     }
 
     public void deleteAuction(String auctionId) {
-        // CHANGED: Chuyển ngữ nội dung hộp thoại xác nhận xóa phiên đấu giá
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
                 "Are you sure you want to delete this auction?", ButtonType.YES, ButtonType.NO);
         confirm.showAndWait().ifPresent(btn -> {
@@ -184,7 +175,6 @@ public class MyAuctionsController {
                 // Mock: xóa khỏi list local
                 myAuctions.removeIf(a -> auctionId.equals(a.getId()));
                 renderAuctionList();
-                // CHANGED: "✅ Đã xóa phiên đấu giá (demo)" -> "✅ Auction deleted (demo)"
                 statusLabel.setText("✅ Auction deleted (demo)");
             }
         });
@@ -199,7 +189,6 @@ public class MyAuctionsController {
             stage.initModality(Modality.WINDOW_MODAL);
             stage.initOwner(owner);
             stage.setScene(new Scene(loader.load()));
-            // CHANGED: "Chỉnh sửa phiên đấu giá" -> "Edit Auction"
             stage.setTitle("Edit Auction");
             stage.show();
         } catch (Exception e) {
@@ -218,7 +207,6 @@ public class MyAuctionsController {
             stage.setScene(new Scene(loader.load(), 600, 500));
             BidHistoryController controller = loader.getController();
             controller.loadBidHistory(auctionId);
-            // CHANGED: "Lịch sử đặt giá" -> "Bid History"
             stage.setTitle("Bid History");
             stage.show();
         } catch (Exception e) {
@@ -241,9 +229,7 @@ public class MyAuctionsController {
             stage.setTitle("Create New Auction");
             stage.showAndWait();
             loadMyAuctions();
-        } catch (Exception e) {
-            statusLabel.setText("❌ Error: " + e.getMessage());
-        }
+        } catch (Exception e) { statusLabel.setText("❌ Error: " + e.getMessage()); }
     }
 
     public void startAuctionNow(String auctionId) {
@@ -252,7 +238,6 @@ public class MyAuctionsController {
                 .ifPresent(a -> {
                     a.setStatus(AuctionStatus.RUNNING);
                     renderAuctionList();
-                    // CHANGED: "✅ Đã bắt đầu phiên đấu giá (demo)" -> "✅ Auction started (demo)"
                     statusLabel.setText("✅ Auction started (demo)");
                 });
     }
