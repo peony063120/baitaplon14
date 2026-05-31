@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.logging.Logger;
@@ -50,8 +52,12 @@ public class ServerConnection {
 
   private volatile boolean connected = false;
 
-  /** Tracks synchronous requests waiting for matching response lines from the server. */
+  /** Tracks synchronous JSON requests waiting for matching response lines from the server. */
   private final Map<String, CompletableFuture<String>> pendingRequests = new ConcurrentHashMap<>();
+
+  /** FIFO queue for plain-text request/response pairs (one response per request, in order). */
+  private final Deque<CompletableFuture<String>> textResponseQueue = new ArrayDeque<>();
+  private final Object textRequestLock = new Object();
 
   private ServerConnection() {
     this.protocol         = new MessageProtocol();
@@ -93,6 +99,10 @@ public class ServerConnection {
     }
     pendingRequests.forEach((id, future) -> future.cancel(true));
     pendingRequests.clear();
+    synchronized (textRequestLock) {
+      textResponseQueue.forEach(future -> future.cancel(true));
+      textResponseQueue.clear();
+    }
     LOGGER.info("ServerConnection: Disconnected and released pending requests.");
   }
 
@@ -134,24 +144,41 @@ public class ServerConnection {
       throw new IOException("ServerConnection: Cannot send request — Network disconnected.");
     }
 
-    // Tận dụng chính tên lệnh hoặc một ID phân biệt để tránh bị nhận nhầm
-    String key = command.split(":")[0] + "_" + java.util.UUID.randomUUID().toString();
     CompletableFuture<String> responseFuture = new CompletableFuture<>();
-    pendingRequests.put(key, responseFuture);
-
-    synchronized (out) {
-      out.println(command);
-      LOGGER.fine("ServerConnection -> SERVER (text): " + command);
+    synchronized (textRequestLock) {
+      textResponseQueue.addLast(responseFuture);
+      synchronized (out) {
+        out.println(command);
+        LOGGER.fine("ServerConnection -> SERVER (text): " + command);
+      }
     }
 
     try {
       return responseFuture.get(10, TimeUnit.SECONDS);
     } catch (TimeoutException e) {
-      pendingRequests.remove(key);
+      synchronized (textRequestLock) {
+        textResponseQueue.remove(responseFuture);
+      }
       throw new IOException("ServerConnection: Timeout waiting for response from Server");
     } catch (InterruptedException | ExecutionException e) {
-      pendingRequests.remove(key);
+      synchronized (textRequestLock) {
+        textResponseQueue.remove(responseFuture);
+      }
       throw new IOException("ServerConnection: Request interrupted: " + e.getMessage());
+    }
+  }
+
+  private void completeNextTextRequest(String response) {
+    CompletableFuture<String> future;
+    synchronized (textRequestLock) {
+      future = textResponseQueue.pollFirst();
+    }
+    if (future != null) {
+      LOGGER.fine("ServerConnection: Completed text request with response: " + response);
+      future.complete(response);
+    } else {
+      LOGGER.fine("ServerConnection: Unexpected text response (no pending request): " + response);
+      realtimeListener.dispatch("INBOUND_TEXT", response);
     }
   }
 
@@ -176,10 +203,17 @@ public class ServerConnection {
     if (rawJson.isEmpty()) return;
 
     // --- ĐÃ SỬA: KIỂM TRA XỬ LÝ CHUỖI TEXT THUẦN TRƯỚC (Bản tin Realtime dạng text thô) ---
-    if (rawJson.startsWith("AUCTION_UPDATE:") || rawJson.startsWith("BID_UPDATE:")) {
-      LOGGER.info("ServerConnection: Phát hiện gói tin Realtime Text thuần -> Điều phối sang RealtimeListener.");
-      String[] parts = rawJson.split(":", 2);
-      realtimeListener.dispatch(parts[0], parts.length > 1 ? parts[1] : "");
+    if (rawJson.startsWith("AUCTION_UPDATE:")) {
+      LOGGER.info("ServerConnection: Realtime AUCTION_UPDATE received.");
+      com.auction.common.dto.AuctionDTO dto = ResponseHandler.parseAuctionUpdateFromText(rawJson);
+      if (dto != null) {
+        realtimeListener.dispatch(MessageProtocol.TYPE_AUCTION_UPDATE, dto);
+      }
+      return;
+    }
+    if (rawJson.startsWith("BID_UPDATE:")) {
+      LOGGER.info("ServerConnection: Realtime BID_UPDATE received.");
+      realtimeListener.dispatch(MessageProtocol.TYPE_BID_UPDATE, rawJson.substring("BID_UPDATE:".length()));
       return;
     }
 
@@ -188,21 +222,7 @@ public class ServerConnection {
     try {
       envelope = protocol.decodeToMap(rawJson);
     } catch (Exception jsonEx) {
-      // Nếu là text thuần từ Server trả về phản hồi cho Request (ví dụ: LOGIN_OK, BID_OK, ERROR)
-      if (!pendingRequests.isEmpty()) {
-        // Tìm đúng Request đang đợi phản hồi Text phù hợp
-        for (String waitingKey : pendingRequests.keySet()) {
-          // Check bảo vệ: Đảm bảo không bốc nhầm khi luồng khác đang chạy
-          CompletableFuture<String> future = pendingRequests.remove(waitingKey);
-          if (future != null) {
-            LOGGER.fine("ServerConnection: Hoàn thành Request Text với phản hồi: " + rawJson);
-            future.complete(rawJson);
-            return;
-          }
-        }
-      }
-      LOGGER.fine("ServerConnection: Received plain text (not JSON): " + rawJson);
-      realtimeListener.dispatch("INBOUND_TEXT", rawJson);
+      completeNextTextRequest(rawJson);
       return;
     }
 

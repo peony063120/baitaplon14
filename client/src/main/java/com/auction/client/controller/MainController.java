@@ -185,6 +185,33 @@ public class MainController {
         }
     }
 
+    public static void syncBalanceFromServer() {
+        User currentUser = ClientModel.getInstance().getCurrentUser();
+        if (currentUser == null || !(currentUser instanceof Bidder)) {
+            return;
+        }
+        if (com.auction.client.config.AppConfig.isUseMock()) {
+            refreshBalance();
+            return;
+        }
+        String userId = currentUser.getId();
+        new Thread(() -> {
+            try {
+                String response = com.auction.client.network.ServerConnection.getInstance()
+                        .sendRequest("GET_BALANCE:" + userId);
+                if (response != null && response.startsWith("BALANCE:")) {
+                    double balance = Double.parseDouble(response.substring("BALANCE:".length()));
+                    Platform.runLater(() -> {
+                        ((Bidder) currentUser).setBalance(balance);
+                        refreshBalance();
+                    });
+                }
+            } catch (IOException ignored) {
+                // Giữ số dư hiện tại nếu không đồng bộ được
+            }
+        }, "sync-balance").start();
+    }
+
     private void updateBalanceDisplay() {
         User currentUser = clientModel.getCurrentUser();
         if (currentUser instanceof Bidder bidder) {

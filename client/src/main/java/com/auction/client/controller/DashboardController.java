@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 
 import com.auction.client.components.AuctionCard;
 import com.auction.client.config.AppConfig;
+import com.auction.client.network.MessageProtocol;
+import com.auction.client.network.RealtimeListener;
 import com.auction.client.service.DataService;
 import com.auction.common.dto.AuctionDTO;
 import com.auction.common.enums.AuctionStatus;
@@ -40,10 +42,12 @@ public class DashboardController {
 
     private List<AuctionDTO> allAuctions = new ArrayList<>();
     private String currentFilter = "all";
+    private final RealtimeListener realtimeListener = RealtimeListener.getInstance();
 
     @FXML
     public void initialize() {
         loadAuctions();
+        subscribeRealtime();
         if (AppConfig.isUseMock()) {
             Timeline refreshTimer = new Timeline(
                     new KeyFrame(Duration.seconds(5), e -> loadAuctions())
@@ -56,7 +60,9 @@ public class DashboardController {
     public void loadAuctions() {
         DataService.getInstance().loadAuctions(
                 auctions -> {
-                    allAuctions = auctions;
+                    if (auctions != null && (!auctions.isEmpty() || allAuctions.isEmpty())) {
+                        allAuctions = auctions;
+                    }
                     applyFilter();
                     updateStats();
                     updateChart();
@@ -67,6 +73,36 @@ public class DashboardController {
                     System.err.println("Failed to load auction list: " + error);
                 }
         );
+    }
+
+    private void subscribeRealtime() {
+        if (AppConfig.isUseMock()) {
+            return;
+        }
+        realtimeListener.registerCallback(MessageProtocol.TYPE_AUCTION_UPDATE, this::onAuctionUpdate);
+    }
+
+    private void onAuctionUpdate(Object data) {
+        if (!(data instanceof AuctionDTO dto) || dto.getId() == null) {
+            return;
+        }
+        Platform.runLater(() -> {
+            for (AuctionDTO existing : allAuctions) {
+                if (existing.getId().equals(dto.getId())) {
+                    existing.setCurrentPrice(dto.getCurrentPrice());
+                    if (dto.getStatus() != null) {
+                        existing.setStatus(dto.getStatus());
+                    }
+                    if (dto.getCurrentWinnerId() != null) {
+                        existing.setCurrentWinnerId(dto.getCurrentWinnerId());
+                    }
+                    break;
+                }
+            }
+            applyFilter();
+            updateStats();
+            MainController.syncBalanceFromServer();
+        });
     }
 
     private void updateChart() {
@@ -178,15 +214,18 @@ public class DashboardController {
             popupStage.initStyle(StageStyle.DECORATED);
             popupStage.setTitle("Auction Detail — " + auction.getItemName());
             popupStage.setMinWidth(700);
-            popupStage.setMinHeight(600);
+            popupStage.setMinHeight(720);
 
-            Scene scene = new Scene(loader.load(), 750, 680);
+            Scene scene = new Scene(loader.load(), 780, 820);
             popupStage.setScene(scene);
 
             AuctionDetailController controller = loader.getController();
             controller.loadAuctionDetails(auction.getId());
 
-            popupStage.showAndWait(); // Modal: chặn window cha cho đến khi đóng
+            popupStage.showAndWait();
+            applyFilter();
+            updateStats();
+            MainController.syncBalanceFromServer();
         } catch (Exception e) {
             e.printStackTrace();
             showErrorPopup("Could not open details: " + e.getMessage());
