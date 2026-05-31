@@ -80,6 +80,7 @@ public class ClientHandler implements Runnable {
                 case "LOGIN" -> handleLogin(payload);
                 case "REGISTER" -> handleRegister(payload);
                 case "GET_AUCTIONS" -> handleGetAllAuctions();
+                case "GET_ACTIVE_AUCTIONS" -> handleGetActiveAuctions();
                 case "GET_AUCTION" -> handleGetAuction(payload);
                 case "GET_MY_AUCTIONS" -> handleGetMyAuctions(payload);
                 case "CREATE_AUCTION" -> handleCreateAuction(payload);
@@ -195,6 +196,20 @@ public class ClientHandler implements Runnable {
     private void handleGetAllAuctions() {
         // Đã đổi var thành List<AuctionDTO> chuẩn Java 8
         java.util.List<com.auction.common.dto.AuctionDTO> auctions = auctionController.getAllAuctions();
+        StringBuilder sb = new StringBuilder();
+        sb.append("AUCTIONS_COUNT:").append(auctions.size());
+
+        for (com.auction.common.dto.AuctionDTO a : auctions) {
+            sb.append("||AUCTION:").append(a.getId()).append(":").append(a.getItemName())
+                    .append(":").append(a.getCurrentPrice()).append(":").append(a.getStatus().name())
+                    .append(":").append(a.getCategory())
+                    .append(":").append(a.getRemainingTimeMillis());
+        }
+        out.println(sb.toString());
+    }
+
+    private void handleGetActiveAuctions() {
+        java.util.List<com.auction.common.dto.AuctionDTO> auctions = auctionController.getActiveAuctions();
         StringBuilder sb = new StringBuilder();
         sb.append("AUCTIONS_COUNT:").append(auctions.size());
 

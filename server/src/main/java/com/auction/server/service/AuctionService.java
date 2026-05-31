@@ -46,6 +46,19 @@ public class AuctionService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Get only active (RUNNING/OPEN) auctions that bidders can participate in.
+     * This is what should be shown to bidders.
+     */
+    public List<AuctionDTO> getActiveAuctions() {
+        return auctionDAO.getAllAuctions()
+                .stream()
+                .filter(auction -> auction.getStatus() == AuctionStatus.RUNNING 
+                        || auction.getStatus() == AuctionStatus.OPEN)
+                .map(mapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
     public List<AuctionDTO> getAuctionsBySeller(String sellerId) {
         return auctionDAO.getAuctionsBySeller(sellerId)
                 .stream()
@@ -98,8 +111,16 @@ public class AuctionService {
         if (existing == null) {
             throw new AuctionNotFoundException("Auction not found: " + id);
         }
+        AuctionStatus oldStatus = existing.getStatus();
         existing.setStatus(status);
         auctionDAO.saveAuction(existing);
+        
+        // Notify observers when auction status changes to RUNNING or OPEN
+        // so bidders can see the newly approved auction
+        if ((oldStatus == AuctionStatus.PENDING || oldStatus == AuctionStatus.DRAFT) 
+                && (status == AuctionStatus.RUNNING || status == AuctionStatus.OPEN)) {
+            auctionSubject.notifyObservers(existing);
+        }
     }
 
     public void deleteAuction(String id) throws AuctionNotFoundException {

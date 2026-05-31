@@ -30,6 +30,10 @@ public class AuctionController {
         return auctionService.getAllAuctions();
     }
 
+    public List<AuctionDTO> getActiveAuctions() {
+        return auctionService.getActiveAuctions();
+    }
+
     public List<AuctionDTO> getAuctionsBySeller(String sellerId) {
         return auctionService.getAuctionsBySeller(sellerId);
     }
