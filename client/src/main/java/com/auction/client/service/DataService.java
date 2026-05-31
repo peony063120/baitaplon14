@@ -89,7 +89,9 @@ public class DataService {
     public void login(String username, String password, String role,
                       Consumer<LoginResponse> onSuccess, Consumer<String> onError) {
         if (AppConfig.isUseMock()) {
-            if (onSuccess != null) onSuccess.accept(MockDataProvider.getLoginResponse(role));
+            MockUserStore userStore = MockUserStore.getInstance();
+            LoginResponse resp = userStore.login(username, password, role);
+            if (onSuccess != null) onSuccess.accept(resp);
             return;
         }
         new Thread(() -> {

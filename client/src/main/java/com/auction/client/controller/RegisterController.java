@@ -6,8 +6,10 @@ package com.auction.client.controller;
  * → on success, navigates back to login page.
  */
 
+import com.auction.client.config.AppConfig;
 import com.auction.client.model.ClientModel;
 import com.auction.client.network.ServerConnection;
+import com.auction.client.service.MockUserStore;
 import com.auction.common.dto.UserDTO;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -73,7 +75,12 @@ public class RegisterController {
                         0.0
                 );
 
-                boolean success = clientModel.register(dto);
+                boolean success;
+                if (AppConfig.isUseMock()) {
+                    success = MockUserStore.getInstance().register(dto);
+                } else {
+                    success = clientModel.register(dto);
+                }
 
                 Platform.runLater(() -> {
                     if (success) {
@@ -98,13 +105,10 @@ public class RegisterController {
         }).start();
     }
 
-    /**
-     * Check if username already exists on server.
-     * @param username Username to check
-     * @return true if exists, false otherwise
-     * @throws IOException If connection fails
-     */
     public boolean checkUsernameExists(String username) throws IOException {
+        if (AppConfig.isUseMock()) {
+            return MockUserStore.getInstance().usernameExists(username);
+        }
         String response = ServerConnection.getInstance().sendRequest("CHECK_USERNAME:" + username);
         return "EXISTS".equals(response);
     }

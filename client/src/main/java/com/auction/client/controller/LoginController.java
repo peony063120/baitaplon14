@@ -10,6 +10,7 @@ import com.auction.client.ClientApp;
 import com.auction.client.config.AppConfig;
 import com.auction.client.model.ClientModel;
 import com.auction.client.service.DataService;
+import com.auction.client.service.MockUserStore;
 import com.auction.common.dto.LoginResponse;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -32,6 +33,9 @@ public class LoginController {
         boolean mock = AppConfig.isUseMock();
         mockToggle.setSelected(mock);
         mockToggle.setText(mock ? "MOCK MODE" : "LIVE");
+        if (mock) {
+            MockUserStore.getInstance().seedDefaultUsers();
+        }
     }
 
     @FXML
@@ -39,6 +43,9 @@ public class LoginController {
         boolean nowMock = mockToggle.isSelected();
         AppConfig.setUseMock(nowMock);
         mockToggle.setText(nowMock ? "MOCK MODE" : "LIVE");
+        if (nowMock) {
+            MockUserStore.getInstance().seedDefaultUsers();
+        }
     }
 
     @FXML
@@ -75,6 +82,7 @@ public class LoginController {
                     ClientApp.showMainScreen();
                 }
             } catch (Exception e) {
+                e.printStackTrace();
                 showError("Navigation error: " + e.getMessage());
             }
         } else {

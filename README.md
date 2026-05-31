@@ -1,84 +1,83 @@
 # Online Auction System
-Hệ thống đấu giá trực tuyến theo kiến trúc Client-Server, hỗ trợ đấu giá thời gian thực, tự động đặt giá (Auto-bid), và chống snipe (Anti-sniping).
+
+A Client-Server real-time auction system supporting manual bidding, auto-bid, anti-sniping, and role-based access control (Admin / Seller / Bidder).
 
 ---
 
-## 📋 Mô tả bài toán
+## 📋 Problem Description
 
-Xây dựng ứng dụng đấu giá trực tuyến cho phép:
-- **Người bán (Seller)** tạo phiên đấu giá với các loại vật phẩm: Nghệ thuật, Điện tử, Phương tiện.
-- **Người đấu giá (Bidder)** tham gia đặt giá theo thời gian thực hoặc cấu hình Auto-bid.
-- **Quản trị viên (Admin)** quản lý người dùng và giám sát hệ thống.
-- Hỗ trợ **Anti-sniping**: tự động gia hạn phiên đấu giá khi có bid vào phút cuối.
-- Thông báo real-time qua mô hình Observer Pattern.
+An online auction platform enabling:
+- **Sellers** to create auction sessions for items: Art, Electronics, Vehicles.
+- **Bidders** to place real-time bids or configure Auto-bid with a max price limit.
+- **Admins** to manage users and monitor the system.
+- **Anti-sniping**: automatically extends the auction end time when a last-minute bid is placed.
+- Real-time notifications via the Observer Pattern.
 
 ---
 
-## 🛠️ Công nghệ sử dụng
+## 🛠️ Technology Stack
 
-| Thành phần | Công nghệ |
+| Component | Technology |
 |---|---|
-| Ngôn ngữ | Java 17+ |
-| Giao diện Client | JavaFX |
-| Giao tiếp mạng | TCP Socket (JSON Protocol) |
-| Cơ sở dữ liệu | MySQL / PostgreSQL |
-| Migration DB | Flyway |
+| Language | Java 21 |
+| Client UI | JavaFX |
+| Network | TCP Socket (text/pipe-delimited protocol) |
+| Database | H2 (in-memory, auto-seeded) |
 | Build tool | Maven |
 | Logging | Logback |
 | Testing | JUnit 5 |
 
 ---
 
-## ⚙️ Yêu cầu môi trường
+## ⚙️ Requirements
 
-- **JDK**: 17 trở lên
+- **JDK**: 21+
 - **Maven**: 3.8+
-- **MySQL** hoặc **PostgreSQL** đang chạy
-- **JavaFX SDK 17+**: Tải tại https://gluonhq.com/products/javafx/ → chọn đúng OS → giải nén ra thư mục, ví dụ:
+- **JavaFX SDK 21+**: Download from https://gluonhq.com/products/javafx/ → choose your OS → extract to a folder, e.g.:
     - Windows: `C:\javafx-sdk`
     - Linux/macOS: `~/javafx-sdk`
 
 ---
 
-## 📁 Cấu trúc thư mục
+## 📁 Project Structure
 
 ```
 auction-system/
 ├── common/          # Shared: Entity, DTO, Strategy, Observer, Factory, Utils
 ├── server/          # Server: Socket server, Service, DAO, Scheduler
 ├── client/          # Client: JavaFX UI, Controller, Network layer
-├── database/        # SQL schema, init data, Flyway migrations
-└── docs/            # Tài liệu, class diagram, logo
+├── database/        # SQL schema, reference data, migrations
+└── docs/            # Docs, class diagram
 ```
 
-### Các module chính
+### Main Modules
 
-**`common`** – Dùng chung giữa server và client:
-- `entity/` – Các đối tượng nghiệp vụ: `Auction`, `User`, `Bidder`, `Seller`, `Item`, `BidTransaction`, ...
+**`common`** – Shared between server and client:
+- `entity/` – Business objects: `Auction`, `User`, `Bidder`, `Seller`, `Item`, `BidTransaction`, ...
 - `dto/` – Data Transfer Objects: `AuctionDTO`, `BidRequest`, `LoginRequest/Response`, ...
-- `strategy/` – Chiến lược đặt giá: `NormalBiddingStrategy`, `AutoBiddingStrategy`, `AntiSnipingStrategy`
+- `strategy/` – Bidding strategies: `NormalBiddingStrategy`, `AutoBiddingStrategy`, `AntiSnipingStrategy`
 - `observer/` – Observer Pattern: `Subject`, `Observer`, `AuctionSubject`, `ClientObserver`
 - `factory/` – Factory Pattern: `AuctionFactory`, `ItemFactory`
-- `exception/` – Các exception tuỳ chỉnh
-- `utils/` – Tiện ích: `DateUtils`, `JsonUtils`, `PriceUtils`, `ValidationUtils`
+- `exception/` – Custom exceptions
+- `utils/` – Utilities: `DateUtils`, `JsonUtils`, `PriceUtils`, `ValidationUtils`
 
-**`server`** – Xử lý logic nghiệp vụ:
-- `controller/` – Xử lý request từ client: `AuctionController`, `BidController`, `UserController`, `ClientHandler`
-- `service/` – Nghiệp vụ: `AuctionService`, `BiddingService`, `AutoBidService`, `AntiSnipingService`, `NotificationService`
-- `dao/` – Truy cập CSDL: `AuctionDAO`, `UserDAO`, `BidTransactionDAO`
-- `scheduler/` – Task định thời: `AuctionScheduler`, `StartAuctionTask`, `EndAuctionTask`, `AutoBidProcessor`
-- `model/` – Quản lý trạng thái: `AuctionManager`, `BidQueueManager`, `SessionManager`
+**`server`** – Business logic:
+- `controller/` – Request handlers: `AuctionController`, `BidController`, `UserController`, `ClientHandler`
+- `service/` – Business services: `AuctionService`, `BiddingService`, `AutoBidService`, `AntiSnipingService`, `NotificationService`
+- `dao/` – Data access: `AuctionDAO`, `UserDAO`, `BidTransactionDAO`
+- `scheduler/` – Timed tasks: `AuctionScheduler`, `StartAuctionTask`, `EndAuctionTask`, `AutoBidProcessor`
+- `model/` – State management: `AuctionManager`, `BidQueueManager`, `SessionManager`
 
-**`client`** – Giao diện người dùng JavaFX:
-- `controller/` – Điều khiển màn hình: `LoginController`, `DashboardController`, `AuctionDetailController`, ...
-- `network/` – Kết nối server: `ServerConnection`, `RealtimeListener`, `MessageProtocol`
-- `view/` – FXML files cho từng màn hình
+**`client`** – JavaFX UI:
+- `controller/` – Screen controllers: `LoginController`, `DashboardController`, `AuctionDetailController`, ...
+- `network/` – Server connection: `ServerConnection`, `RealtimeListener`, `MessageProtocol`
+- `view/` – FXML layout files
 
 ---
 
-## 📦 Vị trí file JAR
+## 📦 JAR Locations
 
-Sau khi build, các file JAR được đặt tại:
+After building:
 
 ```
 server/target/server-1.0-SNAPSHOT.jar
@@ -87,86 +86,88 @@ client/target/client-1.0-SNAPSHOT.jar
 
 ---
 
+## 🚀 Running Instructions
 
-## 🚀 Hướng dẫn chạy
-
-### Bước 1: Build toàn bộ project
+### Step 1: Build the project
 
 ```bash
 mvn clean package -DskipTests
 ```
 
-### Bước 2: Khởi động Server
+### Step 2: Start the Server
 
 ```bash
 java -jar server/target/server-1.0-SNAPSHOT.jar
 ```
 
-> Server mặc định lắng nghe tại cổng được cấu hình trong `ServerConfig.java` (mặc định: `9999`).
+> The server listens on port `5050` by default.  
+> Seed data is loaded automatically. Disable with `-Dserver.seed=false`.
 
-### Bước 3: Khởi động Client
+### Step 3: Start Client
 
-> ⚠️ Client dùng JavaFX nên **không thể chạy trực tiếp bằng `java -jar`**. Cần chỉ định đường dẫn JavaFX SDK.
+> ⚠️ Client requires JavaFX SDK — **cannot run with `java -jar` directly**.
 
-**Windows:**
+**Windows (cmd.exe or PowerShell):**
 ```bash
-java --module-path "C:\javafx-sdk\lib" ^
-     --add-modules javafx.controls,javafx.fxml ^
-     -jar client/target/client-1.0-SNAPSHOT.jar
+java --module-path "C:\javafx-sdk\lib" --add-modules javafx.controls,javafx.fxml -jar client/target/client-1.0-SNAPSHOT.jar
 ```
 
 **Linux / macOS:**
 ```bash
-java --module-path ~/javafx-sdk/lib \
-     --add-modules javafx.controls,javafx.fxml \
-     -jar client/target/client-1.0-SNAPSHOT.jar
+java --module-path ~/javafx-sdk/lib --add-modules javafx.controls,javafx.fxml -jar client/target/client-1.0-SNAPSHOT.jar
 ```
 
-> Thay `C:\javafx-sdk` hoặc `~/javafx-sdk` bằng đường dẫn thực tế bạn đã giải nén JavaFX SDK.  
-> Đảm bảo Server đã chạy **trước** khi khởi động Client.
+> Replace `C:\javafx-sdk` / `~/javafx-sdk` with your actual JavaFX SDK path.  
+> **No server?** Toggle the **MOCK MODE** button on the login screen to use local mock data.
+
+### Running Tests
+
+```bash
+mvn test
+```
 
 ---
 
-## ✅ Chức năng đã hoàn thành
+## ✅ Features
 
-### Người dùng
-- [x] Đăng ký / Đăng nhập
-- [x] Xem và chỉnh sửa hồ sơ cá nhân
-- [x] Phân quyền: Admin / Seller / Bidder
+### User Management
+- [x] Register / Login
+- [x] View and edit profile
+- [x] Role-based access: Admin / Seller / Bidder
+- [x] Change password
 
-### Đấu giá
-- [x] Tạo phiên đấu giá với vật phẩm (Art, Electronics, Vehicle)
-- [x] Xem danh sách phiên đấu giá (Dashboard)
-- [x] Xem chi tiết phiên đấu giá
-- [x] Xem lịch sử đấu giá của tôi
+### Auctions
+- [x] Create auction with items (Art, Electronics, Vehicle)
+- [x] View auction list (Dashboard)
+- [x] View auction detail
+- [x] View my auction history
 
-### Đặt giá
-- [x] Đặt giá thủ công (Normal Bidding)
-- [x] Đặt giá tự động (Auto-bid) với giới hạn giá tối đa
-- [x] Anti-sniping: gia hạn thời gian khi có bid cuối giờ
-- [x] Xem lịch sử bid và biểu đồ giá
+### Bidding
+- [x] Manual bidding
+- [x] Auto-bid with max price limit
+- [x] Anti-sniping: time extension on last-minute bids
+- [x] Bid history and price chart
 
-### Kỹ thuật
-- [x] Giao tiếp real-time qua TCP Socket
-- [x] Observer Pattern cho thông báo real-time
-- [x] Xử lý đồng thời (Concurrent bid) với queue
-- [x] Unit test cho toàn bộ module
-
----
-
-
-## 📄 Báo cáo & Demo
-
-- 📝 **Báo cáo PDF**: *(Thêm link vào đây)*
-- 🎥 **Video demo**: *(Thêm link vào đây)*
+### Technical
+- [x] Real-time TCP Socket communication
+- [x] Observer Pattern for real-time notifications
+- [x] Concurrent bid handling with queue
+- [x] Unit tests across all modules
 
 ---
 
-## Thành viên
-| Name                |    ID    | Contribution |
-|---------------------|----------|--------------|
-| Hoàng Phương Nhi    | 25023508 |  |
-| Nguyễn Ngọc Quỳnh   | 25023524 |  |
-| Ngô Khánh Linh      | 25023488 | |
-| Đặng Thị Phương Anh | 25023432 | |
+## 📄 Report & Demo
 
+- 📝 **Report PDF**: *(add link here)*
+- 🎥 **Video demo**: *(add link here)*
+
+---
+
+## Team Members
+
+| Name                | ID       | Contribution |
+|---------------------|----------|-------------|
+| Hoàng Phương Nhi    | 25023508 |             |
+| Nguyễn Ngọc Quỳnh   | 25023524 |             |
+| Ngô Khánh Linh      | 25023488 |             |
+| Đặng Thị Phương Anh | 25023432 |             |
