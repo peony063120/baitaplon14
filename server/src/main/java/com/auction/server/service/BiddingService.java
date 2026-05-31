@@ -24,16 +24,16 @@ public class BiddingService {
     private final BidTransactionDAO bidDAO;
     private final UserDAO userDAO;
     private BiddingStrategy strategy;
-    private final AuctionSubject subject;
+    private AuctionSubject subject;
     private final AntiSnipingService antiSnipingService;
-    private final AutoBidService autoBidService;
+    private AutoBidService autoBidService;
 
     // Constructor mặc định (dùng trong production)
     public BiddingService() {
         this.auctionDAO = AuctionDAO.getInstance();
         this.bidDAO = BidTransactionDAO.getInstance();
         this.userDAO = UserDAO.getInstance();
-        this.subject = new AuctionSubject();
+        this.subject = AuctionSubject.getInstance();
         this.antiSnipingService = new AntiSnipingService();
         this.autoBidService = new AutoBidService();
         this.strategy = new NormalBiddingStrategy();
@@ -53,6 +53,11 @@ public class BiddingService {
         this.antiSnipingService = antiSnipingService;
         this.autoBidService = autoBidService;
         this.strategy = new NormalBiddingStrategy();
+    }
+
+    // Setter để inject AuctionSubject (nếu cần)
+    public void setAuctionSubject(AuctionSubject subject) {
+        this.subject = subject;
     }
 
     /**

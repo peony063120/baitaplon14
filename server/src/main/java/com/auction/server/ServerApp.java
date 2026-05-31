@@ -76,8 +76,11 @@ public class ServerApp {
             UserController userController = new UserController(userService);
             BidController bidController = new BidController(biddingService);
 
-            // AuctionSubject cho observer
-            AuctionSubject auctionSubject = new AuctionSubject();
+            // AuctionSubject cho observer (singleton)
+            AuctionSubject auctionSubject = AuctionSubject.getInstance();
+
+            // Inject AuctionSubject vào AuctionService
+            auctionService.setAuctionSubject(auctionSubject);
 
             // Listeners (có thể gắn sau)
             AuctionEventListener auctionListener = new AuctionEventListenerImpl();
@@ -88,6 +91,8 @@ public class ServerApp {
             AutoBidProcessor autoBidProcessor = AutoBidProcessor.getInstance();
             // Inject BiddingService into AutoBidService via AutoBidProcessor
             autoBidProcessor.setBiddingService(biddingService);
+            // ALSO inject the same AutoBidService that BiddingService uses
+            autoBidProcessor.setAutoBidService(autoBidService);
             autoBidProcessor.start();
 
             clientThreadPool = Executors.newCachedThreadPool();

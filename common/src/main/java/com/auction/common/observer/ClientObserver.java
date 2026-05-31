@@ -27,9 +27,9 @@ public class ClientObserver implements Observer {
     public void update(Auction auction) {
         if (out != null && isConnected()) {
             out.println("AUCTION_UPDATE"
-                    + ":ID:" + auction.getItemId() // lúc đầu: auction.getId()
+                    + ":ID:" + auction.getId()
                     + ":PRICE:" + auction.getCurrentPrice()
-                    + ":WINNER:" + auction.getCurrentWinnerId() // lúc đầu: auction.getCurrentWinner()
+                    + ":WINNER:" + auction.getCurrentWinnerId()
                     + ":STATUS:" + auction.getStatus());
         }
     }

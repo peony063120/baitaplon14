@@ -4,6 +4,7 @@ import com.auction.common.dto.AuctionDTO;
 import com.auction.common.entity.Auction;
 import com.auction.common.enums.AuctionStatus;
 import com.auction.common.exception.AuctionNotFoundException;
+import com.auction.common.observer.AuctionSubject;
 import com.auction.server.config.ServerConfig;
 import com.auction.server.dao.AuctionDAO;
 import com.auction.server.mapper.AuctionMapper;
@@ -17,11 +18,13 @@ public class AuctionService {
     private final AuctionDAO auctionDAO;
     private final AuctionMapper mapper;
     private final long defaultAuctionDurationHours;
+    private AuctionSubject auctionSubject;
 
     public AuctionService() {
         this.auctionDAO = AuctionDAO.getInstance();
         this.mapper = new AuctionMapper();
         this.defaultAuctionDurationHours = ServerConfig.getInstance().getDefaultAuctionDurationHours();
+        this.auctionSubject = AuctionSubject.getInstance();
     }
 
     // Thêm constructor này để test có thể inject mock
@@ -29,6 +32,11 @@ public class AuctionService {
         this.auctionDAO = auctionDAO;
         this.mapper = new AuctionMapper();
         this.defaultAuctionDurationHours = 24; // Default 24 hours for tests
+        this.auctionSubject = AuctionSubject.getInstance();
+    }
+
+    public void setAuctionSubject(AuctionSubject auctionSubject) {
+        this.auctionSubject = auctionSubject;
     }
     
     public List<AuctionDTO> getAllAuctions() {

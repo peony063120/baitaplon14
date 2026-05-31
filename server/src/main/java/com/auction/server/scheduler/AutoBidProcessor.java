@@ -39,9 +39,10 @@ public class AutoBidProcessor {
         }
     }
 
-    // Setter to inject AutoBidService (if needed for testing)
+    // Setter to inject AutoBidService (to use the same instance as BiddingService)
     public void setAutoBidService(AutoBidService autoBidService) {
         this.autoBidService = autoBidService;
+        // Also set BiddingService in the new AutoBidService
         if (this.biddingService != null && autoBidService != null) {
             autoBidService.setBiddingService(this.biddingService);
         }

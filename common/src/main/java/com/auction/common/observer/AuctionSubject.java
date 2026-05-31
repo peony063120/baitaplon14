@@ -5,7 +5,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AuctionSubject implements Subject {
+    private static volatile AuctionSubject instance;
     private final List<Observer> observers = new ArrayList<>();
+
+    private AuctionSubject() {}
+
+    public static AuctionSubject getInstance() {
+        if (instance == null) {
+            synchronized (AuctionSubject.class) {
+                if (instance == null) {
+                    instance = new AuctionSubject();
+                }
+            }
+        }
+        return instance;
+    }
 
     @Override
     public void registerObserver(Observer observer) {
