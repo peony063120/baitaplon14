@@ -78,7 +78,7 @@ public class ProfileController {
             emailField.setText(user.getEmail());
 
             if (user instanceof Bidder bidder) {
-                balanceLabel.setText(String.format("%,.0f VNĐ", bidder.getBalance()));
+                balanceLabel.setText(String.format("$%,.0f", bidder.getBalance()));
             } else {
                 balanceLabel.setText("N/A");
             }
