@@ -2,6 +2,7 @@ package com.auction.client.model;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ClientModelTest {
@@ -47,11 +48,10 @@ class ClientModelTest {
     assertNull(clientModel.getSession());
   }
 
-  @Test
-  void testRegisterWithNullDto() {
-    // Truyền một DTO rỗng (null) vào hàm đăng ký phải trả về false bảo vệ hệ thống
-    assertFalse(clientModel.register(null));
-  }
+    @Test
+    void testRegisterWithNullDto() throws IOException {
+        assertFalse(clientModel.register(null));
+    }
 
   @Test
   void testSetSessionWithDetailsAndGetBalance() {
