@@ -75,35 +75,39 @@ public class BiddingService {
     public void placeBid(BidRequest request, boolean triggerAutoBids) throws InvalidBidException {
         Auction auction = auctionDAO.getAuction(request.getAuctionId());
         if (auction == null) {
-            throw new IllegalArgumentException("Auction not found");
+            throw new InvalidBidException("Auction not found");
         }
 
         // Khóa chính trên auction để đảm bảo không có 2 bid xử lý đồng thời trên cùng phiên
         synchronized (auction) {
             // Kiểm tra trạng thái
             if (auction.getStatus() != AuctionStatus.RUNNING) {
-                throw new IllegalArgumentException("Auction is not running");
+                throw new InvalidBidException("Auction is not running");
             }
 
             // Seller không được đấu giá sản phẩm của mình
             if (auction.getSellerId().equals(request.getBidderId())) {
-                throw new IllegalArgumentException("Seller cannot bid on own auction");
+                throw new InvalidBidException("Seller cannot bid on own auction");
             }
 
             // Lấy bidder – giả sử userDAO có findUserById (nếu chưa có thì thêm vào UserDAO)
-            Bidder bidder = (Bidder) userDAO.findUserById(request.getBidderId());
-            if (bidder == null) {
-                throw new IllegalArgumentException("Bidder not found");
+            User user = userDAO.findUserById(request.getBidderId());
+            if (user == null) {
+                throw new InvalidBidException("Bidder not found");
             }
+            if (!(user instanceof Bidder)) {
+                throw new InvalidBidException("User is not a bidder");
+            }
+            Bidder bidder = (Bidder) user;
 
             // Kiểm tra số dư - phải có đủ tiền cho toàn bộ giá thầu
             if (bidder.getBalance() < request.getAmount()) {
-                throw new IllegalArgumentException("Insufficient balance");
+                throw new InvalidBidException("Insufficient balance");
             }
 
             // Kiểm tra giá hợp lệ qua strategy
             if (!strategy.execute(auction, request)) {
-                throw new IllegalArgumentException("Invalid bid amount");
+                throw new InvalidBidException("Invalid bid amount");
             }
 
             // LƯU GIÁ HIỆN TẠI VÀ NGƯỜI THẮNG TRƯỚC ĐÓ

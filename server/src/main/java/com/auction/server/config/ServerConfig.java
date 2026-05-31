@@ -38,7 +38,7 @@ public class ServerConfig {
     }
 
     public int getPort() {
-        return Integer.parseInt(props.getProperty("server.port", "8080"));
+        return Integer.parseInt(props.getProperty("server.port", "8080").trim());
     }
 
     public String getHost() {
@@ -52,7 +52,7 @@ public class ServerConfig {
      * Default: 24 hours (can be configured in server.properties)
      */
     public long getDefaultAuctionDurationHours() {
-        return Long.parseLong(props.getProperty("auction.default.duration.hours", "24"));
+        return Long.parseLong(props.getProperty("auction.default.duration.hours", "24").trim());
     }
 
     /**
@@ -67,7 +67,7 @@ public class ServerConfig {
      * Default: 5 seconds (prevents spam bidding)
      */
     public long getMinBidIntervalSeconds() {
-        return Long.parseLong(props.getProperty("auction.min.bid.interval.seconds", "5"));
+        return Long.parseLong(props.getProperty("auction.min.bid.interval.seconds", "5").trim());
     }
 
     /**
