@@ -120,8 +120,53 @@ public class ResponseHandlerTest {
   }
 
   @Test
+  public void testParseBidHistoryFromText_WithBidderUsername() {
+    String response = "BID_HISTORY_COUNT:1||BID:auc1:uuid-1:bidder17:6020.0:1717248000000:false";
+    List<com.auction.common.entity.BidTransaction> history =
+        ResponseHandler.parseBidHistoryFromText(response);
+    assertEquals(1, history.size());
+    assertEquals("bidder17", history.get(0).getBidderName());
+    assertEquals(6020.0, history.get(0).getAmount());
+  }
+
+  @Test
+  public void testParseAuctionDetailFromText_WithWinnerName() {
+    String detailText = "AUCTION:A99:Sony TV 4K:1500.0:RUNNING:winner-uuid:8:120000:1000.0:50.0::bidder17";
+
+    AuctionDTO dto = ResponseHandler.parseAuctionDetailFromText(detailText.trim());
+
+    assertNotNull(dto);
+    assertEquals("winner-uuid", dto.getCurrentWinnerId());
+    assertEquals("bidder17", dto.getCurrentWinnerName());
+  }
+
+  @Test
+  public void testParseAuctionUpdateFromText_WithWinnerName() {
+    String update = "AUCTION_UPDATE:ID:A99:PRICE:1500.0:WINNER:uuid-1:WINNER_NAME:bidder17:STATUS:RUNNING";
+
+    AuctionDTO dto = ResponseHandler.parseAuctionUpdateFromText(update);
+
+    assertNotNull(dto);
+    assertEquals("uuid-1", dto.getCurrentWinnerId());
+    assertEquals("bidder17", dto.getCurrentWinnerName());
+  }
+
+  @Test
+  public void testParseAuctionUpdateFromText_ValidFormat() {
+    String update = "AUCTION_UPDATE:ID:A99:PRICE:1500.0:WINNER:bidder1:STATUS:RUNNING";
+
+    AuctionDTO dto = ResponseHandler.parseAuctionUpdateFromText(update);
+
+    assertNotNull(dto);
+    assertEquals("A99", dto.getId());
+    assertEquals(1500.0, dto.getCurrentPrice());
+    assertEquals("bidder1", dto.getCurrentWinnerId());
+    assertEquals(AuctionStatus.RUNNING, dto.getStatus());
+  }
+
+  @Test
   public void testParseAuctionDetailFromText_ValidFormat() {
-    String detailText = "AUCTION:A99:Sony TV 4K:1500.0:DRAFT:winner_user_3:8:120000";
+    String detailText = "AUCTION:A99:Sony TV 4K:1500.0:DRAFT:winner_user_3:8:120000:1000.0:50.0";
 
     AuctionDTO dto = ResponseHandler.parseAuctionDetailFromText(detailText.trim());
 
@@ -135,6 +180,8 @@ public class ResponseHandlerTest {
 
     assertEquals("winner_user_3", dto.getCurrentWinnerId());
     assertEquals(8, dto.getTotalBids());
+    assertEquals(1000.0, dto.getStartingPrice());
+    assertEquals(50.0, dto.getMinIncrement());
 
     if (dto.getRemainingTimeMillis() != 0) {
       assertEquals(120000L, dto.getRemainingTimeMillis());

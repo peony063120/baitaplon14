@@ -9,13 +9,18 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.function.Consumer;
 
 public class AuctionCard extends VBox {
@@ -41,7 +46,8 @@ public class AuctionCard extends VBox {
         imagePlaceholder.setAlignment(Pos.CENTER);
         imagePlaceholder.setMaxWidth(Double.MAX_VALUE);
         imagePlaceholder.setMinHeight(130);
-        // TODO(asset): Replace this text placeholder with the auction item image when image URLs are available.
+
+        javafx.scene.Node imageNode = buildImageNode(imagePlaceholder);
 
         Label statusBadge = new Label(getStatusText());
         statusBadge.getStyleClass().add("card-badge");
@@ -96,11 +102,38 @@ public class AuctionCard extends VBox {
         bidButton.setMaxWidth(Double.MAX_VALUE);
 
         StackPane badgePane = new StackPane();
-        badgePane.getChildren().addAll(imagePlaceholder, statusBadge);
+        badgePane.getChildren().addAll(imageNode, statusBadge);
         StackPane.setAlignment(statusBadge, Pos.TOP_LEFT);
         StackPane.setMargin(statusBadge, new Insets(10, 0, 0, 10));
 
         getChildren().addAll(badgePane, categoryLabel, titleLabel, priceBox, metaBox, bidButton);
+    }
+
+    private javafx.scene.Node buildImageNode(Label fallback) {
+        String imageRef = auction.getImagePath();
+        if (imageRef != null && imageRef.startsWith("BASE64:")) {
+            try {
+                byte[] bytes = Base64.getDecoder().decode(imageRef.substring(7));
+                ImageView imageView = new ImageView(new Image(new ByteArrayInputStream(bytes)));
+                imageView.setFitWidth(280);
+                imageView.setFitHeight(130);
+                imageView.setPreserveRatio(true);
+                return imageView;
+            } catch (IllegalArgumentException ignored) {
+                return fallback;
+            }
+        }
+        if (imageRef != null && !imageRef.isBlank()) {
+            File file = new File(imageRef);
+            if (file.exists()) {
+                ImageView imageView = new ImageView(new Image(file.toURI().toString(), true));
+                imageView.setFitWidth(280);
+                imageView.setFitHeight(130);
+                imageView.setPreserveRatio(true);
+                return imageView;
+            }
+        }
+        return fallback;
     }
 
     private String getCategoryLabel() {

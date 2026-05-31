@@ -17,7 +17,10 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.List;
 
 public class CreateAuctionController {
@@ -93,7 +96,8 @@ public class CreateAuctionController {
             String minInc = String.valueOf(auctionDTO.getMinIncrement());
             String category = sanitize(auctionDTO.getCategory() != null ? auctionDTO.getCategory() : "");
 
-            String imagePath = sanitize(imagePathLabel.getText() != null ? imagePathLabel.getText() : "");
+            String imagePath = encodeImageForTransfer(
+                    imagePathLabel.getText() != null ? imagePathLabel.getText() : "");
 
             String request = "CREATE_AUCTION:" + itemName + "|" + description + "|" + startPrice
                     + "|" + seller + "|" + startTime + "|" + endTime + "|" + minInc + "|" + category
@@ -114,6 +118,21 @@ public class CreateAuctionController {
 
     private String sanitize(String s) {
         return s != null ? s.replace("|", " ").replace("\r", "") : "";
+    }
+
+    private String encodeImageForTransfer(String path) {
+        if (path == null || path.isBlank() || "No image selected".equals(path)) {
+            return "";
+        }
+        if (path.startsWith("BASE64:")) {
+            return sanitize(path);
+        }
+        try {
+            byte[] bytes = Files.readAllBytes(Path.of(path));
+            return "BASE64:" + Base64.getEncoder().encodeToString(bytes);
+        } catch (IOException e) {
+            return sanitize(path);
+        }
     }
 
     @FXML

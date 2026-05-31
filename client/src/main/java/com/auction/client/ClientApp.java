@@ -54,7 +54,7 @@ public class ClientApp extends Application {
     public static void showMainScreen() throws Exception {
         FXMLLoader loader = new FXMLLoader(ClientApp.class.getResource("/com/auction/client/view/main.fxml"));
         Parent root = loader.load();
-        Scene scene = new Scene(root);
+        Scene scene = new Scene(root, 1024, 768);
         scene.getStylesheets().add(ClientApp.class.getResource("/com/auction/client/styles/main.css").toExternalForm());
         primaryStage.setScene(scene);
     }
@@ -62,7 +62,7 @@ public class ClientApp extends Application {
     public static void showSellerScreen() throws Exception {
         FXMLLoader loader = new FXMLLoader(ClientApp.class.getResource("/com/auction/client/view/main.fxml"));
         Parent root = loader.load();
-        Scene scene = new Scene(root);
+        Scene scene = new Scene(root, 1024, 768);
         scene.getStylesheets().add(ClientApp.class.getResource("/com/auction/client/styles/main.css").toExternalForm());
         primaryStage.setScene(scene);
     }
@@ -78,7 +78,7 @@ public class ClientApp extends Application {
     public static void showAdminDashboard() throws Exception {
         FXMLLoader loader = new FXMLLoader(ClientApp.class.getResource("/com/auction/client/view/admin.fxml"));
         Parent root = loader.load();
-        Scene scene = new Scene(root);
+        Scene scene = new Scene(root, 1024, 768);
         scene.getStylesheets().add(ClientApp.class.getResource("/com/auction/client/styles/main.css").toExternalForm());
         primaryStage.setScene(scene);
     }

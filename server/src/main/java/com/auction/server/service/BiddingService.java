@@ -105,17 +105,11 @@ public class BiddingService {
                 throw new InvalidBidException("Insufficient balance");
             }
 
-            // Kiểm tra giá hợp lệ qua strategy
-            if (!strategy.execute(auction, request)) {
-                throw new InvalidBidException("Invalid bid amount");
-            }
-
-            // LƯU GIÁ HIỆN TẠI VÀ NGƯỜI THẮNG TRƯỚC ĐÓ (PHẢI LẤY TRƯỚC KHI STRATEGY EXECUTE)
+            // Lưu giá và người thắng trước khi strategy cập nhật auction
             double previousPrice = auction.getCurrentPrice();
             String previousWinnerId = auction.getCurrentWinnerId();
 
-            // Thực thi strategy - sẽ cập nhật auction state (currentPrice, currentWinnerId)
-            // và thêm bid vào auction.bidHistory
+            // Validate và thực thi bid (NormalBiddingStrategy vừa kiểm tra vừa apply)
             strategy.execute(auction, request);
 
             // Lấy bid vừa được thêm vào bidHistory từ strategy
