@@ -167,17 +167,26 @@ public class AuctionDetailController {
         }
 
         try {
-            // Gửi chuỗi định dạng chuẩn chỉnh lên Server phân tách bằng dấu hai chấm
+            // Gửi chuỗi định dạng chuẩn lên Server
             String response = ServerConnection.getInstance().sendRequest(
                     "PLACE_BID:" + currentAuction.getId() + ":" + userId + ":" + amount + ":false"
             );
-            if (response != null && response.startsWith("BID_OK")) {
+
+            // ĐÃ SỬA: Chấp nhận cả "BID_OK" và bản tin "AUCTION_UPDATE" làm tín hiệu thành công
+            if (response != null && (response.startsWith("BID_OK") || response.startsWith("AUCTION_UPDATE"))) {
                 if (currentUser instanceof Bidder bidder) {
                     bidder.deductBalance(amount);
                     MainController.refreshBalance();
                 }
                 bidAmountField.clear();
                 showSuccess("Bid placed successfully.");
+
+                // Cập nhật nóng giá trị trên giao diện
+                currentAuction.setCurrentPrice(amount);
+                currentPriceLabel.setText(formatCurrency(amount));
+
+                // Gọi nạp lại lịch sử thầu để cập nhật danh sách và biểu đồ
+                getBidHistory();
             } else {
                 showError("Bid failed: " + (response != null ? response : "Unknown error"));
             }
