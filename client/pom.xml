@@ -182,32 +182,32 @@
         </plugins>
     </build>
 
-  <!-- Activates when you pass "-Dserver.host=..." on the Maven CLI (forwards into the JavaFX JVM). -->
-  <profiles>
-    <profile>
-      <id>set-server</id>
-      <activation>
-        <property>
-          <name>server.host</name>
-        </property>
-      </activation>
-      <properties>
-        <server.port>5050</server.port>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-maven-plugin</artifactId>
-            <configuration>
-              <options>
-                <option>-Dserver.host=${server.host}</option>
-                <option>-Dserver.port=${server.port}</option>
-              </options>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
+    <!-- Activates when you pass "-Dserver.host=..." on the Maven CLI (forwards into the JavaFX JVM). -->
+    <profiles>
+        <profile>
+            <id>set-server</id>
+            <activation>
+                <property>
+                    <name>server.host</name>
+                </property>
+            </activation>
+            <properties>
+                <server.port>5050</server.port>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.openjfx</groupId>
+                        <artifactId>javafx-maven-plugin</artifactId>
+                        <configuration>
+                            <options>
+                                <option>-Dserver.host=${server.host}</option>
+                                <option>-Dserver.port=${server.port}</option>
+                            </options>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

@@ -12,6 +12,9 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.0.0-M9</version>
+        <configuration>
+          <argLine>-Dnet.bytebuddy.experimental=true</argLine>
+        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -77,7 +80,7 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>5.6.0</version>
+      <version>5.14.2</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -97,7 +100,7 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-junit-jupiter</artifactId>
-      <version>5.6.0</version>
+      <version>5.14.2</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -121,8 +124,8 @@
   </dependencies>
   <properties>
     <maven.compiler.target>21</maven.compiler.target>
-    <junit.version>5.10.0</junit.version>
-    <mockito.version>5.6.0</mockito.version>
     <maven.compiler.source>21</maven.compiler.source>
+    <junit.version>5.10.0</junit.version>
+    <mockito.version>5.14.2</mockito.version>
   </properties>
 </project>

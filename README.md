@@ -388,9 +388,9 @@ Use `--module-path` pointing to those JARs (do **not** use plain `java -jar` wit
 ```powershell
 $jfx = "$env:USERPROFILE\.m2\repository\org\openjfx"
 $mp  = "$jfx\javafx-base\21.0.2\javafx-base-21.0.2-win.jar;" +
-       "$jfx\javafx-controls\21.0.2\javafx-controls-21.0.2-win.jar;" +
-       "$jfx\javafx-fxml\21.0.2\javafx-fxml-21.0.2-win.jar;" +
-       "$jfx\javafx-graphics\21.0.2\javafx-graphics-21.0.2-win.jar"
+        "$jfx\javafx-controls\21.0.2\javafx-controls-21.0.2-win.jar;" +
+        "$jfx\javafx-fxml\21.0.2\javafx-fxml-21.0.2-win.jar;" +
+        "$jfx\javafx-graphics\21.0.2\javafx-graphics-21.0.2-win.jar"
 java --module-path $mp --add-modules javafx.controls,javafx.fxml `
      -Dserver.host=192.168.1.10 -Dserver.port=5050 `
      -jar client/target/client-1.0-SNAPSHOT.jar
