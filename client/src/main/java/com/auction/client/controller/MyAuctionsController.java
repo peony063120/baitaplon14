@@ -39,12 +39,15 @@ public class MyAuctionsController {
     }
 
     public void loadMyAuctions() {
-        String sellerUsername = clientModel.getCurrentUser() != null
-                ? clientModel.getCurrentUser().getUsername() : "demo";
+        if (clientModel.getCurrentUser() == null) {
+            statusLabel.setText("❌ Please log in as a seller.");
+            return;
+        }
+        String sellerKey = clientModel.getCurrentUser().getUsername();
         statusLabel.setText("🔄 Loading...");
 
         DataService.getInstance().loadMyAuctions(
-                sellerUsername,
+                sellerKey,
                 auctions -> {
                     myAuctions = auctions;
                     renderAuctionList();

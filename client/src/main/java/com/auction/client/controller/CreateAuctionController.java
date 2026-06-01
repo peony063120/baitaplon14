@@ -40,8 +40,16 @@ public class CreateAuctionController {
 
     @FXML
     public void initialize() {
-        itemTypeComboBox.getItems().addAll("ELECTRONICS", "ART", "VEHICLE");
-        itemTypeComboBox.setValue("ELECTRONICS");
+        itemTypeComboBox.getItems().addAll(
+                "Vehicles",
+                "Electronics",
+                "Art",
+                "Jewelry",
+                "Real Estate",
+                "Watches",
+                "Antiques"
+        );
+        itemTypeComboBox.setValue("Electronics");
 
         SpinnerValueFactory<Integer> factory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 168, 24);
         durationSpinner.setValueFactory(factory);
