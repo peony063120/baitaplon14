@@ -35,7 +35,16 @@ public class UserController {
     }
 
     public LoginResponse login(LoginRequest request) {
-        return userService.authenticate(request.getUsername(), request.getPassword());
+        LoginResponse response = userService.authenticate(request.getUsername(), request.getPassword());
+        if (response == null || !response.isSuccess()) {
+            return response;
+        }
+        String requestedRole = request.getRole();
+        if (requestedRole != null && !requestedRole.isBlank()
+                && !response.getRole().equalsIgnoreCase(requestedRole)) {
+            return new LoginResponse(false, "Role mismatch: please select the correct role");
+        }
+        return response;
     }
 
     public UserDTO getUserProfile(String userId) {

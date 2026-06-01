@@ -37,6 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MainController {
 
     @FXML private TextField searchField;
+    @FXML private Label welcomeLabel;
     @FXML private Label clockLabel;
     @FXML private Text balanceLabel;
     @FXML private StackPane contentPane;
@@ -159,6 +160,17 @@ public class MainController {
         clockLabel.setText(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
 
         User currentUser = clientModel.getCurrentUser();
+        if (welcomeLabel != null) {
+            if (currentUser != null) {
+                String displayName = currentUser.getFullName();
+                if (displayName == null || displayName.isBlank()) {
+                    displayName = currentUser.getUsername();
+                }
+                welcomeLabel.setText("Welcome, " + displayName);
+            } else {
+                welcomeLabel.setText("");
+            }
+        }
         if (currentUser instanceof Bidder bidder) {
             balanceLabel.setText(String.format("$%,.0f", bidder.getBalance()));
         } else {

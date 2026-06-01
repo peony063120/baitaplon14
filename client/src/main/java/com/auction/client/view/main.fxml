@@ -32,6 +32,7 @@
             <HBox alignment="CENTER_LEFT" onMouseClicked="#showDashboard" spacing="8" />
             <TextField fx:id="searchField" onAction="#handleSearch" promptText="Search auctions..." styleClass="search-field" />
             <Region HBox.hgrow="ALWAYS" />
+            <Label fx:id="welcomeLabel" styleClass="welcome-label" />
             <Label fx:id="clockLabel" styleClass="clock" />
             <Button fx:id="notifBtn" onAction="#showNotifications" styleClass="icon-btn">
                 <graphic>
