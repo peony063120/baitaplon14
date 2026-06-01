@@ -61,11 +61,12 @@ public class UserController {
         }
     }
 
-    public void changePassword(String userId, String oldPassword, String newPassword) {
+    public boolean changePassword(String userId, String oldPassword, String newPassword) {
         try {
             userService.changePassword(userId, oldPassword, newPassword);
+            return true;
         } catch (AuctionNotFoundException | IllegalArgumentException e) {
-            e.printStackTrace();
+            return false;
         }
     }
 }

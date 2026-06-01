@@ -114,7 +114,8 @@ public class BidHistoryController {
 
         return transactions.stream()
                 .map(tx -> new BidHistoryDTO(
-                        tx.getBidderId(),           // bidderName (tạm dùng ID)
+                        tx.getBidderName() != null && !tx.getBidderName().isBlank()
+                                ? tx.getBidderName() : tx.getBidderId(),
                         tx.getAmount(),
                         tx.getBidTime(),
                         tx.isAutoBid()
@@ -217,21 +218,34 @@ public class BidHistoryController {
      * @param userId User ID
      */
     public void loadBidHistoryByUser(String userId) {
+        if (userId == null || userId.isBlank()) {
+            showError("User not logged in.");
+            return;
+        }
+        statusLabel.setText("🔄 Loading...");
         new Thread(() -> {
             try {
                 String response = ServerConnection.getInstance().sendRequest("GET_USER_BID_HISTORY:" + userId);
                 List<BidTransaction> history = ResponseHandler.parseBidHistoryFromText(response);
                 List<BidHistoryDTO> dtos = history.stream()
-                        .map(b -> new BidHistoryDTO(b.getBidderId(), b.getAmount(), b.getBidTime(), b.isAutoBid()))
+                        .map(b -> new BidHistoryDTO(
+                                b.getBidderName() != null && !b.getBidderName().isBlank()
+                                        ? b.getBidderName() : b.getBidderId(),
+                                b.getAmount(),
+                                b.getBidTime(),
+                                b.isAutoBid()))
                         .collect(Collectors.toList());
                 Platform.runLater(() -> {
                     allBids = dtos;
                     historyTable.getItems().setAll(allBids);
-                    statusLabel.setText("📊 Total: " + allBids.size() + (allBids.size() <= 1 ? " bid" : " bids"));                });
+                    statusLabel.setText(allBids.isEmpty()
+                            ? "📋 No bids found for your account"
+                            : "📊 Total: " + allBids.size() + (allBids.size() <= 1 ? " bid" : " bids"));
+                });
             } catch (IOException e) {
-                showError("Connection error:" + e.getMessage());
+                showError("Connection error: " + e.getMessage());
             }
-        }).start();
+        }, "load-user-bids").start();
     }
 
 

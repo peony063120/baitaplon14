@@ -38,7 +38,32 @@ public class ProfileController {
     @FXML
     public void initialize() {
         loadUserProfile();
+        fetchProfileFromServer();
         setupNumberFormatting(addBalanceField);
+    }
+
+    private void fetchProfileFromServer() {
+        User user = clientModel.getCurrentUser();
+        if (user == null || AppConfig.isUseMock()) {
+            return;
+        }
+        new Thread(() -> {
+            try {
+                String response = ServerConnection.getInstance().sendRequest("GET_PROFILE:" + user.getUsername());
+                UserDTO profile = com.auction.client.network.ResponseHandler.parseProfileFromText(response);
+                if (profile == null) {
+                    return;
+                }
+                Platform.runLater(() -> {
+                    user.setEmail(profile.getEmail());
+                    user.setFullName(profile.getFullName());
+                    fullNameField.setText(profile.getFullName() != null ? profile.getFullName() : "");
+                    emailField.setText(profile.getEmail() != null ? profile.getEmail() : "");
+                });
+            } catch (IOException ignored) {
+                // Giữ dữ liệu hiện có nếu không tải được profile
+            }
+        }).start();
     }
 
     private void setupNumberFormatting(TextField field) {
@@ -278,7 +303,10 @@ public class ProfileController {
                         oldPasswordField.clear();
                         newPasswordField.clear();
                     } else {
-                        statusLabel.setText("❌ Current password is incorrect");
+                        String message = response != null && response.startsWith("ERROR:")
+                                ? response.substring(6)
+                                : "Current password is incorrect";
+                        statusLabel.setText("❌ " + message);
                         statusLabel.setStyle("-fx-text-fill: #DC2626;");
                     }
                     clearStatusAfterDelay();
@@ -306,9 +334,10 @@ public class ProfileController {
             stage.setScene(new Scene(loader.load()));
 
             BidHistoryController controller = loader.getController();
-            // Load bid history for current user
-        String username = clientModel.getCurrentUser().getUsername();
-            controller.loadBidHistoryByUser(username);
+            User currentUser = clientModel.getCurrentUser();
+            if (currentUser != null) {
+                controller.loadBidHistoryByUser(currentUser.getId());
+            }
 
             stage.setTitle("My Bid History");
             stage.show();

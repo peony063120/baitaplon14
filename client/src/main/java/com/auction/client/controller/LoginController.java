@@ -70,7 +70,9 @@ public class LoginController {
                     loginResp.getUserId(),
                     loginResp.getUsername(),
                     loginResp.getRole(),
-                    loginResp.getBalance()
+                    loginResp.getBalance(),
+                    loginResp.getEmail(),
+                    loginResp.getFullName()
             );
             try {
                 String role = loginResp.getRole();

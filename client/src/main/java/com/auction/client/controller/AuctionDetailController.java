@@ -19,11 +19,23 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 
 public class AuctionDetailController {
 
     @FXML private Label itemNameLabel;
+    @FXML private Label categoryLabel;
+    @FXML private Label descriptionLabel;
+    @FXML private Label startTimeLabel;
+    @FXML private Label endTimeLabel;
     @FXML private Label currentPriceLabel;
     @FXML private Label startingPriceLabel;
     @FXML private Label minIncrementLabel;
@@ -35,6 +47,10 @@ public class AuctionDetailController {
     @FXML private PriceChart priceChart;
     @FXML private TimerLabel timerLabel;
     @FXML private Label errorLabel;
+    @FXML private ImageView itemImageView;
+
+    private static final DateTimeFormatter DATE_TIME_FMT =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     private AuctionDTO currentAuction;
     private final ClientModel clientModel = ClientModel.getInstance();
@@ -84,6 +100,19 @@ public class AuctionDetailController {
         }
 
         itemNameLabel.setText(textOrDefault(currentAuction.getItemName(), "Auction item"));
+        if (categoryLabel != null) {
+            categoryLabel.setText(textOrDefault(currentAuction.getCategory(), ""));
+        }
+        if (descriptionLabel != null) {
+            descriptionLabel.setText(textOrDefault(currentAuction.getItemDescription(), "No description available."));
+        }
+        if (startTimeLabel != null) {
+            startTimeLabel.setText(formatDateTime(currentAuction.getStartTime()));
+        }
+        if (endTimeLabel != null) {
+            endTimeLabel.setText(formatDateTime(currentAuction.getEndTime()));
+        }
+        loadItemImage(currentAuction.getImagePath());
         currentPriceLabel.setText(formatCurrency(currentAuction.getCurrentPrice()));
         startingPriceLabel.setText(formatCurrency(currentAuction.getStartingPrice()));
         minIncrementLabel.setText(formatCurrency(currentAuction.getMinIncrement()));
@@ -93,11 +122,69 @@ public class AuctionDetailController {
         double nextMinBid = currentAuction.getCurrentPrice() + currentAuction.getMinIncrement();
         bidAmountField.setText(String.format("%.0f", nextMinBid));
 
-        if (currentAuction.getEndTime() != null && timerLabel != null) {
-            timerLabel.startCountdown(currentAuction.getEndTime());
-        }
-
         configureBidPanelVisibility();
+        updateAuctionTimer();
+    }
+
+    private void updateAuctionTimer() {
+        if (timerLabel == null || currentAuction == null) {
+            return;
+        }
+        if (currentAuction.getStatus() == AuctionStatus.FINISHED
+                || currentAuction.getStatus() == AuctionStatus.PAID) {
+            timerLabel.setText("Ended");
+            return;
+        }
+        if (currentAuction.getStatus() == AuctionStatus.OPEN
+                && currentAuction.getStartTime() != null
+                && currentAuction.getStartTime().isAfter(LocalDateTime.now())) {
+            timerLabel.startCountdownToStart(currentAuction.getStartTime());
+        } else if (currentAuction.getStatus() == AuctionStatus.RUNNING) {
+            LocalDateTime endTime = resolveEndTime();
+            if (endTime != null && endTime.isAfter(LocalDateTime.now())) {
+                timerLabel.startCountdown(endTime);
+            } else {
+                timerLabel.setText("Live");
+            }
+        }
+    }
+
+    private LocalDateTime resolveEndTime() {
+        if (currentAuction.getEndTime() != null) {
+            return currentAuction.getEndTime();
+        }
+        if (currentAuction.getRemainingTimeMillis() > 0) {
+            return LocalDateTime.now().plus(
+                    java.time.Duration.ofMillis(currentAuction.getRemainingTimeMillis()));
+        }
+        return null;
+    }
+
+    private void loadItemImage(String imageRef) {
+        if (itemImageView == null) {
+            return;
+        }
+        itemImageView.setImage(null);
+        if (imageRef == null || imageRef.isBlank()) {
+            return;
+        }
+        try {
+            if (imageRef.startsWith("BASE64:")) {
+                byte[] bytes = Base64.getDecoder().decode(imageRef.substring(7));
+                itemImageView.setImage(new Image(new ByteArrayInputStream(bytes)));
+            } else {
+                File file = new File(imageRef);
+                if (file.exists()) {
+                    itemImageView.setImage(new Image(file.toURI().toString(), true));
+                }
+            }
+        } catch (IllegalArgumentException ignored) {
+            // Keep placeholder when image data is invalid.
+        }
+    }
+
+    private String formatDateTime(LocalDateTime value) {
+        return value != null ? value.format(DATE_TIME_FMT) : "—";
     }
 
     private void configureBidPanelVisibility() {
@@ -106,8 +193,13 @@ public class AuctionDetailController {
         }
         User currentUser = clientModel.getCurrentUser();
         boolean isBidder = currentUser instanceof Bidder;
-        bidPanel.setVisible(isBidder);
-        bidPanel.setManaged(isBidder);
+        boolean auctionRunning = currentAuction != null
+                && currentAuction.getStatus() == AuctionStatus.RUNNING
+                && (currentAuction.getStartTime() == null
+                || !currentAuction.getStartTime().isAfter(java.time.LocalDateTime.now()));
+        boolean canBid = isBidder && auctionRunning;
+        bidPanel.setVisible(canBid);
+        bidPanel.setManaged(canBid);
     }
 
     private void subscribeRealtime() {
@@ -227,6 +319,7 @@ public class AuctionDetailController {
         currentAuction.setCurrentWinnerName(
                 currentUser != null ? currentUser.getUsername() : userId);
         currentAuction.setTotalBids(currentAuction.getTotalBids() + 1);
+        MainController.recordLeadingBid(currentAuction.getId(), userId);
         updateUI();
         getBidHistory();
     }
