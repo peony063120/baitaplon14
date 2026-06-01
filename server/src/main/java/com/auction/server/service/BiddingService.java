@@ -134,18 +134,23 @@ public class BiddingService {
             // CHỈ TRỪ SỐ TIỀN CHÊNH LỆCH (giá mới - giá cũ)
             double amountToDeduct = request.getAmount() - previousPrice;
             if (amountToDeduct > 0) {
-                bidder.deductBalance(amountToDeduct);
+                if (!bidder.deductBalance(amountToDeduct)) {
+                    throw new InvalidBidException("Insufficient balance for bid increment");
+                }
                 userDAO.saveUser(bidder);
             }
 
             // Thông báo realtime cho client
             subject.notifyObservers(auction);
 
-            // Anti-sniping: nếu được bật, gia hạn nếu cần
+            // Anti-sniping: bid trong phút cuối → gia hạn 3 phút và lên lịch kết thúc lại
             if (auction.isAntiSnipingEnabled()) {
                 boolean extended = antiSnipingService.checkAndExtend(auction);
                 if (extended) {
-                    auctionDAO.saveAuction(auction);   // Lưu lại nếu endTime thay đổi
+                    auctionDAO.saveAuction(auction);
+                    com.auction.server.scheduler.AuctionScheduler.getInstance()
+                            .rescheduleAuctionEnd(auction);
+                    subject.notifyObservers(auction);
                 }
             }
 

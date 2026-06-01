@@ -80,15 +80,27 @@ class UserServiceTest {
 
     @Test
     void getUserById_Exists() {
-        when(userDAO.findUserByUsername("john")).thenReturn(bidder);
-        UserDTO dto = userService.getUserById("john");
+        bidder.setId("user-john-1");
+        when(userDAO.findUserById("user-john-1")).thenReturn(bidder);
+        UserDTO dto = userService.getUserById("user-john-1");
         assertNotNull(dto);
+        assertEquals("user-john-1", dto.getId());
         assertEquals("john", dto.getUsername());
         assertEquals(100.0, dto.getBalance());
     }
 
     @Test
+    void getUserById_FallbackUsername() {
+        when(userDAO.findUserById("john")).thenReturn(null);
+        when(userDAO.findUserByUsername("john")).thenReturn(bidder);
+        UserDTO dto = userService.getUserById("john");
+        assertNotNull(dto);
+        assertEquals("john", dto.getUsername());
+    }
+
+    @Test
     void getUserById_NotFound() {
+        when(userDAO.findUserById("unknown")).thenReturn(null);
         when(userDAO.findUserByUsername("unknown")).thenReturn(null);
         UserDTO dto = userService.getUserById("unknown");
         assertNull(dto);

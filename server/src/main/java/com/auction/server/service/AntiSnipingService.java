@@ -7,8 +7,11 @@ import java.time.Duration;
 
 public class AntiSnipingService {
 
-    // Ngưỡng kích hoạt gia hạn (giây trước khi kết thúc)
-    private static final int EXTEND_THRESHOLD_SECONDS = 30;
+    /** Bid trong 1 phút cuối kích hoạt gia hạn. */
+    public static final int EXTEND_THRESHOLD_SECONDS = 60;
+
+    /** Gia hạn mặc định: 3 phút. */
+    public static final int DEFAULT_EXTENSION_SECONDS = 180;
 
     /**
      * Kiểm tra và gia hạn phiên đấu giá nếu còn ít thời gian.
@@ -29,6 +32,9 @@ public class AntiSnipingService {
         long secondsLeft = Duration.between(now, endTime).getSeconds();
         if (secondsLeft <= EXTEND_THRESHOLD_SECONDS && secondsLeft > 0) {
             double extension = auction.getAntiSnipingExtensionSeconds();
+            if (extension <= 0) {
+                extension = DEFAULT_EXTENSION_SECONDS;
+            }
             auction.extendEndTime(extension);
             return true;
         }

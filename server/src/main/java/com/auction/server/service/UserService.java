@@ -80,13 +80,17 @@ public class UserService {
         }
         return new LoginResponse(false, "Invalid username or password");
     }
-    // Lấy thông tin user (đã fix)
     public UserDTO getUserById(String userId) {
-        User user = userDAO.findUserByUsername(userId);
-        if (user == null) return null;
+        User user = userDAO.findUserById(userId);
+        if (user == null) {
+            user = userDAO.findUserByUsername(userId);
+        }
+        if (user == null) {
+            return null;
+        }
 
         UserDTO dto = new UserDTO();
-        dto.setId(user.getUsername());
+        dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
         dto.setFullName(user.getFullName());

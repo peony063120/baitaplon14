@@ -93,6 +93,9 @@ public class AuctionService {
                 || "unknown".equalsIgnoreCase(auction.getItemId())) {
             auction.setItemId(auction.getId());
         }
+        if (!auction.isAntiSnipingEnabled()) {
+            auction.enableAntiSniping(AntiSnipingService.DEFAULT_EXTENSION_SECONDS);
+        }
         auctionDAO.saveAuction(auction);
         if (auctionSubject != null) {
             auctionSubject.notifyObservers(auction);

@@ -104,6 +104,7 @@ public class MainController {
                 NotificationStore.getInstance().add("New auction session started: " + itemLabel);
             } else if (newStatus == AuctionStatus.FINISHED || newStatus == AuctionStatus.PAID) {
                 NotificationStore.getInstance().add("Auction ended: " + itemLabel);
+                syncBalanceFromServer();
             }
         }
 

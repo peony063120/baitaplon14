@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.UUID;
 
 public class Auction {
+
+    public static final long ANTI_SNIPING_TRIGGER_WINDOW_SECONDS = 60;
+
     private String id;
     private String itemId;
     private String sellerId;
@@ -80,9 +83,10 @@ public class Auction {
             currentWinnerId = bid.getBidderId();
             bidHistory.add(bid);
 
-            //Anti-sniping: neu gan het gio thi gia han
-            if (antiSnipingEnabled && endTime.minusSeconds((long) antiSnipingExtensionSeconds).isBefore(bid.getBidTime())){
-                extendEndTime(antiSnipingExtensionSeconds);
+            if (antiSnipingEnabled
+                    && endTime.minusSeconds(ANTI_SNIPING_TRIGGER_WINDOW_SECONDS).isBefore(bid.getBidTime())) {
+                double extension = antiSnipingExtensionSeconds > 0 ? antiSnipingExtensionSeconds : 180;
+                extendEndTime(extension);
             }
             return true;
         }
