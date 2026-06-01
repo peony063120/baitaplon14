@@ -22,13 +22,18 @@ public class ClientApp extends Application {
         if (!AppConfig.isUseMock()) {
             serverConnection = ServerConnection.getInstance();
             try {
-                serverConnection.connect("localhost", 5050);
+                String host = AppConfig.getServerHost();
+                int port = AppConfig.getServerPort();
+                serverConnection.connect(host, port);
             } catch (Exception e) {
                 System.err.println("Cannot connect to server: " + e.getMessage());
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Connection failed");
                 alert.setHeaderText("Cannot connect to Auction Server");
-                alert.setContentText("Server is not running. Use -Dapp.useMock=true to enable mock mode.");
+                alert.setContentText(
+                        "Cannot connect to " + AppConfig.getServerHost() + ":" + AppConfig.getServerPort()
+                                + ". Check server.host/server.port or use -Dapp.useMock=true."
+                );
                 alert.showAndWait();
             }
         } else {

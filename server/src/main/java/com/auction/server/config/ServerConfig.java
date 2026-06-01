@@ -19,7 +19,7 @@ public class ServerConfig {
                 props.load(input);
             } else {
                 // Giá trị mặc định
-                props.setProperty("server.port", "8080");
+                props.setProperty("server.port", "5050");
                 props.setProperty("server.host", "localhost");
                 // Cấu hình đấu giá
                 props.setProperty("auction.default.duration.hours", "24");  // Default: 24 giờ
@@ -38,7 +38,12 @@ public class ServerConfig {
     }
 
     public int getPort() {
-        return Integer.parseInt(props.getProperty("server.port", "8080").trim());
+        try {
+            int port = Integer.parseInt(props.getProperty("server.port", "5050").trim());
+            return (port > 0 && port <= 65535) ? port : 5050;
+        } catch (Exception ignored) {
+            return 5050;
+        }
     }
 
     public String getHost() {

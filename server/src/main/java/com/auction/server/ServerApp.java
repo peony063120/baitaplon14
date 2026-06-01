@@ -25,7 +25,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ServerApp {
-    private static final int PORT = 5050;
     private static ServerSocket serverSocket;
     private static ExecutorService clientThreadPool;
     private static volatile boolean running = true;
@@ -33,6 +32,8 @@ public class ServerApp {
     public static void main(String[] args) {
         System.out.println("Starting Online Auction Server...");
         try {
+            ServerConfig config = ServerConfig.getInstance();
+            int port = config.getPort();
             DatabaseConnection.getInstance(); // Khởi tạo storage
             try {
                 org.h2.tools.Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8089").start();
@@ -96,8 +97,8 @@ public class ServerApp {
             autoBidProcessor.start();
 
             clientThreadPool = Executors.newCachedThreadPool();
-            serverSocket = new ServerSocket(PORT);
-            System.out.println("Server started on port " + PORT);
+            serverSocket = new ServerSocket(port);
+            System.out.println("Server started on " + config.getHost() + ":" + port);
             System.out.println("Waiting for client connections...");
 
             while (running) {

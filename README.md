@@ -318,8 +318,9 @@ mvn clean package -DskipTests
 java -jar server/target/server-1.0-SNAPSHOT.jar
 ```
 
-> The server listens on port `5050` by default.  
+> The server listens on port `5050` by default (from `server/src/main/resources/server.properties`).  
 > Seed data is loaded automatically. Disable with `-Dserver.seed=false`.
+> You can change port by editing `server.properties` (`server.port`).
 
 ### Step 3: Start Client
 
@@ -329,6 +330,12 @@ From the project root:
 
 ```bash
 mvn javafx:run -f client/pom.xml
+```
+
+For LAN / multi-machine usage, set server address explicitly:
+
+```bash
+mvn -f client/pom.xml javafx:run -Dserver.host=192.168.1.10 -Dserver.port=5050
 ```
 
 **Option B — Run the packaged JAR with JavaFX from Maven cache**
@@ -361,6 +368,7 @@ java --module-path "$MP" --add-modules javafx.controls,javafx.fxml \
 ```
 
 > On Linux/macOS, replace the classifier in the path (`-win`) with your OS variant if needed (e.g. `-linux`, `-mac`).  
+> For LAN, you can also pass `-Dserver.host=<server-ip> -Dserver.port=5050` when starting client.  
 > **No server?** Toggle the **MOCK MODE** button on the login screen to use local mock data.
 
 ### Running Tests

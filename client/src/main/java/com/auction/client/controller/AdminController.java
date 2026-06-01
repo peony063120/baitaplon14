@@ -1,5 +1,6 @@
 package com.auction.client.controller;
 
+import com.auction.client.config.AppConfig;
 import com.auction.client.model.ClientModel;
 import com.auction.client.network.ServerConnection;
 import com.auction.common.dto.AuctionDTO;
@@ -46,6 +47,7 @@ public class AdminController {
         if (user != null) {
             adminNameLabel.setText("Logged in as: " + user.getUsername());
         }
+        statusLabel.setText("Connected endpoint: " + AppConfig.getServerHost() + ":" + AppConfig.getServerPort());
         loadPendingAuctions();
         loadStats();
     }
