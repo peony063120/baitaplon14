@@ -1,9 +1,18 @@
 package com.auction.client.controller;
 
 import com.auction.client.ClientApp;
+import com.auction.client.config.AppConfig;
 import com.auction.client.model.ClientModel;
+import com.auction.client.model.NotificationStore;
+import com.auction.client.network.MessageProtocol;
+import com.auction.client.network.RealtimeListener;
+import com.auction.client.network.ServerConnection;
+import com.auction.common.dto.AuctionDTO;
 import com.auction.common.entity.Bidder;
 import com.auction.common.entity.User;
+import com.auction.common.enums.AuctionStatus;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -11,15 +20,19 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.util.Duration;
 
 import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MainController {
 
@@ -33,17 +46,113 @@ public class MainController {
     @FXML private ToggleButton historyNav;
     @FXML private ToggleButton walletNav;
     @FXML private ToggleButton profileNav;
+    @FXML private ToggleButton catAll;
+    @FXML private ToggleButton catXe;
+    @FXML private ToggleButton catDienTu;
+    @FXML private ToggleButton catNgheThuat;
+    @FXML private ToggleButton catTrangSuc;
+    @FXML private ToggleButton catBatDongSan;
+    @FXML private ToggleButton catDongHo;
+    @FXML private ToggleButton catCoVat;
 
     private static MainController instance;
 
     private final ClientModel clientModel = ClientModel.getInstance();
     private DashboardController dashboardController;
+    private Timeline clockTimer;
+    private final Map<String, AuctionStatus> auctionStatusCache = new ConcurrentHashMap<>();
+    private final Map<String, String> lastKnownWinners = new ConcurrentHashMap<>();
 
     @FXML
     public void initialize() {
         instance = this;
         updateHeader();
+        startClockTimer();
+        subscribeRealtimeNotifications();
         showDashboard();
+    }
+
+    private void subscribeRealtimeNotifications() {
+        if (AppConfig.isUseMock()) {
+            return;
+        }
+        RealtimeListener.getInstance().registerCallback(
+                MessageProtocol.TYPE_AUCTION_UPDATE, this::handleAuctionUpdateNotification);
+        new Thread(() -> {
+            try {
+                ServerConnection.getInstance().sendRequest("SUBSCRIBE");
+            } catch (IOException ignored) {
+                // Keep dashboard usable if subscribe fails.
+            }
+        }, "subscribe-realtime").start();
+    }
+
+    private void handleAuctionUpdateNotification(Object data) {
+        if (!(data instanceof AuctionDTO dto) || dto.getId() == null) {
+            return;
+        }
+
+        String auctionId = dto.getId();
+        String itemLabel = dto.getItemName() != null && !dto.getItemName().isBlank()
+                ? dto.getItemName() : auctionId;
+        AuctionStatus newStatus = dto.getStatus();
+        AuctionStatus previousStatus = auctionStatusCache.put(auctionId, newStatus);
+
+        if (previousStatus != null && newStatus != null && previousStatus != newStatus) {
+            if (newStatus == AuctionStatus.RUNNING && previousStatus == AuctionStatus.OPEN) {
+                NotificationStore.getInstance().add("New auction session started: " + itemLabel);
+            } else if (newStatus == AuctionStatus.FINISHED || newStatus == AuctionStatus.PAID) {
+                NotificationStore.getInstance().add("Auction ended: " + itemLabel);
+            }
+        }
+
+        User currentUser = clientModel.getCurrentUser();
+        String myId = currentUser != null ? currentUser.getId() : null;
+        String newWinner = dto.getCurrentWinnerId() != null ? dto.getCurrentWinnerId() : "";
+        String previousWinner = lastKnownWinners.get(auctionId);
+
+        if (myId != null && previousWinner != null && previousWinner.equals(myId)
+                && !newWinner.isEmpty() && !newWinner.equals(myId)) {
+            NotificationStore.getInstance().add("You were outbid on: " + itemLabel);
+            syncBalanceFromServer();
+        }
+        lastKnownWinners.put(auctionId, newWinner);
+    }
+
+    public static void recordLeadingBid(String auctionId, String userId) {
+        if (instance != null && auctionId != null && userId != null) {
+            instance.lastKnownWinners.put(auctionId, userId);
+        }
+    }
+
+    public static void seedAuctionSnapshot(java.util.List<AuctionDTO> auctions) {
+        if (instance == null || auctions == null) {
+            return;
+        }
+        for (AuctionDTO auction : auctions) {
+            if (auction.getId() == null) {
+                continue;
+            }
+            if (auction.getStatus() != null) {
+                instance.auctionStatusCache.putIfAbsent(auction.getId(), auction.getStatus());
+            }
+            if (auction.getCurrentWinnerId() != null) {
+                instance.lastKnownWinners.putIfAbsent(auction.getId(), auction.getCurrentWinnerId());
+            }
+        }
+    }
+
+    private void startClockTimer() {
+        if (clockTimer != null) {
+            clockTimer.stop();
+        }
+        clockTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+            if (clockLabel != null) {
+                clockLabel.setText(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
+            }
+        }));
+        clockTimer.setCycleCount(Timeline.INDEFINITE);
+        clockTimer.play();
     }
 
     private void updateHeader() {
@@ -78,8 +187,12 @@ public class MainController {
 
     @FXML
     public void showHistory() {
-        loadContent("/view/bid_history.fxml");
+        BidHistoryController historyController = loadContent("/view/bid_history.fxml");
         selectNav(historyNav);
+        User currentUser = clientModel.getCurrentUser();
+        if (historyController != null && currentUser != null) {
+            historyController.loadBidHistoryByUser(currentUser.getId());
+        }
     }
 
     @FXML
@@ -107,8 +220,23 @@ public class MainController {
 
     @FXML
     public void showNotifications() {
-        // CHANGED: "Notifications" & "No new notifications." -> Chuyển ngữ thông báo popup Thông báo
-        showInfo("Notifications", "No new notifications.");
+        NotificationStore store = NotificationStore.getInstance();
+        if (store.isEmpty()) {
+            showInfo("Notifications", "No new notifications.");
+            return;
+        }
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Notifications");
+            alert.setHeaderText("Recent activity");
+            TextArea area = new TextArea(String.join("\n", store.getMessages()));
+            area.setEditable(false);
+            area.setWrapText(true);
+            area.setPrefRowCount(Math.min(12, store.getMessages().size() + 1));
+            area.setPrefWidth(480);
+            alert.getDialogPane().setContent(area);
+            alert.showAndWait();
+        });
     }
 
     @FXML
@@ -135,14 +263,59 @@ public class MainController {
 
     @FXML
     public void filterByCategory(ActionEvent event) {
+        if (!(event.getSource() instanceof ToggleButton button)) {
+            return;
+        }
         if (dashboardController == null) {
             showDashboard();
         }
-        if (dashboardController == null || !(event.getSource() instanceof ToggleButton button)) {
+        if (dashboardController == null) {
             return;
         }
+
         Object userData = button.getUserData();
-        dashboardController.filterByCategory(userData != null ? userData.toString() : "all");
+        String category = userData != null ? userData.toString() : "all";
+
+        if ("all".equalsIgnoreCase(category)) {
+            clearSidebarCategorySelection();
+            dashboardController.clearCategorySelection();
+            return;
+        }
+
+        dashboardController.toggleSidebarCategory(category, button.isSelected());
+        if (button.isSelected() && catAll != null) {
+            catAll.setSelected(false);
+        }
+        if (!anySidebarCategorySelected() && catAll != null) {
+            catAll.setSelected(true);
+        }
+    }
+
+    private void clearSidebarCategorySelection() {
+        for (ToggleButton categoryButton : sidebarCategoryButtons()) {
+            if (categoryButton != null) {
+                categoryButton.setSelected(false);
+            }
+        }
+        if (catAll != null) {
+            catAll.setSelected(true);
+        }
+    }
+
+    private boolean anySidebarCategorySelected() {
+        for (ToggleButton categoryButton : sidebarCategoryButtons()) {
+            if (categoryButton != null && categoryButton.isSelected()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private ToggleButton[] sidebarCategoryButtons() {
+        return new ToggleButton[]{
+                catXe, catDienTu, catNgheThuat, catTrangSuc,
+                catBatDongSan, catDongHo, catCoVat
+        };
     }
 
     @FXML
