@@ -377,6 +377,12 @@
     -fx-background-radius: 22px;
     -fx-border-radius: 22px;
     -fx-padding: 16px;
+    -fx-max-width: infinity;
+    -fx-pref-width: 100%;
+}
+
+.dashboard-content {
+    -fx-padding: 0;
 }
 
 .chart-series-line {
