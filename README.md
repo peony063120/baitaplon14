@@ -408,9 +408,9 @@ mvn test
 
 ## Team Members
 
-| Name                | ID       | Contribution |
-|---------------------|----------|-------------|
-| Hoàng Phương Nhi    | 25023508 |             |
-| Nguyễn Ngọc Quỳnh   | 25023524 |             |
-| Ngô Khánh Linh      | 25023488 |             |
-| Đặng Thị Phương Anh | 25023432 |             |
+| Name                | ID       |
+|---------------------|----------|
+| Hoàng Phương Nhi    | 25023508 |
+| Nguyễn Ngọc Quỳnh   | 25023524 |
+| Ngô Khánh Linh      | 25023488 |
+| Đặng Thị Phương Anh | 25023432 |
