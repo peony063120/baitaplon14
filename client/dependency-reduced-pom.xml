@@ -71,8 +71,10 @@
           <argLine>-Djava.awt.headless=true
                         -Dtestfx.robot=glass
                         -Dtestfx.headless=true
+                        -Dglass.platform=Monocle
+                        -Dmonocle.platform=Headless
                         -Dprism.order=sw
-                        -Dprism.verbose=true
+                        -Dprism.verbose=false
                         --add-exports javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
                         --add-opens javafx.graphics/com.sun.glass.ui=ALL-UNNAMED</argLine>
         </configuration>
