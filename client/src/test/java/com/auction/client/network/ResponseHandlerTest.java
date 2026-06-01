@@ -131,7 +131,7 @@ public class ResponseHandlerTest {
 
   @Test
   public void testParseAuctionDetailFromText_WithWinnerName() {
-    String detailText = "AUCTION:A99:Sony TV 4K:1500.0:RUNNING:winner-uuid:8:120000:1000.0:50.0::bidder17";
+    String detailText = "AUCTION:A99:Sony TV 4K:1500.0:RUNNING:winner-uuid:8:120000:1000.0:50.0:bidder17";
 
     AuctionDTO dto = ResponseHandler.parseAuctionDetailFromText(detailText.trim());
 
@@ -186,6 +186,36 @@ public class ResponseHandlerTest {
     if (dto.getRemainingTimeMillis() != 0) {
       assertEquals(120000L, dto.getRemainingTimeMillis());
     }
+  }
+
+  @Test
+  public void testParseAuctionDetailFromText_WithImageAndMeta() {
+    String detailText = "AUCTION:A99:Sony TV 4K:1500.0:RUNNING:winner-uuid:8:120000:1000.0:50.0:bidder17"
+            + ":1717248000000:1717334400000"
+            + "||IMAGE:BASE64:YWJj"
+            + "||META:Electronics|Smart TV with 4K panel";
+
+    AuctionDTO dto = ResponseHandler.parseAuctionDetailFromText(detailText.trim());
+
+    assertNotNull(dto);
+    assertEquals("Electronics", dto.getCategory());
+    assertEquals("Smart TV with 4K panel", dto.getItemDescription());
+    assertEquals("BASE64:YWJj", dto.getImagePath());
+    assertNotNull(dto.getStartTime());
+    assertNotNull(dto.getEndTime());
+  }
+
+  @Test
+  public void testParseAuctionListFromText_WithImageSegment() {
+    String response = "AUCTIONS_COUNT:1"
+            + "||AUCTION:A01:MacBook:2200.0:RUNNING:Electronics:540000:2000.0:3:1717248000000:1717334400000"
+            + "||IMAGE:BASE64:abc123";
+
+    List<AuctionDTO> list = ResponseHandler.parseAuctionListFromText(response);
+
+    assertEquals(1, list.size());
+    assertEquals("BASE64:abc123", list.get(0).getImagePath());
+    assertNotNull(list.get(0).getStartTime());
   }
 
   @Test
