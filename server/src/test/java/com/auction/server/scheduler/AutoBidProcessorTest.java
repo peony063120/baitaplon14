@@ -48,9 +48,8 @@ class AutoBidProcessorTest {
         processor.processAllActiveAuctions();
 
         verify(auctionDAO, times(1)).getAuctionsByStatus(AuctionStatus.RUNNING);
-        // processAutoBids nhận 2 tham số: (auction, biddingService)
-        verify(autoBidService, times(1)).processAutoBids(runningAuction, biddingService);
-        verify(autoBidService, never()).processAutoBids(eq(finishedAuction), any());
+        verify(autoBidService, times(1)).processAutoBids(runningAuction);
+        verify(autoBidService, never()).processAutoBids(finishedAuction);
     }
 
     @Test
@@ -60,7 +59,7 @@ class AutoBidProcessorTest {
         processor.processAllActiveAuctions();
 
         verify(auctionDAO, times(1)).getAuctionsByStatus(AuctionStatus.RUNNING);
-        verify(autoBidService, never()).processAutoBids(any(), any());
+        verify(autoBidService, never()).processAutoBids(any(Auction.class));
     }
 
     @AfterEach
