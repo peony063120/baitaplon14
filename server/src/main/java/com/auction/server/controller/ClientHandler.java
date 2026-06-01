@@ -16,6 +16,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -84,11 +85,13 @@ public class ClientHandler implements Runnable {
                 case "PLACE_BID" -> handlePlaceBid(payload);
                 case "CANCEL_BID" -> handleCancelBid(payload);
                 case "GET_BID_HISTORY" -> handleGetBidHistory(payload);
+                case "GET_USER_BID_HISTORY" -> handleGetUserBidHistory(payload);
                 case "CONFIGURE_AUTO_BID" -> handleConfigureAutoBid(payload);
                 case "CANCEL_AUTO_BID" -> handleCancelAutoBid(payload);
                 case "UPDATE_PROFILE" -> handleUpdateProfile(payload);
                 case "ADD_BALANCE" -> handleAddBalance(payload);
                 case "CHANGE_PASSWORD" -> handleChangePassword(payload);
+                case "GET_PROFILE" -> handleGetProfile(payload);
                 case "GET_PENDING_AUCTIONS" -> handleGetPendingAuctions();
                 case "APPROVE_AUCTION" -> handleApproveAuction(payload);
                 case "REJECT_AUCTION" -> handleRejectAuction(payload);
@@ -109,7 +112,13 @@ public class ClientHandler implements Runnable {
         LoginResponse resp = userController.login(req);
 
         if (resp != null && resp.isSuccess()) {
-            out.println("LOGIN_OK:" + resp.getSessionToken() + ":" + resp.getUserId() + ":" + p[0] + ":" + resp.getRole() + ":" + resp.getBalance());
+            UserDTO profile = userController.getUserProfile(p[0]);
+            String email = profile != null ? profile.getEmail() : "";
+            String fullName = profile != null ? profile.getFullName() : "";
+            out.println("LOGIN_OK:" + resp.getSessionToken() + ":" + resp.getUserId() + ":" + p[0]
+                    + ":" + resp.getRole() + ":" + resp.getBalance()
+                    + ":" + (email != null ? email : "")
+                    + ":" + (fullName != null ? fullName : ""));
         } else {
             out.println("LOGIN_FAIL:" + (resp != null ? resp.getMessage() : "Invalid credentials"));
         }
@@ -141,9 +150,29 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleChangePassword(String payload) {
-        String[] p = payload.split(":");
-        userController.changePassword(p[0], p[1], p[2]);
-        out.println("CHANGE_OK");
+        String[] p = payload.split(":", 3);
+        if (p.length < 3) {
+            out.println("ERROR:Invalid password change request");
+            return;
+        }
+        if (userController.changePassword(p[0], p[1], p[2])) {
+            out.println("CHANGE_OK");
+        } else {
+            out.println("ERROR:Current password is incorrect");
+        }
+    }
+
+    private void handleGetProfile(String username) {
+        UserDTO dto = userController.getUserProfile(username);
+        if (dto != null) {
+            out.println("PROFILE:" + dto.getUsername()
+                    + ":" + (dto.getEmail() != null ? dto.getEmail() : "")
+                    + ":" + (dto.getFullName() != null ? dto.getFullName() : "")
+                    + ":" + dto.getRole()
+                    + ":" + dto.getBalance());
+        } else {
+            out.println("ERROR:User not found");
+        }
     }
 
     private void handleGetUserCount() {
@@ -201,13 +230,7 @@ public class ClientHandler implements Runnable {
         sb.append("AUCTIONS_COUNT:").append(auctions.size());
 
         for (com.auction.common.dto.AuctionDTO a : auctions) {
-            sb.append("||AUCTION:").append(a.getId()).append(":").append(a.getItemName())
-                    .append(":").append(a.getCurrentPrice()).append(":").append(a.getStatus().name())
-                    .append(":").append(a.getCategory())
-                    .append(":").append(a.getRemainingTimeMillis())
-                    .append(":").append(a.getStartingPrice())
-                    .append(":").append(a.getTotalBids())
-                    .append(":").append(imageRef(a));
+            appendAuctionListLine(sb, a);
         }
         out.println(sb.toString());
     }
@@ -218,15 +241,28 @@ public class ClientHandler implements Runnable {
         sb.append("AUCTIONS_COUNT:").append(auctions.size());
 
         for (com.auction.common.dto.AuctionDTO a : auctions) {
-            sb.append("||AUCTION:").append(a.getId()).append(":").append(a.getItemName())
-                    .append(":").append(a.getCurrentPrice()).append(":").append(a.getStatus().name())
-                    .append(":").append(a.getCategory())
-                    .append(":").append(a.getRemainingTimeMillis())
-                    .append(":").append(a.getStartingPrice())
-                    .append(":").append(a.getTotalBids())
-                    .append(":").append(imageRef(a));
+            appendAuctionListLine(sb, a);
         }
         out.println(sb.toString());
+    }
+
+    private void appendAuctionListLine(StringBuilder sb, AuctionDTO a) {
+        sb.append("||AUCTION:").append(a.getId()).append(":").append(a.getItemName())
+                .append(":").append(a.getCurrentPrice()).append(":").append(a.getStatus().name())
+                .append(":").append(a.getCategory())
+                .append(":").append(a.getRemainingTimeMillis())
+                .append(":").append(a.getStartingPrice())
+                .append(":").append(a.getTotalBids())
+                .append(":").append(epochMillis(a.getStartTime()))
+                .append(":").append(epochMillis(a.getEndTime()))
+                .append("||IMAGE:").append(imageRef(a));
+    }
+
+    private static long epochMillis(LocalDateTime time) {
+        if (time == null) {
+            return 0L;
+        }
+        return time.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
 
     private void handleGetAuction(String id) {
@@ -234,6 +270,9 @@ public class ClientHandler implements Runnable {
             AuctionDTO a = auctionController.getAuction(id);
             if (a != null) {
                 String winnerName = resolveUsername(a.getCurrentWinnerId());
+                String category = a.getCategory() != null ? a.getCategory() : "";
+                String description = a.getItemDescription() != null
+                        ? a.getItemDescription().replace("|", " ").replace("\n", "\\n") : "";
                 out.println("AUCTION:" + a.getId() + ":" + a.getItemName()
                         + ":" + a.getCurrentPrice() + ":" + a.getStatus().name()
                         + ":" + (a.getCurrentWinnerId() != null ? a.getCurrentWinnerId() : "")
@@ -241,8 +280,11 @@ public class ClientHandler implements Runnable {
                         + ":" + a.getRemainingTimeMillis()
                         + ":" + a.getStartingPrice()
                         + ":" + a.getMinIncrement()
-                        + ":" + imageRef(a)
-                        + ":" + winnerName);
+                        + ":" + winnerName
+                        + ":" + epochMillis(a.getStartTime())
+                        + ":" + epochMillis(a.getEndTime())
+                        + "||IMAGE:" + imageRef(a)
+                        + "||META:" + category + "|" + description);
             } else {
                 out.println("ERROR:Auction not found");
             }
@@ -271,12 +313,7 @@ public class ClientHandler implements Runnable {
         StringBuilder sb = new StringBuilder();
         sb.append("AUCTIONS_COUNT:").append(auctions.size());
         for (AuctionDTO a : auctions) {
-            sb.append("||AUCTION:").append(a.getId()).append(":")
-                    .append(a.getItemName() != null ? a.getItemName() : "").append(":")
-                    .append(a.getCurrentPrice()).append(":")
-                    .append(a.getStatus()).append(":")
-                    .append(a.getCategory() != null ? a.getCategory() : "").append(":")
-                    .append(a.getEndTime() != null ? a.getEndTime().toString() : "");
+            appendAuctionListLine(sb, a);
         }
         out.println(sb.toString());
     }
@@ -371,7 +408,14 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleGetBidHistory(String auctionId) {
-        java.util.List<com.auction.common.entity.BidTransaction> history = bidController.getBidHistory(auctionId);
+        appendBidHistoryResponse(bidController.getBidHistory(auctionId));
+    }
+
+    private void handleGetUserBidHistory(String userId) {
+        appendBidHistoryResponse(bidController.getBidsByUser(userId));
+    }
+
+    private void appendBidHistoryResponse(java.util.List<com.auction.common.entity.BidTransaction> history) {
         StringBuilder sb = new StringBuilder();
         sb.append("BID_HISTORY_COUNT:").append(history.size());
 
@@ -380,7 +424,7 @@ public class ClientHandler implements Runnable {
                     ? b.getBidTime().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
                     : 0L;
             String bidderName = resolveUsername(b.getBidderId());
-            sb.append("||BID:").append(auctionId).append(":").append(b.getBidderId()).append(":")
+            sb.append("||BID:").append(b.getAuctionId()).append(":").append(b.getBidderId()).append(":")
                     .append(bidderName).append(":").append(b.getAmount())
                     .append(":").append(bidTimeMillis).append(":").append(b.isAutoBid());
         }

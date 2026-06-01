@@ -38,6 +38,10 @@ public class BidController {
         return biddingService.getBidHistory(auctionId);
     }
 
+    public List<BidTransaction> getBidsByUser(String userId) {
+        return biddingService.getBidsByUser(userId);
+    }
+
     // AutoBidRequest: (userId, auctionId, maxBid, increment, enable)
     public void configureAutoBid(AutoBidRequest request) {
         biddingService.configureAutoBid(request);
