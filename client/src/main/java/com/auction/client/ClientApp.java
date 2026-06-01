@@ -21,18 +21,23 @@ public class ClientApp extends Application {
         // Nếu mock mode, không cần kết nối server
         if (!AppConfig.isUseMock()) {
             serverConnection = ServerConnection.getInstance();
+            String endpoint = AppConfig.getEndpointLabel();
+            System.out.println("[ClientApp] Connecting to central server at " + endpoint + " ...");
             try {
-                String host = AppConfig.getServerHost();
-                int port = AppConfig.getServerPort();
-                serverConnection.connect(host, port);
+                serverConnection.connect(AppConfig.getServerHost(), AppConfig.getServerPort());
+                System.out.println("[ClientApp] Connected to " + endpoint);
             } catch (Exception e) {
-                System.err.println("Cannot connect to server: " + e.getMessage());
+                System.err.println("[ClientApp] Cannot connect to " + endpoint + ": " + e.getMessage());
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Connection failed");
                 alert.setHeaderText("Cannot connect to Auction Server");
                 alert.setContentText(
-                        "Cannot connect to " + AppConfig.getServerHost() + ":" + AppConfig.getServerPort()
-                                + ". Check server.host/server.port or use -Dapp.useMock=true."
+                        "Cannot connect to " + endpoint + ".\n\n"
+                                + "• Start ServerApp on that machine (port " + AppConfig.getServerPort() + ")\n"
+                                + "• On every client PC, set the same host in client.properties "
+                                + "(src/main/resources/client.properties)\n"
+                                + "• Do NOT run a second server on client machines\n"
+                                + "• Or enable MOCK MODE for offline demo only."
                 );
                 alert.showAndWait();
             }
@@ -42,7 +47,8 @@ public class ClientApp extends Application {
 
         showLoginScreen();
 
-        stage.setTitle("Online Auction System");
+        stage.setTitle("Online Auction — " + (AppConfig.isUseMock()
+                ? "MOCK" : AppConfig.getEndpointLabel()));
         stage.setMinWidth(1024);
         stage.setMinHeight(768);
         stage.show();

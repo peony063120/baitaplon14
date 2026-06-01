@@ -54,7 +54,10 @@ public class AdminController {
         if (user != null) {
             adminNameLabel.setText("Logged in as: " + user.getUsername());
         }
-        statusLabel.setText("Connected endpoint: " + AppConfig.getServerHost() + ":" + AppConfig.getServerPort());
+        boolean connected = ServerConnection.getInstance().isConnected();
+        statusLabel.setText((connected ? "Connected" : "NOT connected")
+                + " → " + AppConfig.getEndpointLabel()
+                + (AppConfig.isUseMock() ? " (MOCK)" : ""));
         RealtimeListener.getInstance().registerCallback(
                 MessageProtocol.TYPE_AUCTION_UPDATE, auctionUpdateCallback);
         serverIo.submit(() -> {

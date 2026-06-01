@@ -9,6 +9,7 @@ package com.auction.client.controller;
 import com.auction.client.ClientApp;
 import com.auction.client.config.AppConfig;
 import com.auction.client.model.ClientModel;
+import com.auction.client.network.ServerConnection;
 import com.auction.client.service.DataService;
 import com.auction.client.service.MockUserStore;
 import com.auction.common.dto.LoginResponse;
@@ -24,6 +25,7 @@ public class LoginController {
     @FXML private PasswordField passwordField;
     @FXML private ComboBox<String> roleCombo;
     @FXML private Label errorLabel;
+    @FXML private Label serverEndpointLabel;
     @FXML private ToggleButton mockToggle;
 
     private final ClientModel clientModel = ClientModel.getInstance();
@@ -36,6 +38,24 @@ public class LoginController {
         if (mock) {
             MockUserStore.getInstance().seedDefaultUsers();
         }
+        updateServerEndpointLabel();
+    }
+
+    private void updateServerEndpointLabel() {
+        if (serverEndpointLabel == null) {
+            return;
+        }
+        if (AppConfig.isUseMock()) {
+            serverEndpointLabel.setText("Mode: MOCK (local data — not shared between PCs)");
+            serverEndpointLabel.setStyle("-fx-text-fill: #b45309;");
+            return;
+        }
+        String endpoint = AppConfig.getEndpointLabel();
+        boolean connected = ServerConnection.getInstance().isConnected();
+        serverEndpointLabel.setText(connected
+                ? "Server: " + endpoint + " (connected)"
+                : "Server: " + endpoint + " (not connected — fix client.properties or start server)");
+        serverEndpointLabel.setStyle(connected ? "-fx-text-fill: #15803d;" : "-fx-text-fill: #dc2626;");
     }
 
     @FXML
@@ -46,11 +66,18 @@ public class LoginController {
         if (nowMock) {
             MockUserStore.getInstance().seedDefaultUsers();
         }
+        updateServerEndpointLabel();
     }
 
     @FXML
     private void handleLogin() {
         if (!validateCredentials()) return;
+
+        if (!AppConfig.isUseMock() && !ServerConnection.getInstance().isConnected()) {
+            showError("Not connected to " + AppConfig.getEndpointLabel()
+                    + ". Start the server on that IP or edit client.properties on this PC.");
+            return;
+        }
 
         String username = usernameField.getText().trim();
         String password = passwordField.getText();

@@ -52,6 +52,7 @@
                 <Text styleClass="form-title" text="Sign In" />
                 <TextField fx:id="usernameField" promptText="Username" styleClass="login-field" />
                 <PasswordField fx:id="passwordField" promptText="Password" styleClass="login-field" />
+                <Label fx:id="serverEndpointLabel" styleClass="muted-text" wrapText="true" maxWidth="360" />
                 <ComboBox fx:id="roleCombo" promptText="Select Role" styleClass="login-field">
                     <items>
                         <FXCollections fx:factory="observableArrayList">

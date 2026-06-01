@@ -312,31 +312,71 @@ client/target/client-1.0-SNAPSHOT.jar
 mvn clean package -DskipTests
 ```
 
-### Step 2: Start the Server
+### Step 2: Start the Server (ONE machine only)
+
+On the **server PC** (example IP `192.168.1.10`):
 
 ```bash
+mvn clean install -DskipTests
 java -jar server/target/server-1.0-SNAPSHOT.jar
 ```
 
-> The server listens on port `5050` by default (from `server/src/main/resources/server.properties`).  
-> Seed data is loaded automatically. Disable with `-Dserver.seed=false`.
-> You can change port by editing `server.properties` (`server.port`).
+> Listens on port **5050** on all interfaces (`0.0.0.0`).  
+> Auction data is stored in the **central server process** (in-memory cache + H2 file `./data/auctiondb` on the server machine).  
+> **Do not** run `ServerApp` on Seller/Admin PCs — each extra server has its own data and admins will see different counts.
 
-### Step 3: Start Client
+### Step 3: Start Client (every Seller / Admin / Bidder PC)
 
-**Option A — Recommended (Maven, no manual JavaFX path):**
+#### Configure the same server address on ALL clients
 
-From the project root:
+Edit `client/src/main/resources/client.properties` on **each** client machine before run (default in repo):
 
-```bash
-mvn javafx:run -f client/pom.xml
+```properties
+server.host=192.168.1.10
+server.port=5050
 ```
 
-For LAN / multi-machine usage, set server address explicitly:
+`AppConfig` resolution order: JVM `-Dserver.host` → env `SERVER_HOST` → `client.properties` → `localhost`.
+
+On the login screen you must see **`Server: 192.168.1.10:5050 (connected)`** (green).  
+If it shows `localhost` or `(not connected)`, fix `client.properties` or start the central server.  
+**MOCK MODE** uses local fake data and is **not** shared between PCs — keep it off for LAN tests.
+
+#### Option A — Maven / JavaFX (recommended)
+
+From project root (uses `client.properties` automatically):
+
+```powershell
+mvn -f client/pom.xml javafx:run
+```
+
+**Windows PowerShell** — optional override (quote each `-D`):
+
+```powershell
+mvn -f client/pom.xml javafx:run "-Dserver.host=192.168.1.10" "-Dserver.port=5050"
+```
+
+**cmd.exe / Git Bash / Linux / macOS:**
 
 ```bash
 mvn -f client/pom.xml javafx:run -Dserver.host=192.168.1.10 -Dserver.port=5050
 ```
+
+**Environment variables** (no `-D` quoting):
+
+```powershell
+$env:SERVER_HOST="192.168.1.10"; $env:SERVER_PORT="5050"; mvn -f client/pom.xml javafx:run
+```
+
+#### Multi-machine checklist
+
+| Step | Action |
+|------|--------|
+| 1 | One `ServerApp` on `192.168.1.10:5050`, firewall allows TCP 5050 |
+| 2 | Same `server.host` in `client.properties` on every PC (or same `SERVER_HOST`) |
+| 3 | Login shows **connected** to that IP; MOCK MODE **off** |
+| 4 | Admin dashboard: **Connected → 192.168.1.10:5050**; use **Refresh** if needed |
+| 5 | Two admins must show the **same** pending/total counts (same central server) |
 
 **Option B — Run the packaged JAR with JavaFX from Maven cache**
 
@@ -352,6 +392,7 @@ $mp  = "$jfx\javafx-base\21.0.2\javafx-base-21.0.2-win.jar;" +
        "$jfx\javafx-fxml\21.0.2\javafx-fxml-21.0.2-win.jar;" +
        "$jfx\javafx-graphics\21.0.2\javafx-graphics-21.0.2-win.jar"
 java --module-path $mp --add-modules javafx.controls,javafx.fxml `
+     -Dserver.host=192.168.1.10 -Dserver.port=5050 `
      -jar client/target/client-1.0-SNAPSHOT.jar
 ```
 
@@ -364,12 +405,13 @@ $JFX/javafx-controls/21.0.2/javafx-controls-21.0.2.jar:\
 $JFX/javafx-fxml/21.0.2/javafx-fxml-21.0.2.jar:\
 $JFX/javafx-graphics/21.0.2/javafx-graphics-21.0.2.jar"
 java --module-path "$MP" --add-modules javafx.controls,javafx.fxml \
+     -Dserver.host=192.168.1.10 -Dserver.port=5050 \
      -jar client/target/client-1.0-SNAPSHOT.jar
 ```
 
 > On Linux/macOS, replace the classifier in the path (`-win`) with your OS variant if needed (e.g. `-linux`, `-mac`).  
-> For LAN, you can also pass `-Dserver.host=<server-ip> -Dserver.port=5050` when starting client.  
-> **No server?** Toggle the **MOCK MODE** button on the login screen to use local mock data.
+> Packaged JAR reads `client.properties` inside the JAR; rebuild after changing that file, or pass `-Dserver.host=...`.  
+> **No server?** MOCK MODE is for offline demo only — not for multi-PC sync.
 
 ### Running Tests
 
@@ -410,7 +452,7 @@ mvn test
 ## 📄 Report & Demo
 
 - 📝 **Report PDF**: *https://docs.google.com/document/d/1S36VNNq40cxFLd_YeehnZef-XDtD7I3eRyls9ktEyzw/edit?usp=sharing*
-- 🎥 **Video demo**: *(add link here)*
+- 🎥 **Video demo**: *https://drive.google.com/file/d/1TRoVN4I4KK6QrNYpKfxF1JtBK53lAjhp/view*
 
 ---
 
