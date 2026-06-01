@@ -15,6 +15,7 @@ public class PriceChart extends LineChart<Number, Number> {
     private final NumberAxis yAxis;
     private final ObservableList<XYChart.Data<Number, Number>> dataList;
     private int pointCount = 0;
+    private double priceScale = 1.0;
 
     public PriceChart() {
         super(new NumberAxis(), new NumberAxis());
@@ -22,17 +23,21 @@ public class PriceChart extends LineChart<Number, Number> {
         yAxis = (NumberAxis) getYAxis();
 
         xAxis.setLabel("Bid Count");
-
-        yAxis.setLabel("Price (M USD)");
+        yAxis.setLabel("Price (USD)");
         yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis) {
             @Override
             public String toString(Number object) {
-                // Format in millions
-                return String.format("%,.0f M", object.doubleValue());
+                double value = object.doubleValue() * priceScale;
+                if (priceScale >= 1_000_000) {
+                    return String.format("%,.1fM", value / 1_000_000.0);
+                }
+                if (priceScale >= 1_000) {
+                    return String.format("%,.0fK", value / 1_000.0);
+                }
+                return String.format("%,.0f", value);
             }
         });
 
-        // Chart title
         setTitle("Price History");
         setLegendVisible(false);
         setCreateSymbols(true);
@@ -46,13 +51,13 @@ public class PriceChart extends LineChart<Number, Number> {
     }
 
     public void addPricePoint(long timestamp, double price) {
-        double priceInMillions = price / 1_000_000.0;
+        configureScale(Math.max(price, yAxis.getUpperBound() * priceScale));
         pointCount++;
-        dataList.add(new XYChart.Data<>((double) pointCount, priceInMillions));
+        dataList.add(new XYChart.Data<>((double) pointCount, price / priceScale));
 
-        double currentMax = yAxis.getUpperBound();
-        if (priceInMillions > currentMax) {
-            yAxis.setUpperBound(priceInMillions * 1.1);
+        double chartValue = price / priceScale;
+        if (chartValue > yAxis.getUpperBound()) {
+            yAxis.setUpperBound(chartValue * 1.15);
         }
 
         if (pointCount > 20) {
@@ -66,35 +71,61 @@ public class PriceChart extends LineChart<Number, Number> {
         pointCount = 0;
 
         if (history == null || history.isEmpty()) {
+            configureScale(1_000);
             addEmptyData();
             return;
         }
 
+        double maxPrice = history.stream().mapToDouble(BidTransaction::getAmount).max().orElse(1_000);
+        double minPrice = history.stream().mapToDouble(BidTransaction::getAmount).min().orElse(0);
+        configureScale(maxPrice);
+
         for (BidTransaction bid : history) {
-            double priceInMillions = bid.getAmount() / 1_000_000.0;
             pointCount++;
-            dataList.add(new XYChart.Data<>((double) pointCount, priceInMillions));
+            dataList.add(new XYChart.Data<>((double) pointCount, bid.getAmount() / priceScale));
         }
 
-        double maxPrice = history.stream().mapToDouble(BidTransaction::getAmount).max().orElse(100_000_000);
-        yAxis.setUpperBound(Math.ceil(maxPrice / 1_000_000) * 1.1);
-        yAxis.setLowerBound(0);
+        double maxChartValue = maxPrice / priceScale;
+        double minChartValue = minPrice / priceScale;
+        yAxis.setUpperBound(Math.max(maxChartValue * 1.05, minChartValue + 1));
+        if (maxPrice - minPrice < Math.max(maxPrice * 0.05, 1)) {
+            yAxis.setLowerBound(Math.max(minChartValue * 0.995, 0));
+        } else {
+            yAxis.setLowerBound(0);
+        }
         xAxis.setLowerBound(0);
-        xAxis.setUpperBound(pointCount + 2);
+        xAxis.setUpperBound(Math.max(pointCount + 1, 2));
+    }
+
+    private void configureScale(double maxPrice) {
+        if (maxPrice >= 1_000_000) {
+            priceScale = 1_000_000.0;
+            yAxis.setLabel("Price (M USD)");
+        } else if (maxPrice >= 1_000) {
+            priceScale = 1_000.0;
+            yAxis.setLabel("Price (K USD)");
+        } else {
+            priceScale = 1.0;
+            yAxis.setLabel("Price (USD)");
+        }
     }
 
     private void addEmptyData() {
         dataList.add(new XYChart.Data<>(0, 0));
+        yAxis.setLowerBound(0);
+        yAxis.setUpperBound(1);
+        xAxis.setLowerBound(0);
+        xAxis.setUpperBound(2);
     }
 
     public void addNewBid(BidTransaction bid, int index) {
-        double priceInMillions = bid.getAmount() / 1_000_000.0;
+        configureScale(Math.max(bid.getAmount(), yAxis.getUpperBound() * priceScale));
         pointCount++;
-        dataList.add(new XYChart.Data<>((double) pointCount, priceInMillions));
+        dataList.add(new XYChart.Data<>((double) pointCount, bid.getAmount() / priceScale));
 
-        double currentMax = yAxis.getUpperBound();
-        if (priceInMillions > currentMax) {
-            yAxis.setUpperBound(priceInMillions * 1.1);
+        double chartValue = bid.getAmount() / priceScale;
+        if (chartValue > yAxis.getUpperBound()) {
+            yAxis.setUpperBound(chartValue * 1.15);
         }
     }
 

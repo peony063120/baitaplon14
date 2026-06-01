@@ -105,29 +105,20 @@ public class BiddingService {
                 throw new InvalidBidException("Insufficient balance");
             }
 
-            // Kiểm tra giá hợp lệ qua strategy
-            if (!strategy.execute(auction, request)) {
-                throw new InvalidBidException("Invalid bid amount");
-            }
-
-            // LƯU GIÁ HIỆN TẠI VÀ NGƯỜI THẮNG TRƯỚC ĐÓ
+            // Lưu giá và người thắng trước khi strategy cập nhật auction
             double previousPrice = auction.getCurrentPrice();
             String previousWinnerId = auction.getCurrentWinnerId();
 
-            // Tạo giao dịch – dùng constructor rút gọn (tự sinh transactionId)
-            BidTransaction bid = new BidTransaction(
-                    auction.getId(),
-                    bidder.getId(),
-                    request.getAmount(),
-                    LocalDateTime.now(),
-                    request.isAutoBid()
-            );
+            // Validate và thực thi bid (NormalBiddingStrategy vừa kiểm tra vừa apply)
+            strategy.execute(auction, request);
 
-            // Lưu giao dịch
+            // Lấy bid vừa được thêm vào bidHistory từ strategy
+            // (Strategy đã tạo BidTransaction với autoBid=false, cập nhật thành request.isAutoBid())
+            BidTransaction bid = auction.getBidHistory().get(auction.getBidHistory().size() - 1);
+            bid.setAutoBid(request.isAutoBid());
+
+            // Lưu giao dịch vào database
             bidDAO.saveBidTransaction(bid);
-
-            // Cập nhật auction
-            auction.addBid(bid);
             auctionDAO.saveAuction(auction);
 
             // HOÀN TIỀN CHO NGƯỜI THẮNG TRƯỚC (nếu có)
@@ -175,6 +166,10 @@ public class BiddingService {
 
     public List<BidTransaction> getBidHistory(String auctionId) {
         return bidDAO.getBidHistory(auctionId);
+    }
+
+    public List<BidTransaction> getBidsByUser(String userId) {
+        return bidDAO.getBidsByUser(userId);
     }
 
     public void configureAutoBid(AutoBidRequest request) {

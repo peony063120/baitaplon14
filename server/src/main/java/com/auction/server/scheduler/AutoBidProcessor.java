@@ -30,6 +30,13 @@ public class AutoBidProcessor {
         this.autoBidService = new AutoBidService();
     }
 
+    // Constructor cho test với cả AutoBidService và AuctionDAO
+    public AutoBidProcessor(AuctionDAO auctionDAO, AutoBidService autoBidService) {
+        this.scheduler = Executors.newSingleThreadScheduledExecutor();
+        this.auctionDAO = auctionDAO;
+        this.autoBidService = autoBidService;
+    }
+
     // Setter to inject BiddingService
     public void setBiddingService(BiddingService biddingService) {
         this.biddingService = biddingService;
@@ -65,7 +72,7 @@ public class AutoBidProcessor {
         List<Auction> runningAuctions = auctionDAO.getAuctionsByStatus(AuctionStatus.RUNNING);
         if (autoBidService != null) {
             for (Auction auction : runningAuctions) {
-                autoBidService.processAutoBids(auction, biddingService);
+                autoBidService.processAutoBids(auction);
             }
         }
     }

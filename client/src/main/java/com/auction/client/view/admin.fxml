@@ -7,58 +7,58 @@
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
-<?import javafx.scene.layout.Region?>
-<ScrollPane fitToWidth="true" styleClass="dashboard-scroll" xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.auction.client.controller.AdminController">
-    <VBox spacing="24" styleClass="content-page">
-        <padding>
-            <Insets top="28" right="28" bottom="28" left="28"/>
-        </padding>
+<VBox spacing="24" styleClass="content-page" xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.auction.client.controller.AdminController">
+    <padding>
+        <Insets top="28" right="28" bottom="28" left="28"/>
+    </padding>
 
-        <HBox alignment="CENTER_LEFT" spacing="16">
-            <Text style="-fx-font-size: 24px; -fx-font-weight: 800;" text="Admin Dashboard" />
-            <Region HBox.hgrow="ALWAYS" />
-            <Label fx:id="adminNameLabel" style="-fx-text-fill: #666;" />
-            <Button onAction="#onLogout" style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: 700; -fx-padding: 6 16; -fx-background-radius: 6; -fx-cursor: hand;" text="Logout" />
-        </HBox>
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <Text style="-fx-font-size: 24px; -fx-font-weight: 800;" text="Admin Dashboard" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Label fx:id="adminNameLabel" style="-fx-text-fill: #666;" />
+        <Button onAction="#onLogout" style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: 700; -fx-padding: 6 16; -fx-background-radius: 6; -fx-cursor: hand;" text="Logout" />
+    </HBox>
 
-        <HBox spacing="24" styleClass="stats-row">
-            <VBox styleClass="stat-card" spacing="8">
-                <Text styleClass="stat-label" text="Pending Auctions" />
-                <Label fx:id="pendingCountLabel" styleClass="stat-value" text="0" />
-                <Text styleClass="muted-text" text="Awaiting approval" />
-            </VBox>
-            <VBox styleClass="stat-card" spacing="8">
-                <Text styleClass="stat-label" text="Total Auctions" />
-                <Label fx:id="totalAuctionsLabel" styleClass="stat-value" text="0" />
-                <Text styleClass="muted-text" text="All time" />
-            </VBox>
-            <VBox styleClass="stat-card" spacing="8">
-                <Text styleClass="stat-label" text="Total Users" />
-                <Label fx:id="totalUsersLabel" styleClass="stat-value" text="0" />
-                <Text styleClass="muted-text" text="Registered accounts" />
-            </VBox>
-        </HBox>
+    <HBox spacing="24" styleClass="stats-row">
+        <VBox styleClass="stat-card" spacing="8">
+            <Text styleClass="stat-label" text="Pending Auctions" />
+            <Label fx:id="pendingCountLabel" styleClass="stat-value" text="0" />
+            <Text styleClass="muted-text" text="Awaiting approval" />
+        </VBox>
+        <VBox styleClass="stat-card" spacing="8">
+            <Text styleClass="stat-label" text="Total Auctions" />
+            <Label fx:id="totalAuctionsLabel" styleClass="stat-value" text="0" />
+            <Text styleClass="muted-text" text="All time" />
+        </VBox>
+        <VBox styleClass="stat-card" spacing="8">
+            <Text styleClass="stat-label" text="Total Users" />
+            <Label fx:id="totalUsersLabel" styleClass="stat-value" text="0" />
+            <Text styleClass="muted-text" text="Registered accounts" />
+        </VBox>
+    </HBox>
 
-        <TabPane tabClosingPolicy="UNAVAILABLE">
-            <Tab text="Pending Auctions">
+    <TabPane tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+        <Tab text="Pending Auctions">
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
                 <VBox spacing="12" styleClass="content-section">
-                    <padding><Insets top="16" /></padding>
+                    <padding><Insets top="16" right="4" bottom="16" left="4"/></padding>
                     <VBox fx:id="pendingAuctionList" spacing="8" />
                     <Text fx:id="noPendingText" styleClass="muted-text"
                           text="No pending auctions to review." />
                 </VBox>
-            </Tab>
-        </TabPane>
+            </ScrollPane>
+        </Tab>
+    </TabPane>
 
-        <HBox spacing="12">
-            <Button onAction="#onRefresh" styleClass="secondary-btn" text="Refresh" />
-        </HBox>
+    <HBox spacing="12">
+        <Button onAction="#onRefresh" styleClass="secondary-btn" text="Refresh" />
+    </HBox>
 
-        <Label fx:id="statusLabel" styleClass="muted-text" />
-    </VBox>
-</ScrollPane>
+    <Label fx:id="statusLabel" styleClass="muted-text" wrapText="true" maxWidth="Infinity" />
+</VBox>

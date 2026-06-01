@@ -105,18 +105,26 @@ public class ClientModel {
      * @param balance Số dư tài khoản
      */
     public void setSession(String sessionToken, String userId, String username, String role, double balance) {
+        setSession(sessionToken, userId, username, role, balance, null, null);
+    }
+
+    public void setSession(String sessionToken, String userId, String username, String role,
+                           double balance, String email, String fullName) {
         this.session = new Session(sessionToken, userId);
+
+        String resolvedEmail = email != null ? email : "";
+        String resolvedFullName = fullName != null && !fullName.isBlank() ? fullName : username;
 
         User user;
         if ("SELLER".equalsIgnoreCase(role)) {
-            user = new com.auction.common.entity.Seller(username, "", "", username);
+            user = new com.auction.common.entity.Seller(username, "", resolvedEmail, resolvedFullName);
             user.setId(userId);
         } else if ("ADMIN".equalsIgnoreCase(role)) {
-            user = new com.auction.common.entity.Admin(username, "", "", username, "SUPER");
+            user = new com.auction.common.entity.Admin(username, "", resolvedEmail, resolvedFullName, "SUPER");
             user.setId(userId);
         } else {
             com.auction.common.entity.Bidder bidder = new com.auction.common.entity.Bidder(
-                    username, "", "", username
+                    username, "", resolvedEmail, resolvedFullName
             );
             bidder.setId(userId);
             bidder.addBalance(balance);

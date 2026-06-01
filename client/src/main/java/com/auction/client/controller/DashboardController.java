@@ -1,12 +1,16 @@
 package com.auction.client.controller;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.auction.client.components.AuctionCard;
 import com.auction.client.config.AppConfig;
+import com.auction.client.network.MessageProtocol;
+import com.auction.client.network.RealtimeListener;
 import com.auction.client.service.DataService;
 import com.auction.common.dto.AuctionDTO;
 import com.auction.common.enums.AuctionStatus;
@@ -39,11 +43,14 @@ public class DashboardController {
     @FXML private TilePane auctionGrid;
 
     private List<AuctionDTO> allAuctions = new ArrayList<>();
-    private String currentFilter = "all";
+    private String sortFilter = "all";
+    private final Set<String> selectedCategories = new LinkedHashSet<>();
+    private final RealtimeListener realtimeListener = RealtimeListener.getInstance();
 
     @FXML
     public void initialize() {
         loadAuctions();
+        subscribeRealtime();
         if (AppConfig.isUseMock()) {
             Timeline refreshTimer = new Timeline(
                     new KeyFrame(Duration.seconds(5), e -> loadAuctions())
@@ -56,7 +63,10 @@ public class DashboardController {
     public void loadAuctions() {
         DataService.getInstance().loadAuctions(
                 auctions -> {
-                    allAuctions = auctions;
+                    if (auctions != null && (!auctions.isEmpty() || allAuctions.isEmpty())) {
+                        allAuctions = auctions;
+                        MainController.seedAuctionSnapshot(auctions);
+                    }
                     applyFilter();
                     updateStats();
                     updateChart();
@@ -69,6 +79,36 @@ public class DashboardController {
         );
     }
 
+    private void subscribeRealtime() {
+        if (AppConfig.isUseMock()) {
+            return;
+        }
+        realtimeListener.registerCallback(MessageProtocol.TYPE_AUCTION_UPDATE, this::onAuctionUpdate);
+    }
+
+    private void onAuctionUpdate(Object data) {
+        if (!(data instanceof AuctionDTO dto) || dto.getId() == null) {
+            return;
+        }
+        Platform.runLater(() -> {
+            for (AuctionDTO existing : allAuctions) {
+                if (existing.getId().equals(dto.getId())) {
+                    existing.setCurrentPrice(dto.getCurrentPrice());
+                    if (dto.getStatus() != null) {
+                        existing.setStatus(dto.getStatus());
+                    }
+                    if (dto.getCurrentWinnerId() != null) {
+                        existing.setCurrentWinnerId(dto.getCurrentWinnerId());
+                    }
+                    break;
+                }
+            }
+            applyFilter();
+            updateStats();
+            MainController.syncBalanceFromServer();
+        });
+    }
+
     private void updateChart() {
         Platform.runLater(() -> {
             if (revenueChart == null) return;
@@ -79,16 +119,22 @@ public class DashboardController {
             var finishedAuctions = allAuctions.stream()
                     .filter(a -> a.getStatus() == AuctionStatus.FINISHED || a.getStatus() == AuctionStatus.PAID)
                     .collect(Collectors.groupingBy(
-                            a -> a.getEndTime() != null ? a.getEndTime().toLocalDate() : null,
+                            a -> {
+                                if (a.getEndTime() != null) {
+                                    return a.getEndTime().toLocalDate();
+                                }
+                                if (a.getStartTime() != null) {
+                                    return a.getStartTime().toLocalDate();
+                                }
+                                return java.time.LocalDate.now();
+                            },
                             Collectors.summingDouble(AuctionDTO::getCurrentPrice)
                     ));
 
-            int dayIndex = 1;
-            for (var entry : finishedAuctions.entrySet()) {
-                if (entry.getKey() != null) {
-                    series.getData().add(new XYChart.Data<>(dayIndex++, entry.getValue()));
-                }
-            }
+            finishedAuctions.entrySet().stream()
+                    .sorted(java.util.Map.Entry.comparingByKey())
+                    .forEach(entry -> series.getData().add(
+                            new XYChart.Data<>(series.getData().size() + 1, entry.getValue())));
 
             if (series.getData().isEmpty()) {
                 series.getData().add(new XYChart.Data<>(1, 0));
@@ -99,7 +145,8 @@ public class DashboardController {
 
     private void updateStats() {
         long runningCount = allAuctions.stream()
-                .filter(a -> a.getStatus() == AuctionStatus.RUNNING)
+                .filter(a -> a.getStatus() == AuctionStatus.RUNNING
+                        || a.getStatus() == AuctionStatus.OPEN)
                 .count();
         activeAuctionsCount.setText(String.valueOf(runningCount));
 
@@ -111,14 +158,13 @@ public class DashboardController {
     }
 
     private void applyFilter() {
-        if (currentFilter == null || "all".equals(currentFilter)) {
-            renderAuctions(new ArrayList<>(allAuctions));
-            return;
-        }
-        List<AuctionDTO> filtered;
-        switch (currentFilter) {
+        List<AuctionDTO> filtered = allAuctions.stream()
+                .filter(this::matchesSelectedCategories)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        switch (sortFilter) {
             case "ending":
-                filtered = allAuctions.stream()
+                filtered = filtered.stream()
                         .filter(a -> a.getStatus() == AuctionStatus.RUNNING)
                         .sorted((a, b) -> {
                             if (a.getEndTime() == null) return 1;
@@ -128,7 +174,7 @@ public class DashboardController {
                         .limit(20).collect(Collectors.toList());
                 break;
             case "newest":
-                filtered = allAuctions.stream()
+                filtered = filtered.stream()
                         .sorted((a, b) -> {
                             if (a.getStartTime() == null) return 1;
                             if (b.getStartTime() == null) return -1;
@@ -137,18 +183,32 @@ public class DashboardController {
                         .limit(20).collect(Collectors.toList());
                 break;
             case "highest":
-                filtered = allAuctions.stream()
+                filtered = filtered.stream()
                         .sorted((a, b) -> Double.compare(b.getCurrentPrice(), a.getCurrentPrice()))
                         .limit(20).collect(Collectors.toList());
                 break;
             default:
-                filtered = allAuctions.stream()
-                        .filter(a -> a.getCategory() != null
-                                && a.getCategory().equals(currentFilter))
-                        .collect(Collectors.toList());
                 break;
         }
         renderAuctions(filtered);
+    }
+
+    private boolean matchesSelectedCategories(AuctionDTO auction) {
+        if (selectedCategories.isEmpty()) {
+            return true;
+        }
+        String auctionCategory = normalizeCategory(auction.getCategory());
+        return selectedCategories.stream()
+                .anyMatch(selected -> normalizeCategory(selected).equals(auctionCategory));
+    }
+
+    static String normalizeCategory(String category) {
+        if (category == null) {
+            return "";
+        }
+        return category.toLowerCase(Locale.ROOT)
+                .replace("đ", "d")
+                .replaceAll("[\\s_-]+", "");
     }
 
     private void renderAuctions(List<AuctionDTO> auctions) {
@@ -178,15 +238,18 @@ public class DashboardController {
             popupStage.initStyle(StageStyle.DECORATED);
             popupStage.setTitle("Auction Detail — " + auction.getItemName());
             popupStage.setMinWidth(700);
-            popupStage.setMinHeight(600);
+            popupStage.setMinHeight(720);
 
-            Scene scene = new Scene(loader.load(), 750, 680);
+            Scene scene = new Scene(loader.load(), 780, 820);
             popupStage.setScene(scene);
 
             AuctionDetailController controller = loader.getController();
             controller.loadAuctionDetails(auction.getId());
 
-            popupStage.showAndWait(); // Modal: chặn window cha cho đến khi đóng
+            popupStage.showAndWait();
+            applyFilter();
+            updateStats();
+            MainController.syncBalanceFromServer();
         } catch (Exception e) {
             e.printStackTrace();
             showErrorPopup("Could not open details: " + e.getMessage());
@@ -211,22 +274,34 @@ public class DashboardController {
     // ==================== METHODS CALLED FROM MAIN CONTROLLER ====================
 
     @FXML
-    public void filterByCategory(javafx.event.ActionEvent event) {
+    public void filterBySort(javafx.event.ActionEvent event) {
         if (event.getSource() instanceof javafx.scene.control.ToggleButton button) {
             Object userData = button.getUserData();
-            String category = userData != null ? userData.toString() : "all";
-            this.currentFilter = category;
+            this.sortFilter = userData != null ? userData.toString() : "all";
             applyFilter();
         }
     }
 
-    public void filterByCategory(String category) {
-        this.currentFilter = category != null ? category : "all";
+    public void clearCategorySelection() {
+        selectedCategories.clear();
+        applyFilter();
+    }
+
+    public void toggleSidebarCategory(String category, boolean selected) {
+        if (category == null || category.isBlank() || "all".equalsIgnoreCase(category)) {
+            clearCategorySelection();
+            return;
+        }
+        if (selected) {
+            selectedCategories.add(category);
+        } else {
+            selectedCategories.remove(category);
+        }
         applyFilter();
     }
 
     public void setFilter(String filterType) {
-        this.currentFilter = filterType != null ? filterType : "all";
+        this.sortFilter = filterType != null ? filterType : "all";
         applyFilter();
     }
 

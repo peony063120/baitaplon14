@@ -1,5 +1,6 @@
 package com.auction.client.controller;
 
+import com.auction.client.config.AppConfig;
 import com.auction.client.model.ClientModel;
 import com.auction.client.network.ServerConnection;
 import com.auction.common.dto.AuctionDTO;
@@ -19,6 +20,8 @@ import javafx.scene.text.Text;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class AdminController {
 
@@ -31,6 +34,12 @@ public class AdminController {
     @FXML private Label adminNameLabel;
 
     private List<AuctionDTO> pendingAuctions = new ArrayList<>();
+    /** Tránh gửi nhiều request TCP đồng thời — dễ nhận nhầm response. */
+    private final ExecutorService serverIo = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "admin-server-io");
+        t.setDaemon(true);
+        return t;
+    });
 
     @FXML
     public void initialize() {
@@ -38,12 +47,13 @@ public class AdminController {
         if (user != null) {
             adminNameLabel.setText("Logged in as: " + user.getUsername());
         }
+        statusLabel.setText("Connected endpoint: " + AppConfig.getServerHost() + ":" + AppConfig.getServerPort());
         loadPendingAuctions();
         loadStats();
     }
 
     private void loadStats() {
-        new Thread(() -> {
+        serverIo.submit(() -> {
             try {
                 String response = ServerConnection.getInstance().sendRequest("GET_AUCTIONS");
                 if (response != null && response.startsWith("AUCTIONS_COUNT:")) {
@@ -60,18 +70,18 @@ public class AdminController {
             } catch (IOException e) {
                 Platform.runLater(() -> statusLabel.setText("Error loading stats"));
             }
-        }).start();
+        });
     }
 
     public void loadPendingAuctions() {
-        new Thread(() -> {
+        serverIo.submit(() -> {
             try {
                 String response = ServerConnection.getInstance().sendRequest("GET_PENDING_AUCTIONS");
                 Platform.runLater(() -> parsePendingResponse(response));
             } catch (IOException e) {
                 Platform.runLater(() -> statusLabel.setText("Connection error: " + e.getMessage()));
             }
-        }).start();
+        });
     }
 
     private void parsePendingResponse(String response) {
@@ -90,14 +100,17 @@ public class AdminController {
             String[] items = data.split("\\|\\|");
             for (String item : items) {
                 if (item.startsWith("PENDING:")) {
-                    String[] p = item.substring(8).split(":");
+                    // id:name:price:sellerId:startTime:endTime — start/end chứa ':' nên split tối đa 5 phần
+                    String[] p = item.substring(8).split(":", 5);
                     if (p.length >= 3) {
                         AuctionDTO dto = new AuctionDTO();
                         dto.setId(p[0]);
                         dto.setItemName(p[1]);
                         dto.setCurrentPrice(Double.parseDouble(p[2]));
                         dto.setStatus(AuctionStatus.PENDING);
-                        if (p.length > 3) dto.setSellerId(p[3]);
+                        if (p.length > 3) {
+                            dto.setSellerId(p[3]);
+                        }
                         pendingAuctions.add(dto);
                     }
                 }
@@ -108,6 +121,7 @@ public class AdminController {
 
         pendingCountLabel.setText(String.valueOf(count));
         renderPendingAuctions();
+        statusLabel.setText("");
     }
 
     private void renderPendingAuctions() {
@@ -159,13 +173,14 @@ public class AdminController {
     }
 
     private void approveAuction(String auctionId) {
-        new Thread(() -> {
+        serverIo.submit(() -> {
             try {
                 String response = ServerConnection.getInstance().sendRequest("APPROVE_AUCTION:" + auctionId);
                 Platform.runLater(() -> {
                     if (response != null && response.startsWith("APPROVE_OK")) {
                         statusLabel.setText("Auction approved successfully!");
                         loadPendingAuctions();
+                        loadStats();
                     } else {
                         statusLabel.setText("Failed to approve: " + response);
                     }
@@ -173,17 +188,18 @@ public class AdminController {
             } catch (IOException e) {
                 Platform.runLater(() -> statusLabel.setText("Connection error: " + e.getMessage()));
             }
-        }).start();
+        });
     }
 
     private void rejectAuction(String auctionId) {
-        new Thread(() -> {
+        serverIo.submit(() -> {
             try {
                 String response = ServerConnection.getInstance().sendRequest("REJECT_AUCTION:" + auctionId);
                 Platform.runLater(() -> {
                     if (response != null && response.startsWith("REJECT_OK")) {
                         statusLabel.setText("Auction rejected.");
                         loadPendingAuctions();
+                        loadStats();
                     } else {
                         statusLabel.setText("Failed to reject: " + response);
                     }
@@ -191,7 +207,7 @@ public class AdminController {
             } catch (IOException e) {
                 Platform.runLater(() -> statusLabel.setText("Connection error: " + e.getMessage()));
             }
-        }).start();
+        });
     }
 
     @FXML

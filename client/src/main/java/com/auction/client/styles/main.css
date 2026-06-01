@@ -256,6 +256,12 @@
     -fx-border-color: #111111;
 }
 
+.welcome-label {
+    -fx-text-fill: #111111;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+}
+
 .clock {
     -fx-text-fill: #6B7280;
     -fx-font-family: "Consolas", monospace;
@@ -377,6 +383,12 @@
     -fx-background-radius: 22px;
     -fx-border-radius: 22px;
     -fx-padding: 16px;
+    -fx-max-width: infinity;
+    -fx-pref-width: 100%;
+}
+
+.dashboard-content {
+    -fx-padding: 0;
 }
 
 .chart-series-line {

@@ -57,6 +57,16 @@ class UserControllerTest {
     }
 
     @Test
+    void login_ShouldFailWhenSelectedRoleDoesNotMatchAccount() {
+        LoginRequest wrongRoleRequest = new LoginRequest("testuser", "pass", "ADMIN");
+        when(userService.authenticate("testuser", "pass")).thenReturn(loginResponse);
+        LoginResponse response = userController.login(wrongRoleRequest);
+        assertNotNull(response);
+        assertFalse(response.isSuccess());
+        assertTrue(response.getMessage().contains("Role mismatch"));
+    }
+
+    @Test
     void getUserProfile_ShouldReturnUserDTO() {
         when(userService.getUserById("testuser")).thenReturn(userDTO);
         UserDTO result = userController.getUserProfile("testuser");

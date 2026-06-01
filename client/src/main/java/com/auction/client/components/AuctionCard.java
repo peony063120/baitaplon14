@@ -2,33 +2,32 @@ package com.auction.client.components;
 
 import com.auction.common.dto.AuctionDTO;
 import com.auction.common.enums.AuctionStatus;
-import javafx.animation.Animation;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.util.Duration;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.function.Consumer;
 
 public class AuctionCard extends VBox {
     private AuctionDTO auction;
     private final Consumer<AuctionDTO> onBidCallback;
-    private Timeline countdownTimer;
 
     public AuctionCard(AuctionDTO auction, Consumer<AuctionDTO> onBidCallback) {
         this.auction = auction;
         this.onBidCallback = onBidCallback;
         getStyleClass().add("auction-card");
         buildUI();
-        startCountdown();
     }
 
     private void buildUI() {
@@ -41,7 +40,8 @@ public class AuctionCard extends VBox {
         imagePlaceholder.setAlignment(Pos.CENTER);
         imagePlaceholder.setMaxWidth(Double.MAX_VALUE);
         imagePlaceholder.setMinHeight(130);
-        // TODO(asset): Replace this text placeholder with the auction item image when image URLs are available.
+
+        javafx.scene.Node imageNode = buildImageNode(imagePlaceholder);
 
         Label statusBadge = new Label(getStatusText());
         statusBadge.getStyleClass().add("card-badge");
@@ -82,7 +82,7 @@ public class AuctionCard extends VBox {
         bidCountLabel.getStyleClass().add("muted-text");
         bidCountLabel.setStyle("-fx-font-size: 12px;");
 
-        TimerLabel timerLabel = new TimerLabel(auction.getEndTime());
+        TimerLabel timerLabel = createTimerLabel();
         HBox.setHgrow(timerLabel, Priority.ALWAYS);
         metaBox.getChildren().addAll(bidCountLabel, timerLabel);
 
@@ -96,11 +96,38 @@ public class AuctionCard extends VBox {
         bidButton.setMaxWidth(Double.MAX_VALUE);
 
         StackPane badgePane = new StackPane();
-        badgePane.getChildren().addAll(imagePlaceholder, statusBadge);
+        badgePane.getChildren().addAll(imageNode, statusBadge);
         StackPane.setAlignment(statusBadge, Pos.TOP_LEFT);
         StackPane.setMargin(statusBadge, new Insets(10, 0, 0, 10));
 
         getChildren().addAll(badgePane, categoryLabel, titleLabel, priceBox, metaBox, bidButton);
+    }
+
+    private javafx.scene.Node buildImageNode(Label fallback) {
+        String imageRef = auction.getImagePath();
+        if (imageRef != null && imageRef.startsWith("BASE64:")) {
+            try {
+                byte[] bytes = Base64.getDecoder().decode(imageRef.substring(7));
+                ImageView imageView = new ImageView(new Image(new ByteArrayInputStream(bytes)));
+                imageView.setFitWidth(280);
+                imageView.setFitHeight(130);
+                imageView.setPreserveRatio(true);
+                return imageView;
+            } catch (IllegalArgumentException ignored) {
+                return fallback;
+            }
+        }
+        if (imageRef != null && !imageRef.isBlank()) {
+            File file = new File(imageRef);
+            if (file.exists()) {
+                ImageView imageView = new ImageView(new Image(file.toURI().toString(), true));
+                imageView.setFitWidth(280);
+                imageView.setFitHeight(130);
+                imageView.setPreserveRatio(true);
+                return imageView;
+            }
+        }
+        return fallback;
     }
 
     private String getCategoryLabel() {
@@ -133,11 +160,41 @@ public class AuctionCard extends VBox {
         }
         return switch (status) {
             case RUNNING -> "LIVE";
+            case OPEN -> "SOON";
             case FINISHED -> "ENDED";
             case PAID -> "PAID";
             case CANCELLED -> "CANCELLED";
             default -> "COMING SOON";
         };
+    }
+
+    private TimerLabel createTimerLabel() {
+        TimerLabel timerLabel = new TimerLabel();
+        AuctionStatus status = auction.getStatus();
+        if (status == AuctionStatus.OPEN && auction.getStartTime() != null
+                && auction.getStartTime().isAfter(LocalDateTime.now())) {
+            timerLabel.startCountdownToStart(auction.getStartTime());
+        } else if (status == AuctionStatus.RUNNING) {
+            LocalDateTime endTime = resolveEndTime();
+            if (endTime != null && endTime.isAfter(LocalDateTime.now())) {
+                timerLabel.startCountdown(endTime);
+            } else {
+                timerLabel.setText("Live");
+            }
+        } else if (status == AuctionStatus.FINISHED || status == AuctionStatus.PAID) {
+            timerLabel.setText("Ended");
+        }
+        return timerLabel;
+    }
+
+    private LocalDateTime resolveEndTime() {
+        if (auction.getEndTime() != null) {
+            return auction.getEndTime();
+        }
+        if (auction.getRemainingTimeMillis() > 0) {
+            return LocalDateTime.now().plus(java.time.Duration.ofMillis(auction.getRemainingTimeMillis()));
+        }
+        return null;
     }
 
     private String formatPrice(double price) {
@@ -147,25 +204,6 @@ public class AuctionCard extends VBox {
             return String.format("$%.0fM", price / 1_000_000);
         }
         return String.format("$%,.0f", price);
-    }
-
-    private void startCountdown() {
-        if (auction.getEndTime() == null || auction.getStatus() != AuctionStatus.RUNNING) {
-            return;
-        }
-        countdownTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> updateCountdown()));
-        countdownTimer.setCycleCount(Animation.INDEFINITE);
-        countdownTimer.play();
-    }
-
-    private void updateCountdown() {
-        if (auction.getEndTime() == null) {
-            return;
-        }
-        long remaining = java.time.Duration.between(LocalDateTime.now(), auction.getEndTime()).getSeconds();
-        if (remaining <= 0 && countdownTimer != null) {
-            countdownTimer.stop();
-        }
     }
 
     public void updateAuction(AuctionDTO newAuction) {

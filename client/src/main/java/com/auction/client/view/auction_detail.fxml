@@ -7,6 +7,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
@@ -17,7 +18,7 @@
             fx:controller="com.auction.client.controller.AuctionDetailController"
             stylesheets="@../styles/main.css">
     <center>
-        <ScrollPane fitToWidth="true" styleClass="dashboard-scroll">
+        <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="dashboard-scroll">
             <VBox spacing="24" styleClass="content-page">
                 <padding>
                     <Insets top="28" right="28" bottom="28" left="28"/>
@@ -27,31 +28,44 @@
                     <VBox spacing="8" HBox.hgrow="ALWAYS">
                         <Label fx:id="itemNameLabel" styleClass="auction-title"/>
                         <Label fx:id="statusLabel" styleClass="status-badge"/>
+                        <Label fx:id="categoryLabel" styleClass="muted-text"/>
                     </VBox>
                     <TimerLabel fx:id="timerLabel"/>
                 </HBox>
 
-                <!-- TODO(asset): Add item gallery/image carousel above this price panel when auction images exist. -->
+                <ImageView fx:id="itemImageView" fitWidth="720" fitHeight="280" preserveRatio="true"
+                           styleClass="asset-placeholder"/>
+
+                <Label fx:id="descriptionLabel" wrapText="true" styleClass="muted-text"/>
+
                 <GridPane hgap="32" vgap="16" styleClass="surface-subtle">
                     <VBox GridPane.columnIndex="0">
+                        <Text text="Start Time" styleClass="price-label"/>
+                        <Label fx:id="startTimeLabel" styleClass="section-title"/>
+                    </VBox>
+                    <VBox GridPane.columnIndex="1">
+                        <Text text="End Time" styleClass="price-label"/>
+                        <Label fx:id="endTimeLabel" styleClass="section-title"/>
+                    </VBox>
+                    <VBox GridPane.columnIndex="0" GridPane.rowIndex="1">
                         <Text text="Current Price" styleClass="price-label"/>
                         <Label fx:id="currentPriceLabel" styleClass="current-price-large"/>
                     </VBox>
-                    <VBox GridPane.columnIndex="1">
+                    <VBox GridPane.columnIndex="1" GridPane.rowIndex="1">
                         <Text text="Starting Price" styleClass="price-label"/>
                         <Label fx:id="startingPriceLabel" styleClass="section-title"/>
                     </VBox>
-                    <VBox GridPane.columnIndex="2">
+                    <VBox GridPane.columnIndex="2" GridPane.rowIndex="1">
                         <Text text="Min Increment" styleClass="price-label"/>
                         <Label fx:id="minIncrementLabel" styleClass="section-title"/>
                     </VBox>
-                    <VBox GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="3">
+                    <VBox GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="3">
                         <Text text="Current Winner" styleClass="price-label"/>
                         <Label fx:id="currentWinnerLabel" styleClass="section-title"/>
                     </VBox>
                 </GridPane>
 
-                <VBox spacing="12" styleClass="surface">
+                <VBox spacing="12" styleClass="surface" fx:id="bidPanel">
                     <Text text="Place Your Bid" styleClass="section-title"/>
                     <HBox spacing="12" alignment="CENTER_LEFT">
                         <TextField fx:id="bidAmountField" promptText="Enter amount" styleClass="bid-field" prefWidth="220"/>
@@ -64,7 +78,7 @@
 
                 <VBox spacing="12">
                     <Text text="Bid History Chart" styleClass="section-title"/>
-                    <PriceChart fx:id="priceChart" prefHeight="280"/>
+                    <PriceChart fx:id="priceChart" prefHeight="380" minHeight="320"/>
                 </VBox>
 
                 <VBox spacing="12">

@@ -33,9 +33,8 @@ An online auction platform enabling:
 
 - **JDK**: 21+
 - **Maven**: 3.8+
-- **JavaFX SDK 21+**: Download from https://gluonhq.com/products/javafx/ → choose your OS → extract to a folder, e.g.:
-    - Windows: `C:\javafx-sdk`
-    - Linux/macOS: `~/javafx-sdk`
+
+> JavaFX is included as a Maven dependency (`org.openjfx`). You do **not** need to download the Gluon JavaFX SDK separately unless you prefer running the client manually with a custom `--module-path`.
 
 ---
 
@@ -252,14 +251,6 @@ online-auction-system/
 │       ├── V3__create_bid_transactions_table.sql
 │       └── V4__create_auto_bid_configs_table.sql
 │
-├── docs/
-│   ├── class-diagram.drawio
-│   ├── client-diagram.drawio          # Updated with Hybrid mode
-│   ├── sequence-diagrams/
-│   │   ├── bidding-sequence.png
-│   │   ├── auto-bid-sequence.png
-│   │   └── anti-sniping-sequence.png
-│   └── api-documentation.md
 │
 ├── scripts/
 │   ├── start-server.sh
@@ -315,6 +306,8 @@ client/target/client-1.0-SNAPSHOT.jar
 
 ### Step 1: Build the project
 
+> Stop the server/client if they are running before `mvn clean` (Windows locks JAR files in `target/`).
+
 ```bash
 mvn clean package -DskipTests
 ```
@@ -325,24 +318,57 @@ mvn clean package -DskipTests
 java -jar server/target/server-1.0-SNAPSHOT.jar
 ```
 
-> The server listens on port `5050` by default.  
+> The server listens on port `5050` by default (from `server/src/main/resources/server.properties`).  
 > Seed data is loaded automatically. Disable with `-Dserver.seed=false`.
+> You can change port by editing `server.properties` (`server.port`).
 
 ### Step 3: Start Client
 
-> ⚠️ Client requires JavaFX SDK — **cannot run with `java -jar` directly**.
+**Option A — Recommended (Maven, no manual JavaFX path):**
 
-**Windows (cmd.exe or PowerShell):**
+From the project root:
+
 ```bash
-java --module-path "C:\javafx-sdk\lib" --add-modules javafx.controls,javafx.fxml -jar client/target/client-1.0-SNAPSHOT.jar
+mvn javafx:run -f client/pom.xml
 ```
 
-**Linux / macOS:**
+For LAN / multi-machine usage, set server address explicitly:
+
 ```bash
-java --module-path ~/javafx-sdk/lib --add-modules javafx.controls,javafx.fxml -jar client/target/client-1.0-SNAPSHOT.jar
+mvn -f client/pom.xml javafx:run -Dserver.host=192.168.1.10 -Dserver.port=5050
 ```
 
-> Replace `C:\javafx-sdk` / `~/javafx-sdk` with your actual JavaFX SDK path.  
+**Option B — Run the packaged JAR with JavaFX from Maven cache**
+
+After `mvn package`, JavaFX JARs are downloaded to your local Maven repository.  
+Use `--module-path` pointing to those JARs (do **not** use plain `java -jar` without it).
+
+**Windows (PowerShell):**
+
+```powershell
+$jfx = "$env:USERPROFILE\.m2\repository\org\openjfx"
+$mp  = "$jfx\javafx-base\21.0.2\javafx-base-21.0.2-win.jar;" +
+       "$jfx\javafx-controls\21.0.2\javafx-controls-21.0.2-win.jar;" +
+       "$jfx\javafx-fxml\21.0.2\javafx-fxml-21.0.2-win.jar;" +
+       "$jfx\javafx-graphics\21.0.2\javafx-graphics-21.0.2-win.jar"
+java --module-path $mp --add-modules javafx.controls,javafx.fxml `
+     -jar client/target/client-1.0-SNAPSHOT.jar
+```
+
+**Linux / macOS (bash):**
+
+```bash
+JFX="$HOME/.m2/repository/org/openjfx"
+MP="$JFX/javafx-base/21.0.2/javafx-base-21.0.2.jar:\
+$JFX/javafx-controls/21.0.2/javafx-controls-21.0.2.jar:\
+$JFX/javafx-fxml/21.0.2/javafx-fxml-21.0.2.jar:\
+$JFX/javafx-graphics/21.0.2/javafx-graphics-21.0.2.jar"
+java --module-path "$MP" --add-modules javafx.controls,javafx.fxml \
+     -jar client/target/client-1.0-SNAPSHOT.jar
+```
+
+> On Linux/macOS, replace the classifier in the path (`-win`) with your OS variant if needed (e.g. `-linux`, `-mac`).  
+> For LAN, you can also pass `-Dserver.host=<server-ip> -Dserver.port=5050` when starting client.  
 > **No server?** Toggle the **MOCK MODE** button on the login screen to use local mock data.
 
 ### Running Tests
@@ -390,9 +416,9 @@ mvn test
 
 ## Team Members
 
-| Name                | ID       | Contribution |
-|---------------------|----------|-------------|
-| Hoàng Phương Nhi    | 25023508 |             |
-| Nguyễn Ngọc Quỳnh   | 25023524 |             |
-| Ngô Khánh Linh      | 25023488 |             |
-| Đặng Thị Phương Anh | 25023432 |             |
+| Name                | ID       |
+|---------------------|----------|
+| Hoàng Phương Nhi    | 25023508 |
+| Nguyễn Ngọc Quỳnh   | 25023524 |
+| Ngô Khánh Linh      | 25023488 |
+| Đặng Thị Phương Anh | 25023432 |

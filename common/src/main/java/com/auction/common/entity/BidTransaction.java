@@ -9,6 +9,7 @@ public class BidTransaction implements Serializable {
     private String bidderId;
     private double amount;
     private LocalDateTime bidTime;
+    private String bidderName;
     private boolean autoBid;
 
     // Constructor đầy đủ với transactionId
@@ -31,12 +32,14 @@ public class BidTransaction implements Serializable {
     public String getTransactionId() { return transactionId; }
     public String getAuctionId() { return auctionId; }
     public String getBidderId() { return bidderId; }
+    public String getBidderName() { return bidderName; }
     public double getAmount() { return amount; }
     public LocalDateTime getBidTime() { return bidTime; }
     public boolean isAutoBid() { return autoBid; }
 
     // Setters
     public void setAmount(double amount) { this.amount = amount; }
+    public void setBidderName(String bidderName) { this.bidderName = bidderName; }
     public void setAutoBid(boolean autoBid) { this.autoBid = autoBid; }
     public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
 

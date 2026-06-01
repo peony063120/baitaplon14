@@ -25,13 +25,31 @@ public class ClientObserver implements Observer {
 
     @Override
     public void update(Auction auction) {
-        if (out != null && isConnected()) {
-            out.println("AUCTION_UPDATE"
-                    + ":ID:" + auction.getId()
-                    + ":PRICE:" + auction.getCurrentPrice()
-                    + ":WINNER:" + auction.getCurrentWinnerId()
-                    + ":STATUS:" + auction.getStatus());
+        if (auction == null) {
+            return;
         }
+        sendAuctionUpdate(
+                auction.getId(),
+                auction.getCurrentPrice(),
+                auction.getCurrentWinnerId() != null ? auction.getCurrentWinnerId() : "",
+                null,
+                auction.getStatus().name());
+    }
+
+    protected void sendAuctionUpdate(String auctionId, double price, String winnerId,
+                                     String winnerName, String status) {
+        if (out == null || !isConnected()) {
+            return;
+        }
+        StringBuilder message = new StringBuilder("AUCTION_UPDATE")
+                .append(":ID:").append(auctionId)
+                .append(":PRICE:").append(price)
+                .append(":WINNER:").append(winnerId != null ? winnerId : "");
+        if (winnerName != null && !winnerName.isBlank()) {
+            message.append(":WINNER_NAME:").append(winnerName);
+        }
+        message.append(":STATUS:").append(status);
+        out.println(message.toString());
     }
 
     public Socket getClientSocket() { return clientSocket; }

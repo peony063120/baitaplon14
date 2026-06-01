@@ -35,7 +35,16 @@ public class UserController {
     }
 
     public LoginResponse login(LoginRequest request) {
-        return userService.authenticate(request.getUsername(), request.getPassword());
+        LoginResponse response = userService.authenticate(request.getUsername(), request.getPassword());
+        if (response == null || !response.isSuccess()) {
+            return response;
+        }
+        String requestedRole = request.getRole();
+        if (requestedRole != null && !requestedRole.isBlank()
+                && !response.getRole().equalsIgnoreCase(requestedRole)) {
+            return new LoginResponse(false, "Role mismatch: please select the correct role");
+        }
+        return response;
     }
 
     public UserDTO getUserProfile(String userId) {
@@ -61,11 +70,12 @@ public class UserController {
         }
     }
 
-    public void changePassword(String userId, String oldPassword, String newPassword) {
+    public boolean changePassword(String userId, String oldPassword, String newPassword) {
         try {
             userService.changePassword(userId, oldPassword, newPassword);
+            return true;
         } catch (AuctionNotFoundException | IllegalArgumentException e) {
-            e.printStackTrace();
+            return false;
         }
     }
 }

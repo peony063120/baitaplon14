@@ -11,6 +11,8 @@ public class LoginResponse implements Serializable {
     private String role;
     private String sessionToken;
     private double balance;
+    private String email;
+    private String fullName;
 
     public LoginResponse() {}
 
@@ -20,6 +22,11 @@ public class LoginResponse implements Serializable {
     }
 
     public LoginResponse(boolean success, String message, String userId, String username, String role, String sessionToken, double balance) {
+        this(success, message, userId, username, role, sessionToken, balance, null, null);
+    }
+
+    public LoginResponse(boolean success, String message, String userId, String username, String role,
+                         String sessionToken, double balance, String email, String fullName) {
         this.success = success;
         this.message = message;
         this.userId = userId;
@@ -27,6 +34,8 @@ public class LoginResponse implements Serializable {
         this.role = role;
         this.sessionToken = sessionToken;
         this.balance = balance;
+        this.email = email;
+        this.fullName = fullName;
     }
 
     // Getters and setters
@@ -50,6 +59,12 @@ public class LoginResponse implements Serializable {
 
     public double getBalance() {return balance;}
     public void setBalance(double balance) {this.balance = balance;}
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 
     @Override
     public String toString() {

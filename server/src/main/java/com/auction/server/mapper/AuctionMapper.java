@@ -2,6 +2,8 @@ package com.auction.server.mapper; // Đổi lại package nếu cần
 
 import com.auction.common.dto.AuctionDTO;
 import com.auction.common.entity.Auction;
+import com.auction.server.dao.UserDAO;
+import com.auction.common.entity.User;
 
 import java.time.LocalDateTime;
 
@@ -14,7 +16,7 @@ public class AuctionMapper {
         dto.setItemId(entity.getItemId());
         dto.setSellerId(entity.getSellerId());
         dto.setCurrentPrice(entity.getCurrentPrice());
-        dto.setStartingPrice(entity.getCurrentPrice());
+        dto.setStartingPrice(entity.getStartingPrice());
         dto.setStatus(entity.getStatus());
         dto.setStartTime(entity.getStartTime());
         dto.setEndTime(entity.getEndTime());
@@ -22,11 +24,20 @@ public class AuctionMapper {
         dto.setAntiSnipingEnabled(entity.isAntiSnipingEnabled());
         dto.setAntiSnipingExtensionSeconds((int) entity.getAntiSnipingExtensionSeconds());
         dto.setCurrentWinnerId(entity.getCurrentWinnerId());
+        if (entity.getCurrentWinnerId() != null && !entity.getCurrentWinnerId().isBlank()) {
+            User winner = UserDAO.getInstance().findUserById(entity.getCurrentWinnerId());
+            dto.setCurrentWinnerName(winner != null ? winner.getUsername() : entity.getCurrentWinnerId());
+        }
         dto.setCategory(entity.getCategory());
         dto.setCategoryName(entity.getCategory());
         dto.setItemName(entity.getItemName());
         dto.setItemDescription(entity.getItemDescription());
-        dto.setImagePath(entity.getImagePath());
+        if (entity.getImageBase64() != null && !entity.getImageBase64().isBlank()) {
+            dto.setImagePath("BASE64:" + entity.getImageBase64());
+        } else {
+            dto.setImagePath(entity.getImagePath());
+        }
+        dto.setTotalBids(entity.getBidHistory() != null ? entity.getBidHistory().size() : 0);
         return dto;
     }
 
@@ -73,11 +84,18 @@ public class AuctionMapper {
         if (dto.getCategory() != null) {
             auction.setCategory(dto.getCategory());
         }
-        if (dto.getImagePath() != null) {
-            auction.setImagePath(dto.getImagePath());
-        }
         if (dto.getSellerId() != null) {
             auction.setSellerId(dto.getSellerId());
+        }
+        if (dto.getMinIncrement() > 0) {
+            auction.setMinIncrement(dto.getMinIncrement());
+        }
+        if (dto.getImagePath() != null && !dto.getImagePath().isBlank()) {
+            if (dto.getImagePath().startsWith("BASE64:")) {
+                auction.setImageBase64(dto.getImagePath().substring(7));
+            } else {
+                auction.setImagePath(dto.getImagePath());
+            }
         }
 
         return auction;
