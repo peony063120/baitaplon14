@@ -59,6 +59,13 @@ public class ServerConnection {
   private final Deque<CompletableFuture<String>> textResponseQueue = new ArrayDeque<>();
   private final Object textRequestLock = new Object();
 
+  /** Serializes all plain-text commands so responses cannot be mixed between callers. */
+  private final ExecutorService textCommandExecutor = Executors.newSingleThreadExecutor(r -> {
+    Thread t = new Thread(r, "server-text-command");
+    t.setDaemon(true);
+    return t;
+  });
+
   private ServerConnection() {
     this.protocol         = new MessageProtocol();
     this.realtimeListener = RealtimeListener.getInstance();
@@ -97,6 +104,7 @@ public class ServerConnection {
     if (listenerThread != null) {
       listenerThread.shutdownNow();
     }
+    textCommandExecutor.shutdownNow();
     pendingRequests.forEach((id, future) -> future.cancel(true));
     pendingRequests.clear();
     synchronized (textRequestLock) {
@@ -144,6 +152,25 @@ public class ServerConnection {
       throw new IOException("ServerConnection: Cannot send request — Network disconnected.");
     }
 
+    try {
+      return textCommandExecutor.submit(() -> sendRequestOnWire(command))
+              .get(10, TimeUnit.SECONDS);
+    } catch (TimeoutException e) {
+      throw new IOException("ServerConnection: Timeout waiting for response from Server");
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IOException("ServerConnection: Request interrupted");
+    } catch (ExecutionException e) {
+      Throwable cause = e.getCause();
+      if (cause instanceof IOException io) {
+        throw io;
+      }
+      throw new IOException("ServerConnection: Request failed: "
+              + (cause != null ? cause.getMessage() : e.getMessage()));
+    }
+  }
+
+  private String sendRequestOnWire(String command) throws IOException {
     CompletableFuture<String> responseFuture = new CompletableFuture<>();
     synchronized (textRequestLock) {
       textResponseQueue.addLast(responseFuture);
@@ -160,11 +187,17 @@ public class ServerConnection {
         textResponseQueue.remove(responseFuture);
       }
       throw new IOException("ServerConnection: Timeout waiting for response from Server");
-    } catch (InterruptedException | ExecutionException e) {
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
       synchronized (textRequestLock) {
         textResponseQueue.remove(responseFuture);
       }
-      throw new IOException("ServerConnection: Request interrupted: " + e.getMessage());
+      throw new IOException("ServerConnection: Request interrupted");
+    } catch (ExecutionException e) {
+      synchronized (textRequestLock) {
+        textResponseQueue.remove(responseFuture);
+      }
+      throw new IOException("ServerConnection: Request failed: " + e.getMessage());
     }
   }
 

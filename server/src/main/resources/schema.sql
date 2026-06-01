@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS auctions (
     current_price DECIMAL(15,2) NOT NULL,
     current_winner_id VARCHAR(36),
     min_increment DECIMAL(15,2) DEFAULT 10000.00,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('DRAFT', 'OPEN', 'RUNNING', 'FINISHED', 'PAID', 'CANCELLED')),
+    status VARCHAR(20) NOT NULL CHECK (status IN ('PENDING', 'DRAFT', 'OPEN', 'RUNNING', 'FINISHED', 'PAID', 'CANCELLED')),
     anti_sniping_enabled BOOLEAN DEFAULT FALSE,
     anti_sniping_extension_seconds INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

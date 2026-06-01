@@ -2,6 +2,8 @@ package com.auction.client.controller;
 
 import com.auction.client.config.AppConfig;
 import com.auction.client.model.ClientModel;
+import com.auction.client.network.MessageProtocol;
+import com.auction.client.network.RealtimeListener;
 import com.auction.client.network.ServerConnection;
 import com.auction.common.dto.AuctionDTO;
 import com.auction.common.enums.AuctionStatus;
@@ -20,6 +22,7 @@ import javafx.scene.text.Text;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -34,6 +37,10 @@ public class AdminController {
     @FXML private Label adminNameLabel;
 
     private List<AuctionDTO> pendingAuctions = new ArrayList<>();
+    private final Consumer<Object> auctionUpdateCallback = data -> {
+        loadPendingAuctions();
+        loadStats();
+    };
     /** Tránh gửi nhiều request TCP đồng thời — dễ nhận nhầm response. */
     private final ExecutorService serverIo = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "admin-server-io");
@@ -48,8 +55,17 @@ public class AdminController {
             adminNameLabel.setText("Logged in as: " + user.getUsername());
         }
         statusLabel.setText("Connected endpoint: " + AppConfig.getServerHost() + ":" + AppConfig.getServerPort());
-        loadPendingAuctions();
-        loadStats();
+        RealtimeListener.getInstance().registerCallback(
+                MessageProtocol.TYPE_AUCTION_UPDATE, auctionUpdateCallback);
+        serverIo.submit(() -> {
+            try {
+                ServerConnection.getInstance().sendRequest("SUBSCRIBE");
+            } catch (IOException ignored) {
+                Platform.runLater(() -> statusLabel.setText("Could not subscribe to live updates"));
+            }
+            loadPendingAuctions();
+            loadStats();
+        });
     }
 
     private void loadStats() {
@@ -218,6 +234,8 @@ public class AdminController {
 
     @FXML
     public void onLogout() {
+        RealtimeListener.getInstance().unregisterCallback(
+                MessageProtocol.TYPE_AUCTION_UPDATE, auctionUpdateCallback);
         ClientModel.getInstance().logout();
         try {
             com.auction.client.ClientApp.showLoginScreen();

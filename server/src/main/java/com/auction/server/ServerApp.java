@@ -98,7 +98,8 @@ public class ServerApp {
 
             clientThreadPool = Executors.newCachedThreadPool();
             serverSocket = new ServerSocket(port);
-            System.out.println("Server started on " + config.getHost() + ":" + port);
+            System.out.println("Server listening on 0.0.0.0:" + port
+                    + " (config host label: " + config.getHost() + ")");
             System.out.println("Waiting for client connections...");
 
             while (running) {

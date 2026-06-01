@@ -121,8 +121,8 @@
   </dependencies>
   <properties>
     <maven.compiler.target>21</maven.compiler.target>
-    <maven.compiler.source>21</maven.compiler.source>
     <junit.version>5.10.0</junit.version>
     <mockito.version>5.6.0</mockito.version>
+    <maven.compiler.source>21</maven.compiler.source>
   </properties>
 </project>

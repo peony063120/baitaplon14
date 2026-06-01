@@ -89,7 +89,14 @@ public class AuctionService {
             // Sử dụng thời gian mặc định từ cấu hình (24 giờ)
             auction.setEndTime(LocalDateTime.now().plusHours(defaultAuctionDurationHours));
         }
+        if (auction.getItemId() == null || auction.getItemId().isBlank()
+                || "unknown".equalsIgnoreCase(auction.getItemId())) {
+            auction.setItemId(auction.getId());
+        }
         auctionDAO.saveAuction(auction);
+        if (auctionSubject != null) {
+            auctionSubject.notifyObservers(auction);
+        }
     }
 
     public void updateAuction(String id, AuctionDTO dto) throws AuctionNotFoundException {
