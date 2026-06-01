@@ -14,6 +14,7 @@ public class AntiSnipingService {
      * Kiểm tra và gia hạn phiên đấu giá nếu còn ít thời gian.
      * @return true nếu đã gia hạn, false nếu không
      */
+
     public boolean checkAndExtend(Auction auction) {
         if (auction == null || !auction.isAntiSnipingEnabled()) {
             return false;
