@@ -112,22 +112,35 @@ public class AuctionService {
             throw new AuctionNotFoundException("Auction not found: " + id);
         }
         AuctionStatus oldStatus = existing.getStatus();
-        
-        // When approving auction (PENDING/DRAFT -> RUNNING/OPEN), ensure it starts now
-        if ((oldStatus == AuctionStatus.PENDING || oldStatus == AuctionStatus.DRAFT) 
+
+        if ((oldStatus == AuctionStatus.PENDING || oldStatus == AuctionStatus.DRAFT)
                 && (status == AuctionStatus.RUNNING || status == AuctionStatus.OPEN)) {
-            // If startTime is in the future, set it to now so auction is immediately active
-            if (existing.getStartTime() != null && existing.getStartTime().isAfter(LocalDateTime.now())) {
-                existing.setStartTime(LocalDateTime.now());
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime startTime = existing.getStartTime();
+
+            if (startTime != null && startTime.isAfter(now)) {
+                existing.setStatus(AuctionStatus.OPEN);
+            } else {
+                existing.setStatus(AuctionStatus.RUNNING);
             }
+            auctionDAO.saveAuction(existing);
+
+            com.auction.server.scheduler.AuctionScheduler scheduler =
+                    com.auction.server.scheduler.AuctionScheduler.getInstance();
+            if (existing.getStatus() == AuctionStatus.OPEN) {
+                scheduler.scheduleAuctionStart(existing);
+            }
+            if (existing.getEndTime() != null) {
+                scheduler.scheduleAuctionEnd(existing);
+            }
+            auctionSubject.notifyObservers(existing);
+            return;
         }
-        
+
         existing.setStatus(status);
         auctionDAO.saveAuction(existing);
-        
-        // Notify observers when auction status changes to RUNNING or OPEN
-        // so bidders can see the newly approved auction
-        if ((oldStatus == AuctionStatus.PENDING || oldStatus == AuctionStatus.DRAFT) 
+
+        if ((oldStatus == AuctionStatus.PENDING || oldStatus == AuctionStatus.DRAFT)
                 && (status == AuctionStatus.RUNNING || status == AuctionStatus.OPEN)) {
             auctionSubject.notifyObservers(existing);
         }

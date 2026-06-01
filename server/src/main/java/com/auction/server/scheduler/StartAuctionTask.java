@@ -5,6 +5,8 @@ import com.auction.common.enums.AuctionStatus;
 import com.auction.server.dao.AuctionDAO;
 import com.auction.server.service.AuctionService;
 
+import java.time.LocalDateTime;
+
 public class StartAuctionTask implements Runnable {
     private final AuctionDAO auctionDAO;
     private final AuctionService auctionService;
@@ -25,10 +27,17 @@ public class StartAuctionTask implements Runnable {
     @Override
     public void run() {
         Auction auction = auctionDAO.getAuction(auctionId);
-        if (auction != null && auction.getStatus() == AuctionStatus.DRAFT) {
+        if (auction == null) {
+            return;
+        }
+        LocalDateTime now = java.time.LocalDateTime.now();
+        boolean readyToStart = auction.getStartTime() == null || !auction.getStartTime().isAfter(now);
+        if ((auction.getStatus() == AuctionStatus.OPEN || auction.getStatus() == AuctionStatus.DRAFT)
+                && readyToStart) {
             auction.setStatus(AuctionStatus.RUNNING);
             auctionDAO.saveAuction(auction);
             auctionService.notifyAuctionStarted(auction);
+            com.auction.common.observer.AuctionSubject.getInstance().notifyObservers(auction);
         }
     }
 }

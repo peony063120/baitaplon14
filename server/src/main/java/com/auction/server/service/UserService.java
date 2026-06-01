@@ -76,7 +76,7 @@ public class UserService {
             double balance = (user instanceof Bidder) ? ((Bidder) user).getBalance() : 0.0;
             return new LoginResponse(true, "Login successful",
                     user.getId(), user.getUsername(), user.getRole(),
-                    sessionToken, balance);
+                    sessionToken, balance, user.getEmail(), user.getFullName());
         }
         return new LoginResponse(false, "Invalid username or password");
     }

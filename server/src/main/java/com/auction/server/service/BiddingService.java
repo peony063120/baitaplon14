@@ -168,6 +168,10 @@ public class BiddingService {
         return bidDAO.getBidHistory(auctionId);
     }
 
+    public List<BidTransaction> getBidsByUser(String userId) {
+        return bidDAO.getBidsByUser(userId);
+    }
+
     public void configureAutoBid(AutoBidRequest request) {
         Bidder bidder = (Bidder) userDAO.findUserById(request.getUserId());
         if (bidder == null) {

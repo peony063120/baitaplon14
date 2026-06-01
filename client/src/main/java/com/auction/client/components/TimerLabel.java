@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 public class TimerLabel extends Label {
     private LocalDateTime endTime;
     private Timeline timer;
+    private boolean countdownToStart;
 
     public TimerLabel() {
         getStyleClass().add("timer-label");
@@ -23,6 +24,17 @@ public class TimerLabel extends Label {
 
     public void startCountdown(LocalDateTime endTime) {
         this.endTime = endTime;
+        this.countdownToStart = false;
+        restartTimer();
+    }
+
+    public void startCountdownToStart(LocalDateTime startTime) {
+        this.endTime = startTime;
+        this.countdownToStart = true;
+        restartTimer();
+    }
+
+    private void restartTimer() {
         if (timer != null) {
             timer.stop();
         }
@@ -44,8 +56,8 @@ public class TimerLabel extends Label {
 
         long seconds = java.time.Duration.between(LocalDateTime.now(), endTime).getSeconds();
         if (seconds <= 0) {
-            setText("Ended"); // Dịch từ "Da ket thuc"
-            if (!getStyleClass().contains("ended")) {
+            setText(countdownToStart ? "Starting" : "Ended");
+            if (!countdownToStart && !getStyleClass().contains("ended")) {
                 getStyleClass().add("ended");
             }
             if (timer != null) {
@@ -60,18 +72,17 @@ public class TimerLabel extends Label {
         long minutes = (seconds % 3600) / 60;
         long secs = seconds % 60;
 
-        // Thay đổi định dạng chuỗi hiển thị thời gian sang Tiếng Anh
+        String timeText;
         if (days > 0) {
-            // "ngay" -> "d" (days), "gio" -> "h" (hours). Dùng ký tự viết tắt giúp UI card không bị vỡ/tràn text.
-            setText(String.format("%dd %02dh", days, hours));
+            timeText = String.format("%dd %02dh", days, hours);
         } else if (hours > 0) {
-            setText(String.format("%02d:%02d:%02d", hours, minutes, secs));
+            timeText = String.format("%02d:%02d:%02d", hours, minutes, secs);
         } else if (minutes > 0) {
-            setText(String.format("%02d:%02d", minutes, secs));
+            timeText = String.format("%02d:%02d", minutes, secs);
         } else {
-            // "%02d giay" -> "%02ds" (seconds)
-            setText(String.format("%02ds", secs));
+            timeText = String.format("%02ds", secs);
         }
+        setText(countdownToStart ? "Starts " + timeText : timeText);
     }
 
     public void updateEndTime(LocalDateTime newEndTime) {
