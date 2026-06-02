@@ -33,11 +33,12 @@ public class ClientObserver implements Observer {
                 auction.getCurrentPrice(),
                 auction.getCurrentWinnerId() != null ? auction.getCurrentWinnerId() : "",
                 null,
-                auction.getStatus().name());
+                auction.getStatus().name(),
+                auction.getBidHistory() != null ? auction.getBidHistory().size() : 0);
     }
 
     protected void sendAuctionUpdate(String auctionId, double price, String winnerId,
-                                     String winnerName, String status) {
+                                     String winnerName, String status, int totalBids) {
         if (out == null || !isConnected()) {
             return;
         }
@@ -48,7 +49,8 @@ public class ClientObserver implements Observer {
         if (winnerName != null && !winnerName.isBlank()) {
             message.append(":WINNER_NAME:").append(winnerName);
         }
-        message.append(":STATUS:").append(status);
+        message.append(":STATUS:").append(status)
+                .append(":TOTAL_BIDS:").append(totalBids);
         out.println(message.toString());
     }
 

@@ -95,6 +95,7 @@ public class ClientHandler implements Runnable {
                 case "GET_PENDING_AUCTIONS" -> handleGetPendingAuctions();
                 case "APPROVE_AUCTION" -> handleApproveAuction(payload);
                 case "REJECT_AUCTION" -> handleRejectAuction(payload);
+                case "DELETE_AUCTION" -> handleDeleteAuction(payload);
                 case "GET_USER_COUNT" -> handleGetUserCount();
                 case "GET_BALANCE" -> handleGetBalance(payload);
                 case "SUBSCRIBE" -> handleSubscribe();
@@ -222,6 +223,17 @@ public class ClientHandler implements Runnable {
         String auctionId = p[0];
         auctionController.updateAuctionStatus(auctionId, AuctionStatus.CANCELLED);
         out.println("REJECT_OK");
+    }
+
+    private void handleDeleteAuction(String payload) {
+        String[] p = payload.split(":");
+        String auctionId = p[0];
+        try {
+            auctionController.deleteAuction(auctionId);
+            out.println("DELETE_OK");
+        } catch (Exception e) {
+            out.println("ERROR:Delete auction failed: " + e.getMessage());
+        }
     }
 
     private void handleGetAllAuctions() {
