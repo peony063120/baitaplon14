@@ -54,7 +54,8 @@ public class LoginController {
         boolean connected = ServerConnection.getInstance().isConnected();
         serverEndpointLabel.setText(connected
                 ? "Server: " + endpoint + " (connected)"
-                : "Server: " + endpoint + " (not connected — fix client.properties or start server)");
+                : "Server: " + endpoint + " (not connected — check server IP in client.properties, firewall port "
+                        + AppConfig.getServerPort() + ", and that ServerApp is running on the server PC)");
         serverEndpointLabel.setStyle(connected ? "-fx-text-fill: #15803d;" : "-fx-text-fill: #dc2626;");
     }
 

@@ -1,6 +1,8 @@
 package com.auction.client.config;
 
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -79,10 +81,26 @@ public class AppConfig {
         try (InputStream in = AppConfig.class.getClassLoader().getResourceAsStream("client.properties")) {
             if (in != null) {
                 props.load(in);
-                LOGGER.fine("[AppConfig] Loaded client.properties from classpath");
+                LOGGER.info("[AppConfig] Loaded client.properties from classpath");
             }
         } catch (Exception e) {
-            LOGGER.warning("[AppConfig] Could not load client.properties: " + e.getMessage());
+            LOGGER.warning("[AppConfig] Could not load classpath client.properties: " + e.getMessage());
+        }
+
+        // Override without rebuild: place client.properties in the project folder you run mvn from
+        Path external = Path.of(System.getProperty("user.dir", "."), "client.properties");
+        if (Files.isRegularFile(external)) {
+            try (InputStream in = Files.newInputStream(external)) {
+                props.load(in);
+                LOGGER.info("[AppConfig] Loaded client.properties override: " + external.toAbsolutePath());
+            } catch (Exception e) {
+                LOGGER.warning("[AppConfig] Could not load " + external + ": " + e.getMessage());
+            }
+        }
+
+        if (props.getProperty("server.host") == null) {
+            LOGGER.warning("[AppConfig] server.host not configured — will default to localhost. "
+                    + "Set client/src/main/resources/client.properties or SERVER_HOST env.");
         }
         return props;
     }
